@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: typing-practice-be
+
+  datasource:
+    url: jdbc:h2:tcp://localhost//Users/hongnamkim/Project/typing-practice/typing-practice-be/data
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: sa
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+server:
+  port: 8080
