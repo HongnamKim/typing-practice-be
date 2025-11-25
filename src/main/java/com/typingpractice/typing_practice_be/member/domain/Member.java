@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.member.domain;
 
+import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.Getter;
@@ -11,10 +12,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Getter
-@EntityListeners(AuditingEntityListener.class)
+// @EntityListeners(AuditingEntityListener.class)
 @SQLRestriction("deleted = false")
 @SQLDelete(sql = "UPDATE member SET deleted = true, deleted_at = NOW() where member_id = ?")
-public class Member {
+public class Member extends BaseEntity {
   @Id
   @GeneratedValue
   @Column(name = "member_id")
@@ -28,10 +29,10 @@ public class Member {
   @Enumerated(EnumType.STRING)
   private MemberRole role;
 
-  @CreatedDate private LocalDateTime createdAt;
-  @LastModifiedDate private LocalDateTime updatedAt;
-  private boolean deleted = false;
-  private LocalDateTime deletedAt;
+  //  @CreatedDate private LocalDateTime createdAt;
+  //  @LastModifiedDate private LocalDateTime updatedAt;
+  //  private boolean deleted = false;
+  //  private LocalDateTime deletedAt;
 
   public static Member createMember(String email, String password, String nickname) {
     Member member = new Member();

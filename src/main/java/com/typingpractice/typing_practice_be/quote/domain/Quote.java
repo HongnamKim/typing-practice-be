@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.quote.domain;
 
+import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -13,10 +14,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@EntityListeners(AuditingEntityListener.class)
+// @EntityListeners(AuditingEntityListener.class)
 @SQLRestriction("deleted = false")
 @SQLDelete(sql = "UPDATE quote SET deleted = true, delted_at = NOW() where quote_id = ?")
-public class Quote {
+public class Quote extends BaseEntity {
   @Id
   @GeneratedValue
   @Column(name = "quote_id")
@@ -28,10 +29,10 @@ public class Quote {
   private String sentence;
   private String author;
 
-  @CreatedDate private LocalDateTime createdAt;
-  @LastModifiedDate private LocalDateTime updatedAt;
-  private boolean deleted = false;
-  private LocalDateTime deletedAt;
+  //  @CreatedDate private LocalDateTime createdAt;
+  //  @LastModifiedDate private LocalDateTime updatedAt;
+  //  private boolean deleted = false;
+  //  private LocalDateTime deletedAt;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "member_id", nullable = true)

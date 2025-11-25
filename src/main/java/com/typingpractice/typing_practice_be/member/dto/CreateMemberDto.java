@@ -13,4 +13,13 @@ public class CreateMemberDto {
   @NotNull
   @Length(min = 2, max = 10)
   private String nickname;
+
+  public static CreateMemberDto create(String email, String password, String nickname) {
+    CreateMemberDto createMemberDto = new CreateMemberDto();
+    createMemberDto.email = email;
+    createMemberDto.password = password;
+    createMemberDto.nickname = nickname;
+
+    return createMemberDto;
+  }
 }
