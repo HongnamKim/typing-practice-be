@@ -12,7 +12,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Getter
-// @EntityListeners(AuditingEntityListener.class)
 @SQLRestriction("deleted = false")
 @SQLDelete(sql = "UPDATE member SET deleted = true, deleted_at = NOW() where member_id = ?")
 public class Member extends BaseEntity {
@@ -28,11 +27,6 @@ public class Member extends BaseEntity {
 
   @Enumerated(EnumType.STRING)
   private MemberRole role;
-
-  //  @CreatedDate private LocalDateTime createdAt;
-  //  @LastModifiedDate private LocalDateTime updatedAt;
-  //  private boolean deleted = false;
-  //  private LocalDateTime deletedAt;
 
   public static Member createMember(String email, String password, String nickname) {
     Member member = new Member();

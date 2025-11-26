@@ -64,6 +64,11 @@ public class MemberService {
   public Member updateNickname(Long memberId, String nickname) {
     Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
+    // 변경하지 않은 경우 그냥 반환
+    if (member.getNickname().equals(nickname)) {
+      return member;
+    }
+
     member.updateNickName(nickname);
 
     return member;

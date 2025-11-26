@@ -1,15 +1,23 @@
 package com.typingpractice.typing_practice_be.common.exception;
 
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
+import com.typingpractice.typing_practice_be.member.exception.ForbiddenException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.View;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+  private final View error;
+
+  public GlobalExceptionHandler(View error) {
+    this.error = error;
+  }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ProblemDetail handleValidationException(MethodArgumentNotValidException e) {
@@ -39,6 +47,13 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MemberNotFoundException.class)
   public ProblemDetail handleMemberNotFoundException(MemberNotFoundException e) {
 
+    ErrorCode errorCode = e.getErrorCode();
+
+    return ProblemDetail.forStatusAndDetail(errorCode.getStatus(), errorCode.getMessage());
+  }
+
+  @ExceptionHandler(ForbiddenException.class)
+  public ProblemDetail handleForbiddenException(ForbiddenException e) {
     ErrorCode errorCode = e.getErrorCode();
 
     return ProblemDetail.forStatusAndDetail(errorCode.getStatus(), errorCode.getMessage());
