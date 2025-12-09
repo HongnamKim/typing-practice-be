@@ -77,7 +77,7 @@ public class MemberController {
   private void validateAdmin(Long memberId) {
     Member member = memberService.findMemberById(memberId);
 
-    System.out.println(member.getRole());
+    // System.out.println(member.getRole());
 
     if (member.getRole() != MemberRole.ADMIN) {
       throw new ForbiddenException();
