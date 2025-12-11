@@ -8,11 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.LocalDateTime;
+import org.springframework.util.StringUtils;
 
 @Entity
 @Getter
@@ -34,6 +30,8 @@ public class Quote extends BaseEntity {
   private String sentence;
   private String author;
 
+  private int reportCount;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "member_id", nullable = true)
   private Member member;
@@ -42,11 +40,24 @@ public class Quote extends BaseEntity {
     Quote quote = new Quote();
     quote.member = member;
     quote.sentence = sentence;
-    quote.author = author;
+    quote.author = StringUtils.hasText(author) ? author : "작자 미상";
     quote.type = type;
-    quote.status = quote.type == QuoteType.PUBLIC ? QuoteStatus.PENDING : QuoteStatus.APPROVED;
+    quote.reportCount = 0;
+    quote.status = quote.type == QuoteType.PUBLIC ? QuoteStatus.PENDING : QuoteStatus.ACTIVE;
 
     return quote;
+  }
+
+  public void updateSentence(String sentence) {
+    this.sentence = sentence;
+  }
+
+  public void updateAuthor(String author) {
+    this.author = author;
+  }
+
+  public void updateType(QuoteType quoteType) {
+    this.type = quoteType;
   }
 
   public void updateStatus(QuoteStatus quoteStatus) {

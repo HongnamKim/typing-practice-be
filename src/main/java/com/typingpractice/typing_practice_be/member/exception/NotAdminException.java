@@ -4,10 +4,10 @@ import com.typingpractice.typing_practice_be.common.exception.ErrorCode;
 import lombok.Getter;
 
 @Getter
-public class ForbiddenException extends RuntimeException {
+public class NotAdminException extends RuntimeException {
   private final ErrorCode errorCode;
 
-  public ForbiddenException() {
+  public NotAdminException() {
     super(ErrorCode.FORBIDDEN.getMessage());
     this.errorCode = ErrorCode.FORBIDDEN;
   }

@@ -10,7 +10,7 @@ import org.hibernate.validator.constraints.Length;
 @ToString
 public class QuoteCreateRequest {
   @NotEmpty
-  @Length(min = 10, max = 80)
+  @Length(min = 5, max = 100)
   private String sentence;
 
   @Length(min = 1, max = 20)

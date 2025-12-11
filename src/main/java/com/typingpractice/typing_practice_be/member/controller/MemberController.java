@@ -8,7 +8,7 @@ import com.typingpractice.typing_practice_be.member.dto.LoginDto;
 import com.typingpractice.typing_practice_be.member.dto.LoginResponseDto;
 import com.typingpractice.typing_practice_be.member.dto.MemberResponseDto;
 import com.typingpractice.typing_practice_be.member.dto.UpdateNicknameDto;
-import com.typingpractice.typing_practice_be.member.exception.ForbiddenException;
+import com.typingpractice.typing_practice_be.member.exception.NotAdminException;
 import com.typingpractice.typing_practice_be.member.service.MemberService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -80,7 +80,7 @@ public class MemberController {
     // System.out.println(member.getRole());
 
     if (member.getRole() != MemberRole.ADMIN) {
-      throw new ForbiddenException();
+      throw new NotAdminException();
     }
   }
 }
