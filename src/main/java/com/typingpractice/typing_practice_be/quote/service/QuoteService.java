@@ -9,13 +9,14 @@ import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteCreateRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteUpdateRequest;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
+import com.typingpractice.typing_practice_be.quote.exception.QuoteNotOwnedException;
+import com.typingpractice.typing_practice_be.quote.exception.QuoteNotProcessableException;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -50,11 +51,12 @@ public class QuoteService {
     Quote quote = findMyQuoteById(memberId, quoteId);
 
     if (quote.getType() != QuoteType.PRIVATE || quote.getStatus() != QuoteStatus.ACTIVE) {
-      throw new IllegalStateException("개인용 문장만 수정 가능");
+      throw new QuoteNotProcessableException();
     }
 
     if (request.getAuthor() != null) {
-      String author = StringUtils.hasText(request.getAuthor()) ? request.getAuthor() : "작자 미상";
+      String author =
+          StringUtils.hasText(request.getAuthor()) ? request.getAuthor() : Quote.DEFAULT_AUTHOR;
       quote.updateAuthor(author);
     }
 
@@ -70,7 +72,7 @@ public class QuoteService {
     Quote quote = findMyQuoteById(memberId, quoteId);
 
     if (quote.getType() != QuoteType.PRIVATE || quote.getStatus() != QuoteStatus.ACTIVE) {
-      throw new IllegalStateException("개인용 문장만 삭제 가능");
+      throw new QuoteNotProcessableException();
     }
 
     quoteRepository.deleteQuote(quote);
@@ -86,7 +88,7 @@ public class QuoteService {
     Quote quote = quoteRepository.findById(quoteId).orElseThrow(QuoteNotFoundException::new);
 
     if (!quote.getMember().getId().equals(memberId)) {
-      throw new IllegalStateException("내 문장이 아닙니다.");
+      throw new QuoteNotOwnedException();
     }
 
     return quote;
@@ -97,7 +99,7 @@ public class QuoteService {
     Quote quote = findMyQuoteById(memberId, quoteId);
 
     if (quote.getType() != QuoteType.PRIVATE || quote.getStatus() != QuoteStatus.ACTIVE) {
-      throw new IllegalStateException("공개 전환할 수 없는 문장");
+      throw new QuoteNotProcessableException();
     }
 
     quote.updateType(QuoteType.PUBLIC);
@@ -111,7 +113,7 @@ public class QuoteService {
     Quote quote = findMyQuoteById(memberId, quoteId);
 
     if (quote.getType() != QuoteType.PUBLIC || quote.getStatus() != QuoteStatus.PENDING) {
-      throw new IllegalStateException("취소할 수 없는 문장");
+      throw new QuoteNotProcessableException();
     }
 
     quote.updateType(QuoteType.PRIVATE);

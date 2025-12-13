@@ -36,11 +36,13 @@ public class Quote extends BaseEntity {
   @JoinColumn(name = "member_id", nullable = true)
   private Member member;
 
+  public static final String DEFAULT_AUTHOR = "작자 미상";
+
   public static Quote create(Member member, String sentence, String author, QuoteType type) {
     Quote quote = new Quote();
     quote.member = member;
     quote.sentence = sentence;
-    quote.author = StringUtils.hasText(author) ? author : "작자 미상";
+    quote.author = StringUtils.hasText(author) ? author : DEFAULT_AUTHOR;
     quote.type = type;
     quote.reportCount = 0;
     quote.status = quote.type == QuoteType.PUBLIC ? QuoteStatus.PENDING : QuoteStatus.ACTIVE;

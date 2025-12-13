@@ -5,13 +5,13 @@ import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteCreateRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteUpdateRequest;
+import com.typingpractice.typing_practice_be.quote.exception.EmptyUpdateRequestException;
 import com.typingpractice.typing_practice_be.quote.service.QuoteService;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -64,7 +64,7 @@ public class QuoteController {
   public ApiResponse<QuoteResponse> updatePrivateQuote(
       @PathVariable Long quoteId, @RequestBody @Valid QuoteUpdateRequest request) {
     if (request.getSentence() == null && request.getAuthor() == null) {
-      throw new IllegalArgumentException("수정할 내용이 없습니다.");
+      throw new EmptyUpdateRequestException();
     }
 
     Long memberId = getMemberId();

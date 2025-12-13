@@ -1,8 +1,5 @@
 package com.typingpractice.typing_practice_be.common.exception;
 
-import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
-import com.typingpractice.typing_practice_be.member.exception.NotAdminException;
-import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -43,27 +40,5 @@ public class GlobalExceptionHandler {
     problemDetail.setTitle("Invalid Parameter Type");
 
     return problemDetail;
-  }
-
-  @ExceptionHandler(MemberNotFoundException.class)
-  public ProblemDetail handleMemberNotFoundException(MemberNotFoundException e) {
-
-    ErrorCode errorCode = e.getErrorCode();
-
-    return ProblemDetail.forStatusAndDetail(errorCode.getStatus(), errorCode.getMessage());
-  }
-
-  @ExceptionHandler(NotAdminException.class)
-  public ProblemDetail handleForbiddenException(NotAdminException e) {
-    ErrorCode errorCode = e.getErrorCode();
-
-    return ProblemDetail.forStatusAndDetail(errorCode.getStatus(), errorCode.getMessage());
-  }
-
-  @ExceptionHandler(QuoteNotFoundException.class)
-  public ProblemDetail handleQuoteNotFoundException(QuoteNotFoundException e) {
-    ErrorCode errorCode = e.getErrorCode();
-
-    return ProblemDetail.forStatusAndDetail(errorCode.getStatus(), errorCode.getMessage());
   }
 }
