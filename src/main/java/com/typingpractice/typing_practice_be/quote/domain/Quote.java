@@ -50,6 +50,26 @@ public class Quote extends BaseEntity {
     return quote;
   }
 
+  public void approvePublish() {
+    this.type = QuoteType.PUBLIC;
+    this.status = QuoteStatus.ACTIVE;
+  }
+
+  public void rejectPublish() {
+    this.type = QuoteType.PRIVATE;
+    this.status = QuoteStatus.ACTIVE;
+  }
+
+  public void update(String sentence, String author) {
+    if (sentence != null) {
+      this.sentence = sentence;
+    }
+
+    if (author != null) {
+      this.author = StringUtils.hasText(author) ? author : DEFAULT_AUTHOR;
+    }
+  }
+
   public void updateSentence(String sentence) {
     this.sentence = sentence;
   }

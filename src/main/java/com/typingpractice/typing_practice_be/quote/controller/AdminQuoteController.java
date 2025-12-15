@@ -1,10 +1,15 @@
 package com.typingpractice.typing_practice_be.quote.controller;
 
+import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.exception.NotAdminException;
 import com.typingpractice.typing_practice_be.member.service.MemberService;
+import com.typingpractice.typing_practice_be.quote.domain.Quote;
+import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
+import com.typingpractice.typing_practice_be.quote.dto.QuoteUpdateRequest;
 import com.typingpractice.typing_practice_be.quote.service.AdminQuoteService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -26,43 +31,72 @@ public class AdminQuoteController {
 
   // 승인 대기 목록 조회
   @GetMapping("/admin/quotes/pending")
-  public void getPendingQuotes() {
+  public ApiResponse<List<QuoteResponse>> getPendingQuotes() {
     validateAdmin();
+
+    List<Quote> pendingQuotes = adminQuoteService.findPendingQuotes();
+
+    return ApiResponse.ok(pendingQuotes.stream().map(QuoteResponse::from).toList());
   }
 
   // 승인
   @PostMapping("/admin/quotes/{quoteId}/approve")
-  public void approvePendingQuote(@PathVariable Long quoteId) {
+  public ApiResponse<QuoteResponse> approvePendingQuote(@PathVariable Long quoteId) {
     validateAdmin();
+
+    Quote quote = adminQuoteService.approvePublish(quoteId);
+
+    return ApiResponse.ok(QuoteResponse.from(quote));
   }
 
   // 거부
   @PostMapping("/admin/quotes/{quoteId}/reject")
-  public void rejectPendingQuote(@PathVariable Long quoteId) {
+  public ApiResponse<QuoteResponse> rejectPendingQuote(@PathVariable Long quoteId) {
     validateAdmin();
+
+    Quote quote = adminQuoteService.rejectPublish(quoteId);
+
+    return ApiResponse.ok(QuoteResponse.from(quote));
   }
 
   // 공개 문장 수정
   @PatchMapping("/admin/quotes/{quoteId}")
-  public void patchQuote(@PathVariable Long quoteId) {
+  public ApiResponse<QuoteResponse> patchQuote(
+      @PathVariable Long quoteId, @RequestBody QuoteUpdateRequest request) {
     validateAdmin();
+
+    Quote quote = adminQuoteService.updateQuote(quoteId, request);
+
+    return ApiResponse.ok(QuoteResponse.from(quote));
   }
 
   // 삭제
   @DeleteMapping("/admin/quotes/{quoteId}")
-  public void deleteQuote(@PathVariable Long quoteId) {
+  public ApiResponse<Void> deleteQuote(@PathVariable Long quoteId) {
     validateAdmin();
+
+    adminQuoteService.deleteQuote(quoteId);
+
+    return ApiResponse.ok(null);
   }
 
   // 숨김 목록
   @GetMapping("/admin/quotes/hidden")
-  public void getHiddenQuotes() {
+  public ApiResponse<List<QuoteResponse>> getHiddenQuotes() {
     validateAdmin();
+
+    List<Quote> hiddenQuotes = adminQuoteService.findHiddenQuotes();
+
+    return ApiResponse.ok(hiddenQuotes.stream().map(QuoteResponse::from).toList());
   }
 
   // 숨김 해제
   @PostMapping("/admin/quotes/{quoteId}/restore")
-  public void restoreHiddenQuotes(@PathVariable Long quoteId) {
+  public ApiResponse<QuoteResponse> restoreHiddenQuotes(@PathVariable Long quoteId) {
     validateAdmin();
+
+    Quote quote = adminQuoteService.cancelHidden(quoteId);
+
+    return ApiResponse.ok(QuoteResponse.from(quote));
   }
 }

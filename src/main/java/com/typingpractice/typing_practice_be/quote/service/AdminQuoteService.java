@@ -1,6 +1,13 @@
 package com.typingpractice.typing_practice_be.quote.service;
 
+import com.typingpractice.typing_practice_be.quote.domain.Quote;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
+import com.typingpractice.typing_practice_be.quote.dto.QuoteUpdateRequest;
+import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
+import com.typingpractice.typing_practice_be.quote.exception.QuoteNotProcessableException;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,4 +17,77 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class AdminQuoteService {
   private final QuoteRepository quoteRepository;
+
+  public List<Quote> findPendingQuotes() {
+    List<Quote> pendingQuotes = quoteRepository.findByStatus(QuoteStatus.PENDING);
+
+    return pendingQuotes;
+  }
+
+  public List<Quote> findHiddenQuotes() {
+    List<Quote> hiddenQuotes = quoteRepository.findByStatus(QuoteStatus.HIDDEN);
+
+    return hiddenQuotes;
+  }
+
+  @Transactional
+  public Quote approvePublish(Long quoteId) {
+    Quote quote = findQuoteById(quoteId);
+
+    if (quote.getStatus() != QuoteStatus.PENDING || quote.getType() != QuoteType.PUBLIC) {
+      throw new QuoteNotProcessableException(); // IllegalStateException("공개 신청한 문장이 아닙니다.");
+    }
+
+    quote.approvePublish();
+
+    return quote;
+  }
+
+  @Transactional
+  public Quote rejectPublish(Long quoteId) {
+    Quote quote = findQuoteById(quoteId);
+
+    if (quote.getStatus() != QuoteStatus.PENDING || quote.getType() != QuoteType.PUBLIC) {
+      throw new QuoteNotProcessableException();
+    }
+
+    quote.rejectPublish();
+
+    return quote;
+  }
+
+  @Transactional
+  public Quote updateQuote(Long quoteId, QuoteUpdateRequest request) {
+    Quote quote = findQuoteById(quoteId);
+
+    if (quote.getType() != QuoteType.PUBLIC) {
+      throw new QuoteNotProcessableException();
+    }
+
+    quote.update(request.getSentence(), request.getAuthor());
+
+    return quote;
+  }
+
+  private Quote findQuoteById(Long quoteId) {
+    return quoteRepository.findById(quoteId).orElseThrow(QuoteNotFoundException::new);
+  }
+
+  @Transactional
+  public void deleteQuote(Long quoteId) {
+    quoteRepository.deleteQuote(findQuoteById(quoteId));
+  }
+
+  @Transactional
+  public Quote cancelHidden(Long quoteId) {
+    Quote quote = findQuoteById(quoteId);
+
+    if (quote.getStatus() != QuoteStatus.HIDDEN) {
+      throw new QuoteNotProcessableException();
+    }
+
+    quote.updateStatus(QuoteStatus.ACTIVE);
+
+    return quote;
+  }
 }
