@@ -16,7 +16,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -54,15 +53,7 @@ public class QuoteService {
       throw new QuoteNotProcessableException();
     }
 
-    if (request.getAuthor() != null) {
-      String author =
-          StringUtils.hasText(request.getAuthor()) ? request.getAuthor() : Quote.DEFAULT_AUTHOR;
-      quote.updateAuthor(author);
-    }
-
-    if (request.getSentence() != null) {
-      quote.updateSentence(request.getSentence());
-    }
+    quote.update(request.getSentence(), request.getAuthor());
 
     return quote;
   }
