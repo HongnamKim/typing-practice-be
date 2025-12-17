@@ -1,14 +1,13 @@
 package com.typingpractice.typing_practice_be.member.domain;
 
 import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
+import com.typingpractice.typing_practice_be.report.domain.Report;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Getter;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Getter
@@ -27,6 +26,9 @@ public class Member extends BaseEntity {
 
   @Enumerated(EnumType.STRING)
   private MemberRole role;
+
+  @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)
+  private List<Report> reports = new ArrayList<>();
 
   public static Member createMember(String email, String password, String nickname) {
     Member member = new Member();

@@ -2,7 +2,10 @@ package com.typingpractice.typing_practice_be.quote.domain;
 
 import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
 import com.typingpractice.typing_practice_be.member.domain.Member;
+import com.typingpractice.typing_practice_be.report.domain.Report;
 import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,6 +38,9 @@ public class Quote extends BaseEntity {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "member_id", nullable = true)
   private Member member;
+
+  @OneToMany(mappedBy = "quote", cascade = CascadeType.REMOVE)
+  private List<Report> reports = new ArrayList<>();
 
   public static final String DEFAULT_AUTHOR = "작자 미상";
 
