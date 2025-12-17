@@ -23,12 +23,9 @@ public class SecurityConfig {
     http.csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 안 씀
-        .headers(headers -> headers.frameOptions(frame -> frame.disable()))
         .authorizeHttpRequests(
             auth -> auth.anyRequest().permitAll()
-            //                auth.requestMatchers("/h2-console/**")
-            //                    .permitAll()
-            //                    .requestMatchers(
+            //                auth.requestMatchers(
             //                        "/swagger-ui/**",
             //                        "/swagger-ui.html",
             //                        "/swagger-ui/index.html",
@@ -47,19 +44,4 @@ public class SecurityConfig {
 
     return http.build();
   }
-
-  //  @Bean
-  //  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-  //    http.csrf(csrf -> csrf.disable())
-  //        .headers(headers -> headers.frameOptions(frame -> frame.disable()))
-  //        .authorizeHttpRequests(
-  //            auth ->
-  //                auth.requestMatchers("/h2-console/**")
-  //                    .permitAll()
-  //                    .anyRequest()
-  //                    .permitAll() // 일단 전체 허용, 나중에 수정
-  //            );
-  //
-  //    return http.build();
-  //  }
 }
