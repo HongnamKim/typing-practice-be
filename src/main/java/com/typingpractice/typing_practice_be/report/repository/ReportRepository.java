@@ -4,6 +4,7 @@ import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import com.typingpractice.typing_practice_be.report.domain.ReportStatus;
+import com.typingpractice.typing_practice_be.report.dto.ReportRequest;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import lombok.RequiredArgsConstructor;
@@ -24,21 +25,21 @@ public class ReportRepository {
     return report;
   }
 
-  public List<Report> findAll(ReportStatus status) {
+  public List<Report> findAll(ReportRequest request) {
     //    return em.createQuery("select r from Report r where r.status = :status", Report.class)
     //        .setParameter("status", status)
     //        .getResultList();
 
     String jpql = "select r from Report r";
 
-    if (status != null) {
+    if (request.getStatus() != null) {
       jpql += " where r.status = :status";
     }
 
     TypedQuery<Report> query = em.createQuery(jpql, Report.class);
 
-    if (status != null) {
-      query.setParameter("status", status);
+    if (request.getStatus() != null) {
+      query.setParameter("status", request.getStatus());
     }
 
     return query.getResultList();
@@ -46,6 +47,12 @@ public class ReportRepository {
 
   public Optional<Report> findById(Long reportId) {
     return Optional.ofNullable(em.find(Report.class, reportId));
+  }
+
+  public List<Report> findMyReports(Member member) {
+    return em.createQuery("select r from Report r where r.member.id = :memberId", Report.class)
+        .setParameter("memberId", member.getId())
+        .getResultList();
   }
 
   public List<Report> findByQuote(Quote quote) {

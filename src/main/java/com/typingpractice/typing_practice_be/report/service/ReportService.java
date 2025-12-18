@@ -1,0 +1,79 @@
+package com.typingpractice.typing_practice_be.report.service;
+
+import com.typingpractice.typing_practice_be.member.domain.Member;
+import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
+import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
+import com.typingpractice.typing_practice_be.quote.domain.Quote;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
+import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
+import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
+import com.typingpractice.typing_practice_be.report.domain.Report;
+import com.typingpractice.typing_practice_be.report.dto.ReportCreateRequest;
+import com.typingpractice.typing_practice_be.report.exception.DuplicateReportException;
+import com.typingpractice.typing_practice_be.report.exception.QuoteNotReportableException;
+import com.typingpractice.typing_practice_be.report.exception.ReportNotFoundException;
+import com.typingpractice.typing_practice_be.report.exception.ReportNotProcessableException;
+import com.typingpractice.typing_practice_be.report.repository.ReportRepository;
+import java.util.List;
+import java.util.Objects;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class ReportService {
+  private final MemberRepository memberRepository;
+  private final QuoteRepository quoteRepository;
+
+  private final ReportRepository reportRepository;
+
+  // 신고 생성
+  @Transactional
+  public Report createReport(Long memberId, Long quoteId, ReportCreateRequest request) {
+    Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+    Quote quote = quoteRepository.findById(quoteId).orElseThrow(QuoteNotFoundException::new);
+
+    if (quote.getStatus() != QuoteStatus.ACTIVE || quote.getType() != QuoteType.PUBLIC) {
+      throw new QuoteNotReportableException();
+    }
+
+    if (reportRepository.existsByQuoteAndMember(quote, member)) {
+      throw new DuplicateReportException();
+    }
+
+    Report report = Report.create(member, quote, request.getReason(), request.getDetail());
+
+    reportRepository.save(report);
+    quote.increaseReportCount();
+
+    if (quote.shouldBeHidden()) {
+      quote.updateStatus(QuoteStatus.HIDDEN);
+    }
+
+    return report;
+  }
+
+  // 내 신고 내역 조회
+  // 페이징 추가 필요
+  public List<Report> findMyReports(Long memberId) {
+    Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+
+    return reportRepository.findMyReports(member);
+  }
+
+  // 본인 신고 내역 삭제(철회 or 처리된 신고 삭제)
+  @Transactional
+  public void deleteReport(Long memberId, Long reportId) {
+    Report report = reportRepository.findById(reportId).orElseThrow(ReportNotFoundException::new);
+
+    if (!Objects.equals(report.getMember().getId(), memberId)) {
+      throw new ReportNotProcessableException();
+    }
+
+    reportRepository.delete(report);
+  }
+}
