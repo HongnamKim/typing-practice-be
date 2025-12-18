@@ -43,6 +43,7 @@ public class Quote extends BaseEntity {
   private List<Report> reports = new ArrayList<>();
 
   public static final String DEFAULT_AUTHOR = "작자 미상";
+  public static final int HIDDEN_THRESHOLD = 5; // 자동 숨김 기준값
 
   public static Quote create(Member member, String sentence, String author, QuoteType type) {
     Quote quote = new Quote();
@@ -90,5 +91,17 @@ public class Quote extends BaseEntity {
 
   public void updateStatus(QuoteStatus quoteStatus) {
     this.status = quoteStatus;
+  }
+
+  public void increaseReportCount() {
+    this.reportCount++;
+  }
+
+  public void resetReportCount() {
+    this.reportCount = 0;
+  }
+
+  public boolean shouldBeHidden() {
+    return this.reportCount >= Quote.HIDDEN_THRESHOLD;
   }
 }

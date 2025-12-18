@@ -15,7 +15,12 @@ public enum ErrorCode {
   QUOTE_NOT_OWNED(HttpStatus.FORBIDDEN, "문장에 대한 권한이 없습니다."),
   QUOTE_NOT_PROCESSABLE(HttpStatus.BAD_REQUEST, "처리할 수 없는 문장입니다."),
 
-  EMPTY_UPDATE_REQUEST(HttpStatus.BAD_REQUEST, "수정할 내용이 없습니다.");
+  EMPTY_UPDATE_REQUEST(HttpStatus.BAD_REQUEST, "수정할 내용이 없습니다."),
+
+  REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "신고 내역을 찾을 수 없습니다."),
+  DUPLICATE_REPORT(HttpStatus.BAD_REQUEST, "중복된 신고 내역이 존재합니다."),
+  QUOTE_NOT_REPORTABLE(HttpStatus.BAD_REQUEST, "신고 불가능한 문장입니다."),
+  REPORT_NOT_PROCESSABLE(HttpStatus.BAD_REQUEST, "처리할 수 없는 신고 내역입니다.");
 
   private final HttpStatus status;
   private final String message;
