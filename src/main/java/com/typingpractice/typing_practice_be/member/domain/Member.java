@@ -27,6 +27,8 @@ public class Member extends BaseEntity {
   @Enumerated(EnumType.STRING)
   private MemberRole role;
 
+  private String banReason = "";
+
   @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)
   private List<Report> reports = new ArrayList<>();
 
@@ -42,5 +44,19 @@ public class Member extends BaseEntity {
 
   public void updateNickName(String nickname) {
     this.nickname = nickname;
+  }
+
+  public void updateRole(MemberRole role) {
+    this.role = role;
+  }
+
+  public void ban(String reason) {
+    this.role = MemberRole.BANNED;
+    this.banReason = reason;
+  }
+
+  public void unban() {
+    this.role = MemberRole.USER;
+    this.banReason = "";
   }
 }
