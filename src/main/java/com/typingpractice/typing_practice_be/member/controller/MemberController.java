@@ -3,15 +3,12 @@ package com.typingpractice.typing_practice_be.member.controller;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.jwt.JwtTokenProvider;
 import com.typingpractice.typing_practice_be.member.domain.Member;
-import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.dto.LoginDto;
 import com.typingpractice.typing_practice_be.member.dto.LoginResponseDto;
 import com.typingpractice.typing_practice_be.member.dto.MemberResponseDto;
 import com.typingpractice.typing_practice_be.member.dto.UpdateNicknameDto;
-import com.typingpractice.typing_practice_be.member.exception.NotAdminException;
 import com.typingpractice.typing_practice_be.member.service.MemberService;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,15 +29,6 @@ public class MemberController {
     String token = jwtTokenProvider.createToken(member.getId(), member.getEmail());
 
     return ApiResponse.ok(LoginResponseDto.of(member, token));
-  }
-
-  @GetMapping
-  public ApiResponse<List<MemberResponseDto>> memberList() {
-    Long memberId = getAuthenticatedMemberId();
-    validateAdmin(memberId);
-
-    List<Member> members = memberService.findAllMembers();
-    return ApiResponse.ok(members.stream().map(MemberResponseDto::from).toList());
   }
 
   @GetMapping("/me")
@@ -72,15 +60,5 @@ public class MemberController {
 
   private Long getAuthenticatedMemberId() {
     return (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-  }
-
-  private void validateAdmin(Long memberId) {
-    Member member = memberService.findMemberById(memberId);
-
-    // System.out.println(member.getRole());
-
-    if (member.getRole() != MemberRole.ADMIN) {
-      throw new NotAdminException();
-    }
   }
 }
