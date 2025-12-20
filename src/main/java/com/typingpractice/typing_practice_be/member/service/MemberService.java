@@ -1,17 +1,15 @@
 package com.typingpractice.typing_practice_be.member.service;
 
+import com.typingpractice.typing_practice_be.member.domain.Member;
+import com.typingpractice.typing_practice_be.member.dto.CreateMemberDto;
 import com.typingpractice.typing_practice_be.member.dto.LoginDto;
 import com.typingpractice.typing_practice_be.member.exception.DuplicateEmailException;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
-import com.typingpractice.typing_practice_be.member.domain.Member;
-import com.typingpractice.typing_practice_be.member.dto.CreateMemberDto;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,10 +19,6 @@ public class MemberService {
 
   public Member findMemberById(Long memberId) {
     return memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
-  }
-
-  public List<Member> findAllMembers() {
-    return memberRepository.findAll();
   }
 
   @Transactional

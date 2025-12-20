@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.member.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import jakarta.persistence.*;

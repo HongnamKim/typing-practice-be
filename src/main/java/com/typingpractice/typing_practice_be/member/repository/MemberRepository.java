@@ -1,12 +1,13 @@
 package com.typingpractice.typing_practice_be.member.repository;
 
 import com.typingpractice.typing_practice_be.member.domain.Member;
+import com.typingpractice.typing_practice_be.member.dto.MemberPaginationRequest;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface MemberRepository {
-  List<Member> findAll();
+  List<Member> findAll(MemberPaginationRequest request);
 
   Optional<Member> findById(Long memberId);
 
