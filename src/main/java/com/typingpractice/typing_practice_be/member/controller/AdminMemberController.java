@@ -3,9 +3,7 @@ package com.typingpractice.typing_practice_be.member.controller;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
-import com.typingpractice.typing_practice_be.member.dto.MemberListResponse;
-import com.typingpractice.typing_practice_be.member.dto.MemberPaginationRequest;
-import com.typingpractice.typing_practice_be.member.dto.MemberResponseDto;
+import com.typingpractice.typing_practice_be.member.dto.*;
 import com.typingpractice.typing_practice_be.member.exception.NotAdminException;
 import com.typingpractice.typing_practice_be.member.service.AdminMemberService;
 import com.typingpractice.typing_practice_be.member.service.MemberService;
@@ -48,8 +46,40 @@ public class AdminMemberController {
   }
 
   @GetMapping("/admin/members/{memberId}")
-  public void findMemberById(@PathVariable Long memberId) {}
+  public ApiResponse<MemberResponseDto> findMemberById(@PathVariable Long memberId) {
+    validateAdmin();
+
+    Member member = adminMemberService.findMemberById(memberId);
+
+    return ApiResponse.ok(MemberResponseDto.from(member));
+  }
 
   @PatchMapping("/admin/members/{memberId}/role")
-  public void updateMemberRole(@PathVariable Long memberId) {}
+  public ApiResponse<MemberResponseDto> updateMemberRole(
+      @PathVariable Long memberId, @RequestBody UpdateMemberRoleRequest request) {
+    validateAdmin();
+
+    Member member = adminMemberService.updateRole(memberId, request.getRole());
+
+    return ApiResponse.ok(MemberResponseDto.from(member));
+  }
+
+  @PostMapping("/admin/members/{memberId}/ban")
+  public ApiResponse<MemberResponseDto> banMember(
+      @PathVariable Long memberId, @RequestBody BanMemberRequest request) {
+    validateAdmin();
+
+    Member member = adminMemberService.banMember(memberId, request);
+
+    return ApiResponse.ok(MemberResponseDto.from(member));
+  }
+
+  @PostMapping("/admin/members/{memberId}/unban")
+  public ApiResponse<MemberResponseDto> unbanMember(@PathVariable Long memberId) {
+    validateAdmin();
+
+    Member member = adminMemberService.unbanMember(memberId);
+
+    return ApiResponse.ok(MemberResponseDto.from(member));
+  }
 }
