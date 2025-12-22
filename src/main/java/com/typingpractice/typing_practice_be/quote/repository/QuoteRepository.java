@@ -47,7 +47,7 @@ public class QuoteRepository {
       jpql += " where q.type = :type";
     }
 
-    jpql += "order by :orderBy";
+    jpql += " order by q." + request.getOrderBy() + " " + request.getSortDirection();
 
     TypedQuery<Quote> query =
         em.createQuery(jpql, Quote.class).setFirstResult((page - 1) * size).setMaxResults(size + 1);
@@ -59,8 +59,6 @@ public class QuoteRepository {
     if (request.getType() != null) {
       query.setParameter("type", request.getType());
     }
-
-    query.setParameter("orderBy", request.getOrderBy());
 
     return query.getResultList();
   }
@@ -83,10 +81,34 @@ public class QuoteRepository {
     em.remove(quote);
   }
 
-  public List<Quote> findByMember(Member member) {
-    return em.createQuery(
-            "select q from Quote q join q.member m where m.id = :memberId", Quote.class)
-        .setParameter("memberId", member.getId())
-        .getResultList();
+  public List<Quote> findByMember(Member member, QuotePaginationRequest request) {
+    int page = request.getPage();
+    int size = request.getSize();
+
+    String jpql = "select q from Quote q join q.member m where m.id = :memberId";
+
+    if (request.getStatus() != null && request.getType() != null) {
+      jpql += " and q.status = :status and q.type = :type";
+    } else if (request.getStatus() != null) {
+      jpql += " and q.status = :status";
+    } else if (request.getType() != null) {
+      jpql += " and q.type = :type";
+    }
+
+    jpql += " order by q." + request.getOrderBy() + " " + request.getSortDirection();
+
+    TypedQuery<Quote> query =
+        em.createQuery(jpql, Quote.class).setFirstResult((page - 1) * size).setMaxResults(size + 1);
+    query.setParameter("memberId", member.getId());
+
+    if (request.getStatus() != null) {
+      query.setParameter("status", request.getStatus());
+    }
+
+    if (request.getType() != null) {
+      query.setParameter("type", request.getType());
+    }
+
+    return query.getResultList();
   }
 }

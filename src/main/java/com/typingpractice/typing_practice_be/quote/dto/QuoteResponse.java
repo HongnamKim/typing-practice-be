@@ -15,6 +15,7 @@ public class QuoteResponse {
   private String author;
   private QuoteType type;
   private QuoteStatus status;
+  private int reportCount;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
@@ -26,6 +27,7 @@ public class QuoteResponse {
     response.author = quote.getAuthor();
     response.type = quote.getType();
     response.status = quote.getStatus();
+    response.reportCount = quote.getReportCount();
     response.createdAt = quote.getCreatedAt();
     response.updatedAt = quote.getUpdatedAt();
 
