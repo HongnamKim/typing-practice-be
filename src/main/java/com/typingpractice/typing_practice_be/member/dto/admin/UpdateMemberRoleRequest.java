@@ -1,4 +1,4 @@
-package com.typingpractice.typing_practice_be.member.dto;
+package com.typingpractice.typing_practice_be.member.dto.admin;
 
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import jakarta.validation.constraints.NotNull;

@@ -5,10 +5,10 @@ import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 
 import java.time.LocalDateTime;
 
-public record MemberResponseDto(
+public record MemberResponse(
     Long id, String email, String nickname, MemberRole role, LocalDateTime createdAt) {
-  public static MemberResponseDto from(Member member) {
-    return new MemberResponseDto(
+  public static MemberResponse from(Member member) {
+    return new MemberResponse(
         member.getId(),
         member.getEmail(),
         member.getNickname(),

@@ -2,7 +2,7 @@ package com.typingpractice.typing_practice_be.member.service;
 
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.dto.CreateMemberDto;
-import com.typingpractice.typing_practice_be.member.dto.LoginDto;
+import com.typingpractice.typing_practice_be.member.dto.LoginRequest;
 import com.typingpractice.typing_practice_be.member.exception.DuplicateEmailException;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
@@ -22,18 +22,18 @@ public class MemberService {
   }
 
   @Transactional
-  public Member loginOrSignIn(LoginDto loginDto) {
-    Optional<Member> byEmail = memberRepository.findByEmail(loginDto.getEmail());
+  public Member loginOrSignIn(LoginRequest loginRequest) {
+    Optional<Member> byEmail = memberRepository.findByEmail(loginRequest.getEmail());
 
     if (byEmail.isPresent()) {
 
       return memberRepository
-          .login(loginDto.getEmail(), loginDto.getPassword())
+          .login(loginRequest.getEmail(), loginRequest.getPassword())
           .orElseThrow(MemberNotFoundException::new);
     } else {
 
       CreateMemberDto createMemberDto =
-          CreateMemberDto.create(loginDto.getEmail(), loginDto.getPassword(), "nickname");
+          CreateMemberDto.create(loginRequest.getEmail(), loginRequest.getPassword(), "nickname");
       return this.join(createMemberDto);
     }
   }

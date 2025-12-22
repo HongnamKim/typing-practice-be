@@ -3,7 +3,7 @@ package com.typingpractice.typing_practice_be.member.service;
 import static org.assertj.core.api.Assertions.*;
 
 import com.typingpractice.typing_practice_be.member.domain.Member;
-import com.typingpractice.typing_practice_be.member.dto.LoginDto;
+import com.typingpractice.typing_practice_be.member.dto.LoginRequest;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MockMemberRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -29,8 +29,8 @@ class MemberServiceTest {
   @Test
   void findMemberById() {
     // given
-    LoginDto loginDto = LoginDto.create("email", "password");
-    Member member = memberService.loginOrSignIn(loginDto);
+    LoginRequest loginRequest = LoginRequest.create("email", "password");
+    Member member = memberService.loginOrSignIn(loginRequest);
 
     // when
     Member findMember = memberService.findMemberById(member.getId());
@@ -59,11 +59,11 @@ class MemberServiceTest {
   @Test
   void loginOrSignIn() {
     // given
-    LoginDto loginDto = LoginDto.create("memberA", "A");
-    Member memberA = memberService.loginOrSignIn(loginDto); // 회원가입
+    LoginRequest loginRequest = LoginRequest.create("memberA", "A");
+    Member memberA = memberService.loginOrSignIn(loginRequest); // 회원가입
 
     // when
-    Member loginMember = memberService.loginOrSignIn(loginDto);
+    Member loginMember = memberService.loginOrSignIn(loginRequest);
 
     // then
     // assertThat(loginMember.getEmail()).isEqualTo(loginDto.getEmail());
@@ -75,8 +75,8 @@ class MemberServiceTest {
   @Test
   void updateNickname() {
     // given
-    LoginDto loginDto = LoginDto.create("memberA", "a");
-    Member memberA = memberService.loginOrSignIn(loginDto); // 회원가입
+    LoginRequest loginRequest = LoginRequest.create("memberA", "a");
+    Member memberA = memberService.loginOrSignIn(loginRequest); // 회원가입
 
     // when
     memberService.updateNickname(memberA.getId(), "new_nickname");
@@ -89,8 +89,8 @@ class MemberServiceTest {
   @Test
   void deleteMember() {
     // given
-    LoginDto loginDto = LoginDto.create("memberA", "a");
-    Member memberA = memberService.loginOrSignIn(loginDto);
+    LoginRequest loginRequest = LoginRequest.create("memberA", "a");
+    Member memberA = memberService.loginOrSignIn(loginRequest);
 
     // when
     memberService.deleteMember(memberA.getId());

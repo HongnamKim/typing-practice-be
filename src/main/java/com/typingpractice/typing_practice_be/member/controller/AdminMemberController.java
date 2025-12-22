@@ -4,6 +4,10 @@ import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.dto.*;
+import com.typingpractice.typing_practice_be.member.dto.admin.BanMemberRequest;
+import com.typingpractice.typing_practice_be.member.dto.admin.MemberPaginationRequest;
+import com.typingpractice.typing_practice_be.member.dto.admin.MemberPaginationResponse;
+import com.typingpractice.typing_practice_be.member.dto.admin.UpdateMemberRoleRequest;
 import com.typingpractice.typing_practice_be.member.exception.NotAdminException;
 import com.typingpractice.typing_practice_be.member.service.AdminMemberService;
 import com.typingpractice.typing_practice_be.member.service.MemberService;
@@ -30,7 +34,7 @@ public class AdminMemberController {
   }
 
   @GetMapping("/admin/members")
-  public ApiResponse<MemberListResponse> getMemberList(
+  public ApiResponse<MemberPaginationResponse> getMemberList(
       @ModelAttribute @Valid MemberPaginationRequest request) {
     validateAdmin();
 
@@ -38,48 +42,45 @@ public class AdminMemberController {
 
     boolean hasNext = allMembers.size() > request.getSize();
 
-    List<MemberResponseDto> data =
-        allMembers.stream().limit(request.getSize()).map(MemberResponseDto::from).toList();
-
     return ApiResponse.ok(
-        new MemberListResponse(data, request.getPage(), request.getSize(), hasNext));
+        MemberPaginationResponse.from(allMembers, request.getPage(), request.getSize(), hasNext));
   }
 
   @GetMapping("/admin/members/{memberId}")
-  public ApiResponse<MemberResponseDto> findMemberById(@PathVariable Long memberId) {
+  public ApiResponse<MemberResponse> findMemberById(@PathVariable Long memberId) {
     validateAdmin();
 
     Member member = adminMemberService.findMemberById(memberId);
 
-    return ApiResponse.ok(MemberResponseDto.from(member));
+    return ApiResponse.ok(MemberResponse.from(member));
   }
 
   @PatchMapping("/admin/members/{memberId}/role")
-  public ApiResponse<MemberResponseDto> updateMemberRole(
+  public ApiResponse<MemberResponse> updateMemberRole(
       @PathVariable Long memberId, @RequestBody UpdateMemberRoleRequest request) {
     validateAdmin();
 
     Member member = adminMemberService.updateRole(memberId, request.getRole());
 
-    return ApiResponse.ok(MemberResponseDto.from(member));
+    return ApiResponse.ok(MemberResponse.from(member));
   }
 
   @PostMapping("/admin/members/{memberId}/ban")
-  public ApiResponse<MemberResponseDto> banMember(
+  public ApiResponse<MemberResponse> banMember(
       @PathVariable Long memberId, @RequestBody BanMemberRequest request) {
     validateAdmin();
 
     Member member = adminMemberService.banMember(memberId, request);
 
-    return ApiResponse.ok(MemberResponseDto.from(member));
+    return ApiResponse.ok(MemberResponse.from(member));
   }
 
   @PostMapping("/admin/members/{memberId}/unban")
-  public ApiResponse<MemberResponseDto> unbanMember(@PathVariable Long memberId) {
+  public ApiResponse<MemberResponse> unbanMember(@PathVariable Long memberId) {
     validateAdmin();
 
     Member member = adminMemberService.unbanMember(memberId);
 
-    return ApiResponse.ok(MemberResponseDto.from(member));
+    return ApiResponse.ok(MemberResponse.from(member));
   }
 }

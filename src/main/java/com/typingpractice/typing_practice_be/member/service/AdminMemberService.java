@@ -2,8 +2,8 @@ package com.typingpractice.typing_practice_be.member.service;
 
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
-import com.typingpractice.typing_practice_be.member.dto.BanMemberRequest;
-import com.typingpractice.typing_practice_be.member.dto.MemberPaginationRequest;
+import com.typingpractice.typing_practice_be.member.dto.admin.BanMemberRequest;
+import com.typingpractice.typing_practice_be.member.dto.admin.MemberPaginationRequest;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotProcessableException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;

@@ -1,7 +1,7 @@
 package com.typingpractice.typing_practice_be.member.repository;
 
 import com.typingpractice.typing_practice_be.member.domain.Member;
-import com.typingpractice.typing_practice_be.member.dto.MemberPaginationRequest;
+import com.typingpractice.typing_practice_be.member.dto.admin.MemberPaginationRequest;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import java.util.List;
