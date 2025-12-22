@@ -1,5 +1,6 @@
-package com.typingpractice.typing_practice_be.member.dto;
+package com.typingpractice.typing_practice_be.common.dto;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
@@ -8,9 +9,8 @@ import java.util.List;
 
 @Getter
 @ToString
-@AllArgsConstructor
-public class MemberListResponse {
-  private List<MemberResponseDto> content;
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+public abstract class PaginationResponse {
   private int page;
   private int size;
   private boolean hasNext;

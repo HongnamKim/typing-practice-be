@@ -5,8 +5,16 @@ import lombok.Getter;
 import org.hibernate.validator.constraints.Length;
 
 @Getter
-public class UpdateNicknameDto {
+public class UpdateNicknameRequest {
   @NotNull
   @Length(min = 2, max = 10)
   private String nickname;
+
+  public static UpdateNicknameRequest create(String nickname) {
+    UpdateNicknameRequest request = new UpdateNicknameRequest();
+
+    request.nickname = nickname;
+
+    return request;
+  }
 }

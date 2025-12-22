@@ -4,7 +4,9 @@ import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
+import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationRequest;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -31,8 +33,36 @@ public class QuoteRepository {
     // return Optional.ofNullable(em.find(Quote.class, quoteId));
   }
 
-  public List<Quote> findAll() {
-    return em.createQuery("select q from Quote q", Quote.class).getResultList();
+  public List<Quote> findAll(QuotePaginationRequest request) {
+    int page = request.getPage();
+    int size = request.getSize();
+
+    String jpql = "select q from Quote q";
+
+    if (request.getStatus() != null && request.getType() != null) {
+      jpql += " where q.status = :status and q.type = :type";
+    } else if (request.getStatus() != null) {
+      jpql += " where q.status = :status";
+    } else if (request.getType() != null) {
+      jpql += " where q.type = :type";
+    }
+
+    jpql += "order by :orderBy";
+
+    TypedQuery<Quote> query =
+        em.createQuery(jpql, Quote.class).setFirstResult((page - 1) * size).setMaxResults(size + 1);
+
+    if (request.getStatus() != null) {
+      query.setParameter("status", request.getStatus());
+    }
+
+    if (request.getType() != null) {
+      query.setParameter("type", request.getType());
+    }
+
+    query.setParameter("orderBy", request.getOrderBy());
+
+    return query.getResultList();
   }
 
   public List<Quote> findPublicQuotes() {

@@ -3,11 +3,14 @@ package com.typingpractice.typing_practice_be.quote.service;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
+import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteUpdateRequest;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotProcessableException;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
 import java.util.List;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -89,5 +92,9 @@ public class AdminQuoteService {
     quote.updateStatus(QuoteStatus.ACTIVE);
 
     return quote;
+  }
+
+  public List<Quote> findQuotes(@Valid QuotePaginationRequest request) {
+    return quoteRepository.findAll(request);
   }
 }

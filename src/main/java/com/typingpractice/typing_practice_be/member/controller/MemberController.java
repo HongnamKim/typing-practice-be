@@ -3,10 +3,10 @@ package com.typingpractice.typing_practice_be.member.controller;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.jwt.JwtTokenProvider;
 import com.typingpractice.typing_practice_be.member.domain.Member;
-import com.typingpractice.typing_practice_be.member.dto.LoginDto;
-import com.typingpractice.typing_practice_be.member.dto.LoginResponseDto;
-import com.typingpractice.typing_practice_be.member.dto.MemberResponseDto;
-import com.typingpractice.typing_practice_be.member.dto.UpdateNicknameDto;
+import com.typingpractice.typing_practice_be.member.dto.LoginRequest;
+import com.typingpractice.typing_practice_be.member.dto.LoginResponse;
+import com.typingpractice.typing_practice_be.member.dto.MemberResponse;
+import com.typingpractice.typing_practice_be.member.dto.UpdateNicknameRequest;
 import com.typingpractice.typing_practice_be.member.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,30 +23,30 @@ public class MemberController {
 
   @PostMapping("/login")
   @ResponseStatus(HttpStatus.CREATED)
-  public ApiResponse<LoginResponseDto> login(@Valid @RequestBody LoginDto loginDto) {
-    Member member = this.memberService.loginOrSignIn(loginDto);
+  public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+    Member member = this.memberService.loginOrSignIn(loginRequest);
 
     String token = jwtTokenProvider.createToken(member.getId(), member.getEmail());
 
-    return ApiResponse.ok(LoginResponseDto.of(member, token));
+    return ApiResponse.ok(LoginResponse.of(member, token));
   }
 
   @GetMapping("/me")
-  public ApiResponse<MemberResponseDto> findMember() {
+  public ApiResponse<MemberResponse> findMember() {
     Long memberId = getAuthenticatedMemberId();
 
     Member member = memberService.findMemberById(memberId);
 
-    return ApiResponse.ok(MemberResponseDto.from(member));
+    return ApiResponse.ok(MemberResponse.from(member));
   }
 
   @PatchMapping("/me")
-  public ApiResponse<MemberResponseDto> updateNickname(
-      @RequestBody UpdateNicknameDto updateNicknameDto) {
+  public ApiResponse<MemberResponse> updateNickname(
+      @RequestBody UpdateNicknameRequest updateNicknameRequest) {
     Long memberId = getAuthenticatedMemberId();
-    Member member = memberService.updateNickname(memberId, updateNicknameDto.getNickname());
+    Member member = memberService.updateNickname(memberId, updateNicknameRequest.getNickname());
 
-    return ApiResponse.ok(MemberResponseDto.from(member));
+    return ApiResponse.ok(MemberResponse.from(member));
   }
 
   @DeleteMapping("/me")

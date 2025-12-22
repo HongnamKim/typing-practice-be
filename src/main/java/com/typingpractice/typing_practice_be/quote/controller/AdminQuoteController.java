@@ -6,10 +6,14 @@ import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.exception.NotAdminException;
 import com.typingpractice.typing_practice_be.member.service.MemberService;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
+import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationRequest;
+import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationResponse;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteUpdateRequest;
 import com.typingpractice.typing_practice_be.quote.service.AdminQuoteService;
 import java.util.List;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +31,18 @@ public class AdminQuoteController {
     if (member.getRole() != MemberRole.ADMIN) {
       throw new NotAdminException();
     }
+  }
+
+  @GetMapping("/admin/quotes")
+  public ApiResponse<QuotePaginationResponse> getQuotes(
+      @ModelAttribute @Valid QuotePaginationRequest request) {
+    validateAdmin();
+
+    List<Quote> quotes = adminQuoteService.findQuotes(request);
+
+    return ApiResponse.ok(
+        QuotePaginationResponse.from(
+            quotes, request.getPage(), request.getSize(), quotes.size() > request.getSize()));
   }
 
   // 승인 대기 목록 조회
