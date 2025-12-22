@@ -7,6 +7,7 @@ import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteCreateRequest;
+import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteUpdateRequest;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotOwnedException;
@@ -69,10 +70,10 @@ public class QuoteService {
     quoteRepository.deleteQuote(quote);
   }
 
-  public List<Quote> getMyQuotes(Long memberId) {
+  public List<Quote> getMyQuotes(Long memberId, QuotePaginationRequest request) {
     Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-    return quoteRepository.findByMember(member);
+    return quoteRepository.findByMember(member, request);
   }
 
   private Quote findMyQuoteById(Long memberId, Long quoteId) {

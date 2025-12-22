@@ -2,9 +2,7 @@ package com.typingpractice.typing_practice_be.quote.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
-import com.typingpractice.typing_practice_be.quote.dto.QuoteCreateRequest;
-import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
-import com.typingpractice.typing_practice_be.quote.dto.QuoteUpdateRequest;
+import com.typingpractice.typing_practice_be.quote.dto.*;
 import com.typingpractice.typing_practice_be.quote.exception.EmptyUpdateRequestException;
 import com.typingpractice.typing_practice_be.quote.service.QuoteService;
 import jakarta.validation.Valid;
@@ -43,12 +41,15 @@ public class QuoteController {
 
   // 내 문장 조회
   @GetMapping("/quotes/my")
-  public ApiResponse<List<QuoteResponse>> getMyQuotes() {
-    Long memberId = getMemberId();
+  public ApiResponse<QuotePaginationResponse> getMyQuotes(
+      @ModelAttribute @Valid QuotePaginationRequest request) {
+    Long memberId = 2L; // getMemberId();
 
-    List<Quote> myQuotes = quoteService.getMyQuotes(memberId);
+    List<Quote> myQuotes = quoteService.getMyQuotes(memberId, request);
 
-    return ApiResponse.ok(myQuotes.stream().map(QuoteResponse::from).toList());
+    return ApiResponse.ok(
+        QuotePaginationResponse.from(
+            myQuotes, request.getPage(), request.getSize(), myQuotes.size() > request.getSize()));
   }
 
   // 상세 조회
