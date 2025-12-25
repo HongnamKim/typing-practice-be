@@ -10,6 +10,7 @@ import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundExcept
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import com.typingpractice.typing_practice_be.report.dto.ReportCreateRequest;
+import com.typingpractice.typing_practice_be.report.dto.ReportPaginationRequest;
 import com.typingpractice.typing_practice_be.report.exception.DuplicateReportException;
 import com.typingpractice.typing_practice_be.report.exception.QuoteNotReportableException;
 import com.typingpractice.typing_practice_be.report.exception.ReportNotFoundException;
@@ -59,10 +60,10 @@ public class ReportService {
 
   // 내 신고 내역 조회
   // 페이징 추가 필요
-  public List<Report> findMyReports(Long memberId) {
+  public List<Report> findMyReports(Long memberId, ReportPaginationRequest request) {
     Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-    return reportRepository.findMyReports(member);
+    return reportRepository.findMyReports(member, request);
   }
 
   // 본인 신고 내역 삭제(철회 or 처리된 신고 삭제)

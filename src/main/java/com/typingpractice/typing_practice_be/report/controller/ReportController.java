@@ -3,11 +3,12 @@ package com.typingpractice.typing_practice_be.report.controller;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import com.typingpractice.typing_practice_be.report.dto.ReportCreateRequest;
+import com.typingpractice.typing_practice_be.report.dto.ReportPaginationRequest;
+import com.typingpractice.typing_practice_be.report.dto.ReportPaginationResponse;
 import com.typingpractice.typing_practice_be.report.dto.ReportResponse;
 import com.typingpractice.typing_practice_be.report.service.ReportService;
-import java.util.List;
-
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -31,12 +32,15 @@ public class ReportController {
   }
 
   @GetMapping("/reports/my")
-  public ApiResponse<List<ReportResponse>> getMyReports() {
+  public ApiResponse<ReportPaginationResponse> getMyReports(
+      @ModelAttribute @Valid ReportPaginationRequest request) {
     Long memberId = getMemberId();
 
-    List<Report> myReports = reportService.findMyReports(memberId);
+    List<Report> myReports = reportService.findMyReports(memberId, request);
 
-    return ApiResponse.ok(myReports.stream().map(ReportResponse::from).toList());
+    return ApiResponse.ok(
+        ReportPaginationResponse.from(
+            myReports, request.getPage(), request.getSize(), myReports.size() > request.getSize()));
   }
 
   @DeleteMapping("/reports/{reportId}")

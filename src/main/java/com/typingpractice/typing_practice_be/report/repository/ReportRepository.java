@@ -4,15 +4,14 @@ import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import com.typingpractice.typing_practice_be.report.domain.ReportStatus;
-import com.typingpractice.typing_practice_be.report.dto.ReportRequest;
+import com.typingpractice.typing_practice_be.report.dto.ReportPaginationRequest;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
@@ -25,21 +24,33 @@ public class ReportRepository {
     return report;
   }
 
-  public List<Report> findAll(ReportRequest request) {
-    //    return em.createQuery("select r from Report r where r.status = :status", Report.class)
-    //        .setParameter("status", status)
-    //        .getResultList();
+  public List<Report> findAll(ReportPaginationRequest request) {
+    int page = request.getPage();
+    int size = request.getSize();
 
-    String jpql = "select r from Report r";
+    String jpql = "select r from Report r join fetch r.member m";
 
-    if (request.getStatus() != null) {
+    if (request.getStatus() != null && request.getMemberId() != null) {
+      jpql += " where r.status = :status and m.id = :memberId";
+    } else if (request.getStatus() == null && request.getMemberId() != null) {
+      jpql += " where m.id = :memberId";
+    } else if (request.getStatus() != null) {
       jpql += " where r.status = :status";
     }
 
-    TypedQuery<Report> query = em.createQuery(jpql, Report.class);
+    jpql += " order by r." + request.getOrderBy() + " " + request.getSortDirection();
+
+    TypedQuery<Report> query =
+        em.createQuery(jpql, Report.class)
+            .setFirstResult((page - 1) * size)
+            .setMaxResults(size + 1);
 
     if (request.getStatus() != null) {
       query.setParameter("status", request.getStatus());
+    }
+
+    if (request.getMemberId() != null) {
+      query.setParameter("memberId", request.getMemberId());
     }
 
     return query.getResultList();
@@ -49,10 +60,29 @@ public class ReportRepository {
     return Optional.ofNullable(em.find(Report.class, reportId));
   }
 
-  public List<Report> findMyReports(Member member) {
-    return em.createQuery("select r from Report r where r.member.id = :memberId", Report.class)
-        .setParameter("memberId", member.getId())
-        .getResultList();
+  public List<Report> findMyReports(Member member, ReportPaginationRequest request) {
+    int page = request.getPage();
+    int size = request.getSize();
+
+    String jpql = "select r from Report r where r.member.id = :memberId";
+
+    if (request.getStatus() != null) {
+      jpql += " and r.status = :status";
+    }
+
+    jpql += " order by r." + request.getOrderBy() + " " + request.getSortDirection();
+
+    TypedQuery<Report> query = em.createQuery(jpql, Report.class);
+
+    query.setFirstResult((page - 1) * size).setMaxResults(size + 1);
+
+    query.setParameter("memberId", member.getId());
+
+    if (request.getStatus() != null) {
+      query.setParameter("status", request.getStatus());
+    }
+
+    return query.getResultList();
   }
 
   public List<Report> findByQuote(Quote quote) {
