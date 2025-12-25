@@ -6,9 +6,7 @@ import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.exception.NotAdminException;
 import com.typingpractice.typing_practice_be.member.service.MemberService;
 import com.typingpractice.typing_practice_be.report.domain.Report;
-import com.typingpractice.typing_practice_be.report.dto.ReportProcessRequest;
-import com.typingpractice.typing_practice_be.report.dto.ReportRequest;
-import com.typingpractice.typing_practice_be.report.dto.ReportResponse;
+import com.typingpractice.typing_practice_be.report.dto.*;
 import com.typingpractice.typing_practice_be.report.service.AdminReportService;
 import java.util.List;
 
@@ -33,13 +31,15 @@ public class AdminReportController {
   }
 
   @GetMapping("/admin/reports")
-  public ApiResponse<List<ReportResponse>> getReports(
-      @ModelAttribute @Valid ReportRequest request) {
+  public ApiResponse<AdminReportPaginationResponse> getReports(
+      @ModelAttribute @Valid ReportPaginationRequest request) {
     validateAdmin();
 
     List<Report> reports = adminReportService.findReports(request);
 
-    return ApiResponse.ok(reports.stream().map(ReportResponse::from).toList());
+    return ApiResponse.ok(
+        AdminReportPaginationResponse.from(
+            reports, request.getPage(), request.getSize(), reports.size() > request.getSize()));
   }
 
   @PostMapping("/admin/reports/{quoteId}/process")

@@ -1,0 +1,26 @@
+package com.typingpractice.typing_practice_be.report.dto;
+
+import com.typingpractice.typing_practice_be.common.dto.PaginationResponse;
+import com.typingpractice.typing_practice_be.report.domain.Report;
+import java.util.List;
+import lombok.Getter;
+import lombok.ToString;
+
+@Getter
+@ToString
+public class ReportPaginationResponse extends PaginationResponse {
+  private List<ReportResponse> content;
+
+  protected ReportPaginationResponse(int page, int size, boolean hasNext) {
+    super(page, size, hasNext);
+  }
+
+  public static ReportPaginationResponse from(
+      List<Report> reports, int page, int size, boolean hasNext) {
+    ReportPaginationResponse response = new ReportPaginationResponse(page, size, hasNext);
+
+    response.content = reports.stream().limit(size).map(ReportResponse::from).toList();
+
+    return response;
+  }
+}

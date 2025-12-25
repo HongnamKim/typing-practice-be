@@ -4,5 +4,6 @@ public enum QuoteOrderBy {
   id,
   status,
   type,
-  reportCount
+  reportCount,
+  createdAt
 }

@@ -25,6 +25,11 @@ public class QuoteService {
   private final QuoteRepository quoteRepository;
   private final MemberRepository memberRepository;
 
+  /**
+   * 추후 랜덤 조회로 변경할 예정
+   *
+   * @return List<Quote>
+   */
   public List<Quote> findPublicQuotes() {
     List<Quote> all = quoteRepository.findPublicQuotes();
 
