@@ -3,6 +3,8 @@ package com.typingpractice.typing_practice_be.member.domain;
 import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import jakarta.persistence.*;
+
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -29,6 +31,9 @@ public class Member extends BaseEntity {
 
   private String banReason = "";
 
+  private int reportCount = 0;
+  private LocalDate lastReportDate = LocalDate.now();
+
   @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)
   private List<Report> reports = new ArrayList<>();
 
@@ -38,6 +43,8 @@ public class Member extends BaseEntity {
     member.password = password;
     member.nickname = nickname;
     member.role = MemberRole.USER;
+    member.reportCount = 0;
+    member.lastReportDate = LocalDate.now();
 
     return member;
   }
@@ -48,6 +55,25 @@ public class Member extends BaseEntity {
 
   public void updateRole(MemberRole role) {
     this.role = role;
+  }
+
+  public boolean canReportToday(int limit) {
+    // 날짜 변경됨.
+    if (LocalDate.now().isAfter(lastReportDate)) {
+      return true;
+    }
+
+    return this.reportCount < limit;
+  }
+
+  public void incrementReportCount() {
+    LocalDate today = LocalDate.now();
+    if (today.isAfter(this.lastReportDate)) {
+      this.reportCount = 0;
+      this.lastReportDate = today;
+    }
+
+    this.reportCount++;
   }
 
   public void ban(String reason) {
