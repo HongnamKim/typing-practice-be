@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.report.service;
 
+import com.typingpractice.typing_practice_be.dailylimit.DailyLimitService;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
@@ -31,6 +32,7 @@ public class ReportService {
   private final QuoteRepository quoteRepository;
 
   private final ReportRepository reportRepository;
+  private final DailyLimitService dailyLimitService;
 
   // 신고 생성
   @Transactional
@@ -38,18 +40,29 @@ public class ReportService {
     Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
     Quote quote = quoteRepository.findById(quoteId).orElseThrow(QuoteNotFoundException::new);
 
+    // 신고 가능 문장 검증
     if (quote.getStatus() != QuoteStatus.ACTIVE || quote.getType() != QuoteType.PUBLIC) {
       throw new QuoteNotReportableException();
     }
 
+    // 신고 횟수 가능 검증
+    if (!dailyLimitService.canReport(memberId)) {
+      throw new IllegalStateException("하루 최대 신고 횟수 초과");
+    }
+
+    // 중복 신고 검증
     if (reportRepository.existsByQuoteAndMember(quote, member)) {
       throw new DuplicateReportException();
     }
 
+    // 신고 생성
     Report report = Report.create(member, quote, request.getReason(), request.getDetail());
 
     reportRepository.save(report);
+
+    // 문장, 회원 신고 횟수 증가
     quote.increaseReportCount();
+    dailyLimitService.incrementReportCount(memberId);
 
     if (quote.shouldBeHidden()) {
       quote.updateStatus(QuoteStatus.HIDDEN);
