@@ -34,6 +34,9 @@ public class Member extends BaseEntity {
   private int reportCount = 0;
   private LocalDate lastReportDate = LocalDate.now();
 
+  private int dailyQuoteUploadCount = 0;
+  private LocalDate lastQuoteUploadDate = LocalDate.now();
+
   @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)
   private List<Report> reports = new ArrayList<>();
 
@@ -43,8 +46,11 @@ public class Member extends BaseEntity {
     member.password = password;
     member.nickname = nickname;
     member.role = MemberRole.USER;
+
     member.reportCount = 0;
     member.lastReportDate = LocalDate.now();
+    member.dailyQuoteUploadCount = 0;
+    member.lastQuoteUploadDate = LocalDate.now();
 
     return member;
   }
@@ -66,6 +72,14 @@ public class Member extends BaseEntity {
     return this.reportCount < limit;
   }
 
+  public boolean canUploadQuote(int limit) {
+    if (LocalDate.now().isAfter(lastQuoteUploadDate)) {
+      return true;
+    }
+
+    return this.dailyQuoteUploadCount < limit;
+  }
+
   public void incrementReportCount() {
     LocalDate today = LocalDate.now();
     if (today.isAfter(this.lastReportDate)) {
@@ -74,6 +88,16 @@ public class Member extends BaseEntity {
     }
 
     this.reportCount++;
+  }
+
+  public void incrementQuoteUploadCount() {
+    LocalDate today = LocalDate.now();
+    if (today.isAfter(this.lastQuoteUploadDate)) {
+      this.dailyQuoteUploadCount = 0;
+      this.lastQuoteUploadDate = today;
+    }
+
+    this.dailyQuoteUploadCount++;
   }
 
   public void ban(String reason) {

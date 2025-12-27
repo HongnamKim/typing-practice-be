@@ -43,7 +43,7 @@ public class QuoteController {
   @GetMapping("/quotes/my")
   public ApiResponse<QuotePaginationResponse> getMyQuotes(
       @ModelAttribute @Valid QuotePaginationRequest request) {
-    Long memberId = 2L; // getMemberId();
+    Long memberId = getMemberId();
 
     List<Quote> myQuotes = quoteService.getMyQuotes(memberId, request);
 

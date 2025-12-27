@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.report.service;
 
 import com.typingpractice.typing_practice_be.dailylimit.DailyLimitService;
+import com.typingpractice.typing_practice_be.dailylimit.exception.DailyReportLimitException;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
@@ -47,7 +48,7 @@ public class ReportService {
 
     // 신고 횟수 가능 검증
     if (!dailyLimitService.canReport(memberId)) {
-      throw new IllegalStateException("하루 최대 신고 횟수 초과");
+      throw new DailyReportLimitException();
     }
 
     // 중복 신고 검증

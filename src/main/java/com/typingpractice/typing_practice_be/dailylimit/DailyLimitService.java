@@ -4,4 +4,8 @@ public interface DailyLimitService {
   boolean canReport(Long memberId);
 
   void incrementReportCount(Long memberId);
+
+  boolean canUploadQuote(Long memberId);
+
+  void incrementQuoteUploadCount(Long memberId);
 }

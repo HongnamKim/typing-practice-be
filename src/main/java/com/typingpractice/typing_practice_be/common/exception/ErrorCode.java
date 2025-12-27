@@ -21,7 +21,10 @@ public enum ErrorCode {
   REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "신고 내역을 찾을 수 없습니다."),
   DUPLICATE_REPORT(HttpStatus.BAD_REQUEST, "중복된 신고 내역이 존재합니다."),
   QUOTE_NOT_REPORTABLE(HttpStatus.BAD_REQUEST, "신고 불가능한 문장입니다."),
-  REPORT_NOT_PROCESSABLE(HttpStatus.BAD_REQUEST, "처리할 수 없는 신고 내역입니다.");
+  REPORT_NOT_PROCESSABLE(HttpStatus.BAD_REQUEST, "처리할 수 없는 신고 내역입니다."),
+
+  DAILY_REPORT_LIMIT(HttpStatus.BAD_REQUEST, "하루 신고 제한 횟수에 도달했습니다."),
+  DAILY_QUOTE_UPLOAD_LIMIT(HttpStatus.BAD_REQUEST, "하루 업로드 제한 횟수에 도달했습니다.");
 
   private final HttpStatus status;
   private final String message;
