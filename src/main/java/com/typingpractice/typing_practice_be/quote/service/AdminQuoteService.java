@@ -8,9 +8,8 @@ import com.typingpractice.typing_practice_be.quote.dto.QuoteUpdateRequest;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotProcessableException;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
-import java.util.List;
-
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +37,7 @@ public class AdminQuoteService {
     Quote quote = findQuoteById(quoteId);
 
     if (quote.getStatus() != QuoteStatus.PENDING || quote.getType() != QuoteType.PUBLIC) {
-      throw new QuoteNotProcessableException(); // IllegalStateException("공개 신청한 문장이 아닙니다.");
+      throw new QuoteNotProcessableException();
     }
 
     quote.approvePublish();

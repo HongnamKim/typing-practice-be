@@ -1,5 +1,7 @@
 package com.typingpractice.typing_practice_be.quote.service;
 
+import com.typingpractice.typing_practice_be.dailylimit.DailyLimitService;
+import com.typingpractice.typing_practice_be.dailylimit.exception.DailyQuoteUploadLimitException;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
@@ -25,6 +27,8 @@ public class QuoteService {
   private final QuoteRepository quoteRepository;
   private final MemberRepository memberRepository;
 
+  private final DailyLimitService dailyLimitService;
+
   /**
    * 추후 랜덤 조회로 변경할 예정
    *
@@ -43,10 +47,16 @@ public class QuoteService {
   @Transactional
   public Quote create(Long memberId, QuoteCreateRequest request) {
     Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+
+    if (!dailyLimitService.canUploadQuote(memberId)) {
+      throw new DailyQuoteUploadLimitException();
+    }
+
     Quote quote =
         Quote.create(member, request.getSentence(), request.getAuthor(), request.getType());
 
     quoteRepository.save(quote);
+    dailyLimitService.incrementQuoteUploadCount(memberId);
 
     return quote;
   }
