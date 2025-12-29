@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.report.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
+import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import com.typingpractice.typing_practice_be.report.dto.ReportCreateRequest;
 import com.typingpractice.typing_practice_be.report.dto.ReportPaginationRequest;
@@ -28,7 +29,9 @@ public class ReportController {
 
     Report report = reportService.createReport(memberId, request.getQuoteId(), request);
 
-    return ApiResponse.ok(ReportResponse.from(report));
+    QuoteResponse quote = QuoteResponse.from(report.getQuote());
+
+    return ApiResponse.ok(ReportResponse.from(report, quote));
   }
 
   @GetMapping("/reports/my")

@@ -29,6 +29,8 @@ public class Report extends BaseEntity {
 
   private String detail; // 상세 사유
 
+  private boolean quoteDeleted = false;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "quote_id")
   private Quote quote;
@@ -46,10 +48,12 @@ public class Report extends BaseEntity {
     report.quote = quote;
     report.member = member;
 
+    report.quoteDeleted = false;
+
     return report;
   }
 
-  public void updateStatus(ReportStatus status) {
+  /*public void updateStatus(ReportStatus status) {
     this.status = status;
-  }
+  }*/
 }

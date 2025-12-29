@@ -5,19 +5,30 @@ import com.typingpractice.typing_practice_be.common.dto.PaginationRequest;
 import com.typingpractice.typing_practice_be.report.domain.ReportOrderBy;
 import com.typingpractice.typing_practice_be.report.domain.ReportStatus;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 
 @Getter
-@Setter
 @ToString(callSuper = true)
 public class ReportPaginationRequest extends PaginationRequest {
 
-  private Long memberId;
-  private ReportStatus status;
-  private ReportOrderBy orderBy = ReportOrderBy.id;
+  private final Long memberId;
+  private final ReportStatus status;
+  private final ReportOrderBy orderBy;
 
-  protected ReportPaginationRequest(int page, int size, SortDirection sortDirection) {
+  public ReportPaginationRequest(
+      Integer page,
+      Integer size,
+      SortDirection sortDirection,
+      ReportStatus status,
+      ReportOrderBy orderBy,
+      Long memberId) {
+    super(page, size, sortDirection);
+    this.status = status;
+    this.orderBy = orderBy != null ? orderBy : ReportOrderBy.id;
+    this.memberId = memberId;
+  }
+
+  /*protected ReportPaginationRequest(int page, int size, SortDirection sortDirection) {
     super(page, size, sortDirection);
   }
 
@@ -32,8 +43,8 @@ public class ReportPaginationRequest extends PaginationRequest {
 
     request.status = status;
     request.memberId = memberId;
-    request.orderBy = orderBy;
+    request.orderBy = orderBy != null ? orderBy : ReportOrderBy.id;
 
     return request;
-  }
+  }*/
 }

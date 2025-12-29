@@ -2,22 +2,31 @@ package com.typingpractice.typing_practice_be.member.dto.admin;
 
 import com.typingpractice.typing_practice_be.common.domain.SortDirection;
 import com.typingpractice.typing_practice_be.common.dto.PaginationRequest;
-import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.domain.MemberOrderBy;
+import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 
 @Getter
-@Setter
 @ToString(callSuper = true)
 public class MemberPaginationRequest extends PaginationRequest {
 
-  private MemberRole role;
+  private final MemberRole role;
 
-  private MemberOrderBy orderBy = MemberOrderBy.id;
+  private final MemberOrderBy orderBy;
 
-  protected MemberPaginationRequest(int page, int size, SortDirection sortDirection) {
+  public MemberPaginationRequest(
+      Integer page,
+      Integer size,
+      SortDirection sortDirection,
+      MemberRole role,
+      MemberOrderBy orderBy) {
+    super(page, size, sortDirection);
+    this.role = role;
+    this.orderBy = orderBy != null ? orderBy : MemberOrderBy.id;
+  }
+
+  /*  protected MemberPaginationRequest(int page, int size, SortDirection sortDirection) {
     super(page, size, sortDirection);
   }
 
@@ -33,5 +42,5 @@ public class MemberPaginationRequest extends PaginationRequest {
     request.orderBy = orderBy;
 
     return request;
-  }
+  }*/
 }
