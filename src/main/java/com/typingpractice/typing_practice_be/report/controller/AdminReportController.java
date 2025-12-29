@@ -37,6 +37,8 @@ public class AdminReportController {
 
     List<Report> reports = adminReportService.findReports(request);
 
+    System.out.println("request = " + request);
+
     return ApiResponse.ok(
         AdminReportPaginationResponse.from(
             reports, request.getPage(), request.getSize(), reports.size() > request.getSize()));

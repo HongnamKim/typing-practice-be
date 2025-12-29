@@ -2,10 +2,7 @@ package com.typingpractice.typing_practice_be.quote.domain;
 
 import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
 import com.typingpractice.typing_practice_be.member.domain.Member;
-import com.typingpractice.typing_practice_be.report.domain.Report;
 import jakarta.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,11 +33,11 @@ public class Quote extends BaseEntity {
   private int reportCount;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "member_id", nullable = true)
+  @JoinColumn(name = "member_id")
   private Member member;
 
-  @OneToMany(mappedBy = "quote", cascade = CascadeType.REMOVE)
-  private List<Report> reports = new ArrayList<>();
+  //  @OneToMany(mappedBy = "quote", cascade = CascadeType.REMOVE)
+  //  private List<Report> reports = new ArrayList<>();
 
   public static final String DEFAULT_AUTHOR = "작자 미상";
   public static final int HIDDEN_THRESHOLD = 5; // 자동 숨김 기준값
@@ -77,13 +74,13 @@ public class Quote extends BaseEntity {
     }
   }
 
-  public void updateSentence(String sentence) {
+  /*public void updateSentence(String sentence) {
     this.sentence = sentence;
-  }
+  }*/
 
-  public void updateAuthor(String author) {
+  /*public void updateAuthor(String author) {
     this.author = author;
-  }
+  }*/
 
   public void updateType(QuoteType quoteType) {
     this.type = quoteType;

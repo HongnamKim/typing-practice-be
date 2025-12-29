@@ -42,12 +42,15 @@ public class AdminReportService {
     if (request.getSentence() == null && request.getAuthor() == null) {
       quoteRepository.deleteQuote(targetQuote);
 
+      // 신고 내역 처리
+      reportRepository.processReportByQuote(targetQuote, true);
     } else {
       // DTO 에 값이 있으면 수정
       targetQuote.update(request.getSentence(), request.getAuthor());
       targetQuote.resetReportCount();
 
-      reportRepository.processReportByQuote(targetQuote);
+      // 신고 내역 처리
+      reportRepository.processReportByQuote(targetQuote, false);
     }
   }
 

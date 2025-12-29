@@ -28,7 +28,7 @@ public class ReportRepository {
     int page = request.getPage();
     int size = request.getSize();
 
-    String jpql = "select r from Report r join fetch r.member m";
+    String jpql = "select r from Report r join fetch r.member m left join fetch r.quote q";
 
     if (request.getStatus() != null && request.getMemberId() != null) {
       jpql += " where r.status = :status and m.id = :memberId";
@@ -64,7 +64,7 @@ public class ReportRepository {
     int page = request.getPage();
     int size = request.getSize();
 
-    String jpql = "select r from Report r where r.member.id = :memberId";
+    String jpql = "select r from Report r left join fetch r.quote where r.member.id = :memberId";
 
     if (request.getStatus() != null) {
       jpql += " and r.status = :status";
@@ -92,10 +92,11 @@ public class ReportRepository {
         .getResultList();
   }
 
-  public void processReportByQuote(Quote quote) {
+  public void processReportByQuote(Quote quote, boolean quoteDeleted) {
     // quote 에 해당하는 모든 신고내역 처리
     em.createQuery(
-            "update Report r set r.status = :status, r.updatedAt = :updatedAt where r.quote.id = :quoteId")
+            "update Report r set r.status = :status, r.updatedAt = :updatedAt, r.quoteDeleted = :quoteDeleted where r.quote.id = :quoteId")
+        .setParameter("quoteDeleted", quoteDeleted)
         .setParameter("status", ReportStatus.PROCESSED)
         .setParameter("updatedAt", LocalDateTime.now())
         .setParameter("quoteId", quote.getId())

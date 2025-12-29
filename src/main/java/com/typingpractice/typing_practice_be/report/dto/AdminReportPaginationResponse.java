@@ -2,6 +2,7 @@ package com.typingpractice.typing_practice_be.report.dto;
 
 import com.typingpractice.typing_practice_be.common.dto.PaginationResponse;
 import com.typingpractice.typing_practice_be.member.dto.MemberResponse;
+import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import java.util.List;
 import lombok.Getter;
@@ -26,8 +27,11 @@ public class AdminReportPaginationResponse extends PaginationResponse {
             .map(
                 r -> {
                   MemberResponse member = MemberResponse.from(r.getMember());
+                  QuoteResponse quote =
+                      r.getQuote() != null ? QuoteResponse.from(r.getQuote()) : null;
+                  // System.out.println(r.getQuote());
 
-                  return AdminReportResponse.from(r, member);
+                  return AdminReportResponse.from(r, member, quote);
                 })
             .toList();
 

@@ -6,18 +6,29 @@ import com.typingpractice.typing_practice_be.quote.domain.QuoteOrderBy;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 
 @Getter
-@Setter
 @ToString(callSuper = true)
 public class QuotePaginationRequest extends PaginationRequest {
-  private QuoteStatus status;
-  private QuoteType type;
-  private QuoteOrderBy orderBy = QuoteOrderBy.id;
+  private final QuoteStatus status;
+  private final QuoteType type;
+  private final QuoteOrderBy orderBy;
 
-  protected QuotePaginationRequest(int page, int size, SortDirection sortDirection) {
+  public QuotePaginationRequest(
+      Integer page,
+      Integer size,
+      SortDirection sortDirection,
+      QuoteStatus status,
+      QuoteType type,
+      QuoteOrderBy orderBy) {
+    super(page, size, sortDirection);
+    this.status = status;
+    this.type = type;
+    this.orderBy = orderBy != null ? orderBy : QuoteOrderBy.id;
+  }
+
+  /*protected QuotePaginationRequest(int page, int size, SortDirection sortDirection) {
     super(page, size, sortDirection);
   }
 
@@ -35,5 +46,5 @@ public class QuotePaginationRequest extends PaginationRequest {
     request.orderBy = orderBy;
 
     return request;
-  }
+  }*/
 }
