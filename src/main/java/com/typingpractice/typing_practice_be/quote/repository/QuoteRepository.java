@@ -7,11 +7,10 @@ import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationRequest;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
@@ -63,12 +62,26 @@ public class QuoteRepository {
     return query.getResultList();
   }
 
-  public List<Quote> findPublicQuotes() {
-    return em.createQuery(
-            "select q from Quote q where q.status = :status and q.type = :type", Quote.class)
-        .setParameter("status", QuoteStatus.ACTIVE)
-        .setParameter("type", QuoteType.PUBLIC)
-        .getResultList();
+  public List<Quote> findPublicQuotes(long memberId, int count, boolean onlyMyQuotes) {
+    String jpql = "select q from Quote q where q.status = :status and q.type = :type";
+
+    if (onlyMyQuotes) {
+      jpql += " and q.member.id = :memberId";
+    }
+
+    jpql += " order by function('RANDOM')";
+
+    TypedQuery<Quote> query =
+        em.createQuery(jpql, Quote.class)
+            .setParameter("status", QuoteStatus.ACTIVE)
+            .setParameter("type", QuoteType.PUBLIC)
+            .setMaxResults(count);
+
+    if (onlyMyQuotes) {
+      query.setParameter("memberId", memberId);
+    }
+
+    return query.getResultList();
   }
 
   public List<Quote> findByStatus(QuoteStatus quoteStatus) {
