@@ -8,6 +8,7 @@ import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
+import com.typingpractice.typing_practice_be.quote.dto.PublicQuoteRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteCreateRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteUpdateRequest;
@@ -29,13 +30,9 @@ public class QuoteService {
 
   private final DailyLimitService dailyLimitService;
 
-  /**
-   * 추후 랜덤 조회로 변경할 예정
-   *
-   * @return List<Quote>
-   */
-  public List<Quote> findPublicQuotes() {
-    List<Quote> all = quoteRepository.findPublicQuotes();
+  public List<Quote> findRandomPublicQuotes(Long memberId, PublicQuoteRequest request) {
+    List<Quote> all =
+        quoteRepository.findPublicQuotes(memberId, request.getCount(), request.getOnlyMyQuotes());
 
     return all;
   }

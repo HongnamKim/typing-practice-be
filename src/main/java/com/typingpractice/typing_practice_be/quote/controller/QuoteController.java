@@ -33,8 +33,11 @@ public class QuoteController {
 
   // 공개 문장 조회
   @GetMapping("/quotes")
-  public ApiResponse<List<QuoteResponse>> getPublicQuotes() {
-    List<Quote> quotes = quoteService.findPublicQuotes();
+  public ApiResponse<List<QuoteResponse>> getPublicQuotes(
+      @ModelAttribute @Valid PublicQuoteRequest request) {
+    Long memberId = getMemberId();
+
+    List<Quote> quotes = quoteService.findRandomPublicQuotes(memberId, request);
 
     return ApiResponse.ok(quotes.stream().map(QuoteResponse::from).toList());
   }
