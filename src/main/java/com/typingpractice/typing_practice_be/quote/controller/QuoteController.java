@@ -35,7 +35,8 @@ public class QuoteController {
   @GetMapping("/quotes")
   public ApiResponse<List<QuoteResponse>> getPublicQuotes(
       @ModelAttribute @Valid PublicQuoteRequest request) {
-    Long memberId = getMemberId();
+
+    Long memberId = request.getOnlyMyQuotes() ? getMemberId() : null;
 
     List<Quote> quotes = quoteService.findRandomPublicQuotes(memberId, request);
 
