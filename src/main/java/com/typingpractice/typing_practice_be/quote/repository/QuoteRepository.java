@@ -62,10 +62,14 @@ public class QuoteRepository {
     return query.getResultList();
   }
 
-  public List<Quote> findPublicQuotes(long memberId, int count, boolean onlyMyQuotes) {
+  public List<Quote> findPublicQuotes(
+      Long memberId, Float seed, Integer page, Integer count, Boolean onlyMyQuotes) {
+    // 랜덤 순서
+    em.createNativeQuery("SELECT SETSEED(:seed)").setParameter("seed", seed).getSingleResult();
+
     String jpql = "select q from Quote q where q.status = :status and q.type = :type";
 
-    if (onlyMyQuotes) {
+    if (onlyMyQuotes && memberId != null) {
       jpql += " and q.member.id = :memberId";
     }
 
@@ -75,9 +79,10 @@ public class QuoteRepository {
         em.createQuery(jpql, Quote.class)
             .setParameter("status", QuoteStatus.ACTIVE)
             .setParameter("type", QuoteType.PUBLIC)
+            .setFirstResult((page - 1) * count)
             .setMaxResults(count);
 
-    if (onlyMyQuotes) {
+    if (onlyMyQuotes && memberId != null) {
       query.setParameter("memberId", memberId);
     }
 

@@ -32,7 +32,12 @@ public class QuoteService {
 
   public List<Quote> findRandomPublicQuotes(Long memberId, PublicQuoteRequest request) {
     List<Quote> all =
-        quoteRepository.findPublicQuotes(memberId, request.getCount(), request.getOnlyMyQuotes());
+        quoteRepository.findPublicQuotes(
+            memberId,
+            request.getSeed(),
+            request.getPage(),
+            request.getCount(),
+            request.getOnlyMyQuotes());
 
     return all;
   }
