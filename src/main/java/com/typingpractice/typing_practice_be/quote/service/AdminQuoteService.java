@@ -3,12 +3,11 @@ package com.typingpractice.typing_practice_be.quote.service;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
-import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationRequest;
-import com.typingpractice.typing_practice_be.quote.dto.QuoteUpdateRequest;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotProcessableException;
+import com.typingpractice.typing_practice_be.quote.query.QuotePaginationQuery;
+import com.typingpractice.typing_practice_be.quote.query.QuoteUpdateQuery;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
-import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -59,14 +58,14 @@ public class AdminQuoteService {
   }
 
   @Transactional
-  public Quote updateQuote(Long quoteId, QuoteUpdateRequest request) {
+  public Quote updateQuote(Long quoteId, QuoteUpdateQuery query) {
     Quote quote = findQuoteById(quoteId);
 
     if (quote.getType() != QuoteType.PUBLIC) {
       throw new QuoteNotProcessableException();
     }
 
-    quote.update(request.getSentence(), request.getAuthor());
+    quote.update(query.getSentence(), query.getAuthor());
 
     return quote;
   }
@@ -93,7 +92,7 @@ public class AdminQuoteService {
     return quote;
   }
 
-  public List<Quote> findQuotes(@Valid QuotePaginationRequest request) {
-    return quoteRepository.findAll(request);
+  public List<Quote> findQuotes(QuotePaginationQuery query) {
+    return quoteRepository.findAll(query);
   }
 }

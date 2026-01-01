@@ -4,7 +4,8 @@ import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
-import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationRequest;
+import com.typingpractice.typing_practice_be.quote.query.PublicQuoteQuery;
+import com.typingpractice.typing_practice_be.quote.query.QuotePaginationQuery;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import java.util.List;
@@ -32,61 +33,62 @@ public class QuoteRepository {
     // return Optional.ofNullable(em.find(Quote.class, quoteId));
   }
 
-  public List<Quote> findAll(QuotePaginationRequest request) {
-    int page = request.getPage();
-    int size = request.getSize();
+  public List<Quote> findAll(QuotePaginationQuery query) {
+    int page = query.getPage();
+    int size = query.getSize();
 
     String jpql = "select q from Quote q";
 
-    if (request.getStatus() != null && request.getType() != null) {
+    if (query.getStatus() != null && query.getType() != null) {
       jpql += " where q.status = :status and q.type = :type";
-    } else if (request.getStatus() != null) {
+    } else if (query.getStatus() != null) {
       jpql += " where q.status = :status";
-    } else if (request.getType() != null) {
+    } else if (query.getType() != null) {
       jpql += " where q.type = :type";
     }
 
-    jpql += " order by q." + request.getOrderBy() + " " + request.getSortDirection();
+    jpql += " order by q." + query.getOrderBy() + " " + query.getSortDirection();
 
-    TypedQuery<Quote> query =
+    TypedQuery<Quote> typedQuery =
         em.createQuery(jpql, Quote.class).setFirstResult((page - 1) * size).setMaxResults(size + 1);
 
-    if (request.getStatus() != null) {
-      query.setParameter("status", request.getStatus());
+    if (query.getStatus() != null) {
+      typedQuery.setParameter("status", query.getStatus());
     }
 
-    if (request.getType() != null) {
-      query.setParameter("type", request.getType());
+    if (query.getType() != null) {
+      typedQuery.setParameter("type", query.getType());
     }
 
-    return query.getResultList();
+    return typedQuery.getResultList();
   }
 
-  public List<Quote> findPublicQuotes(
-      Long memberId, Float seed, Integer page, Integer count, Boolean onlyMyQuotes) {
+  public List<Quote> findPublicQuotes(PublicQuoteQuery query) {
     // 랜덤 순서
-    em.createNativeQuery("SELECT SETSEED(:seed)").setParameter("seed", seed).getSingleResult();
+    em.createNativeQuery("SELECT SETSEED(:seed)")
+        .setParameter("seed", query.getSeed())
+        .getSingleResult();
 
     String jpql = "select q from Quote q where q.status = :status and q.type = :type";
 
-    if (onlyMyQuotes && memberId != null) {
+    if (query.getOnlyMyQuotes() && query.getMemberId() != null) {
       jpql += " and q.member.id = :memberId";
     }
 
     jpql += " order by function('RANDOM')";
 
-    TypedQuery<Quote> query =
+    TypedQuery<Quote> typedQuery =
         em.createQuery(jpql, Quote.class)
             .setParameter("status", QuoteStatus.ACTIVE)
             .setParameter("type", QuoteType.PUBLIC)
-            .setFirstResult((page - 1) * count)
-            .setMaxResults(count);
+            .setFirstResult((query.getPage() - 1) * query.getCount())
+            .setMaxResults(query.getCount());
 
-    if (onlyMyQuotes && memberId != null) {
-      query.setParameter("memberId", memberId);
+    if (query.getOnlyMyQuotes() && query.getMemberId() != null) {
+      typedQuery.setParameter("memberId", query.getMemberId());
     }
 
-    return query.getResultList();
+    return typedQuery.getResultList();
   }
 
   public List<Quote> findByStatus(QuoteStatus quoteStatus) {
@@ -99,34 +101,34 @@ public class QuoteRepository {
     em.remove(quote);
   }
 
-  public List<Quote> findByMember(Member member, QuotePaginationRequest request) {
-    int page = request.getPage();
-    int size = request.getSize();
+  public List<Quote> findByMember(Member member, QuotePaginationQuery query) {
+    int page = query.getPage();
+    int size = query.getSize();
 
     String jpql = "select q from Quote q join q.member m where m.id = :memberId";
 
-    if (request.getStatus() != null && request.getType() != null) {
+    if (query.getStatus() != null && query.getType() != null) {
       jpql += " and q.status = :status and q.type = :type";
-    } else if (request.getStatus() != null) {
+    } else if (query.getStatus() != null) {
       jpql += " and q.status = :status";
-    } else if (request.getType() != null) {
+    } else if (query.getType() != null) {
       jpql += " and q.type = :type";
     }
 
-    jpql += " order by q." + request.getOrderBy() + " " + request.getSortDirection();
+    jpql += " order by q." + query.getOrderBy() + " " + query.getSortDirection();
 
-    TypedQuery<Quote> query =
+    TypedQuery<Quote> typedQuery =
         em.createQuery(jpql, Quote.class).setFirstResult((page - 1) * size).setMaxResults(size + 1);
-    query.setParameter("memberId", member.getId());
+    typedQuery.setParameter("memberId", member.getId());
 
-    if (request.getStatus() != null) {
-      query.setParameter("status", request.getStatus());
+    if (query.getStatus() != null) {
+      typedQuery.setParameter("status", query.getStatus());
     }
 
-    if (request.getType() != null) {
-      query.setParameter("type", request.getType());
+    if (query.getType() != null) {
+      typedQuery.setParameter("type", query.getType());
     }
 
-    return query.getResultList();
+    return typedQuery.getResultList();
   }
 }
