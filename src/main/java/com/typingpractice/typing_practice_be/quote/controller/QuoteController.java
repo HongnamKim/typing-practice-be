@@ -4,6 +4,10 @@ import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.dto.*;
 import com.typingpractice.typing_practice_be.quote.exception.EmptyUpdateRequestException;
+import com.typingpractice.typing_practice_be.quote.query.PublicQuoteQuery;
+import com.typingpractice.typing_practice_be.quote.query.QuoteCreateQuery;
+import com.typingpractice.typing_practice_be.quote.query.QuotePaginationQuery;
+import com.typingpractice.typing_practice_be.quote.query.QuoteUpdateQuery;
 import com.typingpractice.typing_practice_be.quote.service.QuoteService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -26,19 +30,23 @@ public class QuoteController {
   public ApiResponse<QuoteResponse> create(@RequestBody @Valid QuoteCreateRequest request) {
     Long memberId = getMemberId();
 
-    Quote quote = quoteService.create(memberId, request);
+    QuoteCreateQuery query = QuoteCreateQuery.from(request);
+
+    Quote quote = quoteService.create(memberId, query);
 
     return ApiResponse.ok(QuoteResponse.from(quote));
   }
 
-  // 공개 문장 조회
+  // 공개 문장 랜덤 조회
   @GetMapping("/quotes")
   public ApiResponse<List<QuoteResponse>> getPublicQuotes(
       @ModelAttribute @Valid PublicQuoteRequest request) {
 
     Long memberId = request.getOnlyMyQuotes() ? getMemberId() : null;
 
-    List<Quote> quotes = quoteService.findRandomPublicQuotes(memberId, request);
+    PublicQuoteQuery query = PublicQuoteQuery.from(memberId, request);
+
+    List<Quote> quotes = quoteService.findRandomPublicQuotes(query);
 
     return ApiResponse.ok(quotes.stream().map(QuoteResponse::from).toList());
   }
@@ -49,7 +57,9 @@ public class QuoteController {
       @ModelAttribute @Valid QuotePaginationRequest request) {
     Long memberId = getMemberId();
 
-    List<Quote> myQuotes = quoteService.getMyQuotes(memberId, request);
+    QuotePaginationQuery query = QuotePaginationQuery.from(request);
+
+    List<Quote> myQuotes = quoteService.getMyQuotes(memberId, query);
 
     return ApiResponse.ok(
         QuotePaginationResponse.from(
@@ -73,7 +83,9 @@ public class QuoteController {
     }
 
     Long memberId = getMemberId();
-    Quote quote = quoteService.updatePrivateQuote(memberId, quoteId, request);
+    QuoteUpdateQuery query = QuoteUpdateQuery.from(request);
+
+    Quote quote = quoteService.updatePrivateQuote(memberId, quoteId, query);
 
     return ApiResponse.ok(QuoteResponse.from(quote));
   }

@@ -46,7 +46,7 @@ public class Quote extends BaseEntity {
     Quote quote = new Quote();
     quote.member = member;
     quote.sentence = sentence;
-    quote.author = StringUtils.hasText(author) ? author : DEFAULT_AUTHOR;
+    quote.author = author != null ? author : DEFAULT_AUTHOR;
     quote.type = type;
     quote.reportCount = 0;
     quote.status = quote.type == QuoteType.PUBLIC ? QuoteStatus.PENDING : QuoteStatus.ACTIVE;

@@ -10,6 +10,8 @@ import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationResponse;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteUpdateRequest;
+import com.typingpractice.typing_practice_be.quote.query.QuotePaginationQuery;
+import com.typingpractice.typing_practice_be.quote.query.QuoteUpdateQuery;
 import com.typingpractice.typing_practice_be.quote.service.AdminQuoteService;
 import java.util.List;
 
@@ -38,7 +40,9 @@ public class AdminQuoteController {
       @ModelAttribute @Valid QuotePaginationRequest request) {
     validateAdmin();
 
-    List<Quote> quotes = adminQuoteService.findQuotes(request);
+    QuotePaginationQuery query = QuotePaginationQuery.from(request);
+
+    List<Quote> quotes = adminQuoteService.findQuotes(query);
 
     return ApiResponse.ok(
         QuotePaginationResponse.from(
@@ -81,7 +85,9 @@ public class AdminQuoteController {
       @PathVariable Long quoteId, @RequestBody QuoteUpdateRequest request) {
     validateAdmin();
 
-    Quote quote = adminQuoteService.updateQuote(quoteId, request);
+    QuoteUpdateQuery query = QuoteUpdateQuery.from(request);
+
+    Quote quote = adminQuoteService.updateQuote(quoteId, query);
 
     return ApiResponse.ok(QuoteResponse.from(quote));
   }
