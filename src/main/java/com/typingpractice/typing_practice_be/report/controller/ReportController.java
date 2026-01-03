@@ -7,6 +7,8 @@ import com.typingpractice.typing_practice_be.report.dto.ReportCreateRequest;
 import com.typingpractice.typing_practice_be.report.dto.ReportPaginationRequest;
 import com.typingpractice.typing_practice_be.report.dto.ReportPaginationResponse;
 import com.typingpractice.typing_practice_be.report.dto.ReportResponse;
+import com.typingpractice.typing_practice_be.report.query.ReportCreateQuery;
+import com.typingpractice.typing_practice_be.report.query.ReportPaginationQuery;
 import com.typingpractice.typing_practice_be.report.service.ReportService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -27,7 +29,9 @@ public class ReportController {
   public ApiResponse<ReportResponse> reportQuote(@RequestBody @Valid ReportCreateRequest request) {
     Long memberId = getMemberId();
 
-    Report report = reportService.createReport(memberId, request.getQuoteId(), request);
+    ReportCreateQuery query = ReportCreateQuery.from(request);
+
+    Report report = reportService.createReport(memberId, request.getQuoteId(), query);
 
     QuoteResponse quote = QuoteResponse.from(report.getQuote());
 
@@ -39,7 +43,9 @@ public class ReportController {
       @ModelAttribute @Valid ReportPaginationRequest request) {
     Long memberId = getMemberId();
 
-    List<Report> myReports = reportService.findMyReports(memberId, request);
+    ReportPaginationQuery query = ReportPaginationQuery.from(request);
+
+    List<Report> myReports = reportService.findMyReports(memberId, query);
 
     return ApiResponse.ok(
         ReportPaginationResponse.from(

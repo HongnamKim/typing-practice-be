@@ -11,16 +11,15 @@ import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
 import com.typingpractice.typing_practice_be.report.domain.Report;
-import com.typingpractice.typing_practice_be.report.dto.ReportCreateRequest;
-import com.typingpractice.typing_practice_be.report.dto.ReportPaginationRequest;
 import com.typingpractice.typing_practice_be.report.exception.DuplicateReportException;
 import com.typingpractice.typing_practice_be.report.exception.QuoteNotReportableException;
 import com.typingpractice.typing_practice_be.report.exception.ReportNotFoundException;
 import com.typingpractice.typing_practice_be.report.exception.ReportNotProcessableException;
+import com.typingpractice.typing_practice_be.report.query.ReportCreateQuery;
+import com.typingpractice.typing_practice_be.report.query.ReportPaginationQuery;
 import com.typingpractice.typing_practice_be.report.repository.ReportRepository;
 import java.util.List;
 import java.util.Objects;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +36,7 @@ public class ReportService {
 
   // 신고 생성
   @Transactional
-  public Report createReport(Long memberId, Long quoteId, ReportCreateRequest request) {
+  public Report createReport(Long memberId, Long quoteId, ReportCreateQuery query) {
     Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
     Quote quote = quoteRepository.findById(quoteId).orElseThrow(QuoteNotFoundException::new);
 
@@ -57,7 +56,7 @@ public class ReportService {
     }
 
     // 신고 생성
-    Report report = Report.create(member, quote, request.getReason(), request.getDetail());
+    Report report = Report.create(member, quote, query.getReason(), query.getDetail());
 
     reportRepository.save(report);
 
@@ -74,10 +73,10 @@ public class ReportService {
 
   // 내 신고 내역 조회
   // 페이징 추가 필요
-  public List<Report> findMyReports(Long memberId, ReportPaginationRequest request) {
+  public List<Report> findMyReports(Long memberId, ReportPaginationQuery query) {
     Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-    return reportRepository.findMyReports(member, request);
+    return reportRepository.findMyReports(member, query);
   }
 
   // 본인 신고 내역 삭제(철회 or 처리된 신고 삭제)

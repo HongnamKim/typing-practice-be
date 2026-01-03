@@ -27,24 +27,4 @@ public class QuotePaginationRequest extends PaginationRequest {
     this.type = type;
     this.orderBy = orderBy != null ? orderBy : QuoteOrderBy.id;
   }
-
-  /*protected QuotePaginationRequest(int page, int size, SortDirection sortDirection) {
-    super(page, size, sortDirection);
-  }
-
-  public static QuotePaginationRequest create(
-      int page,
-      int size,
-      SortDirection sortDirection,
-      QuoteStatus status,
-      QuoteType type,
-      QuoteOrderBy orderBy) {
-    QuotePaginationRequest request = new QuotePaginationRequest(page, size, sortDirection);
-
-    request.status = status;
-    request.type = type;
-    request.orderBy = orderBy;
-
-    return request;
-  }*/
 }
