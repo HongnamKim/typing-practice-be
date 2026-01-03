@@ -7,6 +7,8 @@ import com.typingpractice.typing_practice_be.member.exception.NotAdminException;
 import com.typingpractice.typing_practice_be.member.service.MemberService;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import com.typingpractice.typing_practice_be.report.dto.*;
+import com.typingpractice.typing_practice_be.report.query.ReportPaginationQuery;
+import com.typingpractice.typing_practice_be.report.query.ReportProcessQuery;
 import com.typingpractice.typing_practice_be.report.service.AdminReportService;
 import java.util.List;
 
@@ -35,9 +37,9 @@ public class AdminReportController {
       @ModelAttribute @Valid ReportPaginationRequest request) {
     validateAdmin();
 
-    List<Report> reports = adminReportService.findReports(request);
+    ReportPaginationQuery query = ReportPaginationQuery.from(request);
 
-    System.out.println("request = " + request);
+    List<Report> reports = adminReportService.findReports(query);
 
     return ApiResponse.ok(
         AdminReportPaginationResponse.from(
@@ -49,7 +51,9 @@ public class AdminReportController {
       @PathVariable Long quoteId, @RequestBody @Valid ReportProcessRequest request) {
     validateAdmin();
 
-    adminReportService.processReport(quoteId, request);
+    ReportProcessQuery query = ReportProcessQuery.from(request);
+
+    adminReportService.processReport(quoteId, query);
 
     return ApiResponse.ok(null);
   }

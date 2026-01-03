@@ -4,7 +4,7 @@ import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import com.typingpractice.typing_practice_be.report.domain.ReportStatus;
-import com.typingpractice.typing_practice_be.report.dto.ReportPaginationRequest;
+import com.typingpractice.typing_practice_be.report.query.ReportPaginationQuery;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import java.time.LocalDateTime;
@@ -24,65 +24,65 @@ public class ReportRepository {
     return report;
   }
 
-  public List<Report> findAll(ReportPaginationRequest request) {
-    int page = request.getPage();
-    int size = request.getSize();
+  public List<Report> findAll(ReportPaginationQuery query) {
+    int page = query.getPage();
+    int size = query.getSize();
 
     String jpql = "select r from Report r join fetch r.member m left join fetch r.quote q";
 
-    if (request.getStatus() != null && request.getMemberId() != null) {
+    if (query.getStatus() != null && query.getMemberId() != null) {
       jpql += " where r.status = :status and m.id = :memberId";
-    } else if (request.getStatus() == null && request.getMemberId() != null) {
+    } else if (query.getStatus() == null && query.getMemberId() != null) {
       jpql += " where m.id = :memberId";
-    } else if (request.getStatus() != null) {
+    } else if (query.getStatus() != null) {
       jpql += " where r.status = :status";
     }
 
-    jpql += " order by r." + request.getOrderBy() + " " + request.getSortDirection();
+    jpql += " order by r." + query.getOrderBy() + " " + query.getSortDirection();
 
-    TypedQuery<Report> query =
+    TypedQuery<Report> typedQuery =
         em.createQuery(jpql, Report.class)
             .setFirstResult((page - 1) * size)
             .setMaxResults(size + 1);
 
-    if (request.getStatus() != null) {
-      query.setParameter("status", request.getStatus());
+    if (query.getStatus() != null) {
+      typedQuery.setParameter("status", query.getStatus());
     }
 
-    if (request.getMemberId() != null) {
-      query.setParameter("memberId", request.getMemberId());
+    if (query.getMemberId() != null) {
+      typedQuery.setParameter("memberId", query.getMemberId());
     }
 
-    return query.getResultList();
+    return typedQuery.getResultList();
   }
 
   public Optional<Report> findById(Long reportId) {
     return Optional.ofNullable(em.find(Report.class, reportId));
   }
 
-  public List<Report> findMyReports(Member member, ReportPaginationRequest request) {
-    int page = request.getPage();
-    int size = request.getSize();
+  public List<Report> findMyReports(Member member, ReportPaginationQuery query) {
+    int page = query.getPage();
+    int size = query.getSize();
 
     String jpql = "select r from Report r left join fetch r.quote where r.member.id = :memberId";
 
-    if (request.getStatus() != null) {
+    if (query.getStatus() != null) {
       jpql += " and r.status = :status";
     }
 
-    jpql += " order by r." + request.getOrderBy() + " " + request.getSortDirection();
+    jpql += " order by r." + query.getOrderBy() + " " + query.getSortDirection();
 
-    TypedQuery<Report> query = em.createQuery(jpql, Report.class);
+    TypedQuery<Report> typedQuery = em.createQuery(jpql, Report.class);
 
-    query.setFirstResult((page - 1) * size).setMaxResults(size + 1);
+    typedQuery.setFirstResult((page - 1) * size).setMaxResults(size + 1);
 
-    query.setParameter("memberId", member.getId());
+    typedQuery.setParameter("memberId", member.getId());
 
-    if (request.getStatus() != null) {
-      query.setParameter("status", request.getStatus());
+    if (query.getStatus() != null) {
+      typedQuery.setParameter("status", query.getStatus());
     }
 
-    return query.getResultList();
+    return typedQuery.getResultList();
   }
 
   public List<Report> findByQuote(Quote quote) {
