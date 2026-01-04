@@ -7,6 +7,8 @@ import com.typingpractice.typing_practice_be.member.dto.LoginRequest;
 import com.typingpractice.typing_practice_be.member.dto.LoginResponse;
 import com.typingpractice.typing_practice_be.member.dto.MemberResponse;
 import com.typingpractice.typing_practice_be.member.dto.UpdateNicknameRequest;
+import com.typingpractice.typing_practice_be.member.query.MemberLoginQuery;
+import com.typingpractice.typing_practice_be.member.query.MemberUpdateQuery;
 import com.typingpractice.typing_practice_be.member.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +26,9 @@ public class MemberController {
   @PostMapping("/login")
   @ResponseStatus(HttpStatus.CREATED)
   public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
-    Member member = this.memberService.loginOrSignIn(loginRequest);
+    MemberLoginQuery query = MemberLoginQuery.from(loginRequest);
+
+    Member member = this.memberService.loginOrSignIn(query);
 
     String token = jwtTokenProvider.createToken(member.getId(), member.getEmail());
 
@@ -44,7 +48,10 @@ public class MemberController {
   public ApiResponse<MemberResponse> updateNickname(
       @RequestBody UpdateNicknameRequest updateNicknameRequest) {
     Long memberId = getAuthenticatedMemberId();
-    Member member = memberService.updateNickname(memberId, updateNicknameRequest.getNickname());
+
+    MemberUpdateQuery query = MemberUpdateQuery.from(updateNicknameRequest);
+
+    Member member = memberService.updateNickname(memberId, query);
 
     return ApiResponse.ok(MemberResponse.from(member));
   }

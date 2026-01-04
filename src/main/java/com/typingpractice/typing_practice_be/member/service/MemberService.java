@@ -1,10 +1,11 @@
 package com.typingpractice.typing_practice_be.member.service;
 
 import com.typingpractice.typing_practice_be.member.domain.Member;
-import com.typingpractice.typing_practice_be.member.dto.CreateMemberDto;
-import com.typingpractice.typing_practice_be.member.dto.LoginRequest;
+import com.typingpractice.typing_practice_be.member.query.MemberCreateQuery;
 import com.typingpractice.typing_practice_be.member.exception.DuplicateEmailException;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
+import com.typingpractice.typing_practice_be.member.query.MemberLoginQuery;
+import com.typingpractice.typing_practice_be.member.query.MemberUpdateQuery;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -22,30 +23,28 @@ public class MemberService {
   }
 
   @Transactional
-  public Member loginOrSignIn(LoginRequest loginRequest) {
-    Optional<Member> byEmail = memberRepository.findByEmail(loginRequest.getEmail());
+  public Member loginOrSignIn(MemberLoginQuery query) {
+    Optional<Member> byEmail = memberRepository.findByEmail(query.getEmail());
 
     if (byEmail.isPresent()) {
-
       return memberRepository
-          .login(loginRequest.getEmail(), loginRequest.getPassword())
+          .login(query.getEmail(), query.getPassword())
           .orElseThrow(MemberNotFoundException::new);
     } else {
-
-      CreateMemberDto createMemberDto =
-          CreateMemberDto.create(loginRequest.getEmail(), loginRequest.getPassword(), "nickname");
-      return this.join(createMemberDto);
+      MemberCreateQuery memberCreateQuery =
+          MemberCreateQuery.of(query.getEmail(), query.getPassword(), Member.DEFAULT_NICKNAME);
+      return this.join(memberCreateQuery);
     }
   }
 
-  private Member join(CreateMemberDto createMemberDto) {
+  private Member join(MemberCreateQuery memberCreateQuery) {
     Member member =
         Member.createMember(
-            createMemberDto.getEmail(),
-            createMemberDto.getPassword(),
-            createMemberDto.getNickname());
+            memberCreateQuery.getEmail(),
+            memberCreateQuery.getPassword(),
+            memberCreateQuery.getNickname());
 
-    if (memberRepository.findByEmail(createMemberDto.getEmail()).isPresent()) {
+    if (memberRepository.findByEmail(memberCreateQuery.getEmail()).isPresent()) {
       throw new DuplicateEmailException();
     }
 
@@ -55,8 +54,10 @@ public class MemberService {
   }
 
   @Transactional
-  public Member updateNickname(Long memberId, String nickname) {
+  public Member updateNickname(Long memberId, MemberUpdateQuery query) {
     Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+
+    String nickname = query.getNickname();
 
     // 변경하지 않은 경우 그냥 반환
     if (member.getNickname().equals(nickname)) {
