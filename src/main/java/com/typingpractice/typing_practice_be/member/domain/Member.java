@@ -40,6 +40,8 @@ public class Member extends BaseEntity {
   @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)
   private List<Report> reports = new ArrayList<>();
 
+  public static String DEFAULT_NICKNAME = "nickname";
+
   public static Member createMember(String email, String password, String nickname) {
     Member member = new Member();
     member.email = email;
