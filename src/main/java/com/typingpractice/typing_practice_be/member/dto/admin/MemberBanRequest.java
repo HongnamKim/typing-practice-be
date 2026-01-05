@@ -5,6 +5,6 @@ import lombok.ToString;
 
 @Getter
 @ToString
-public class BanMemberRequest {
+public class MemberBanRequest {
   private String banReason;
 }

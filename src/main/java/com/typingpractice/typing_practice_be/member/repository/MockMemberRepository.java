@@ -1,8 +1,7 @@
 package com.typingpractice.typing_practice_be.member.repository;
 
 import com.typingpractice.typing_practice_be.member.domain.Member;
-import com.typingpractice.typing_practice_be.member.dto.admin.MemberPaginationRequest;
-
+import com.typingpractice.typing_practice_be.member.query.MemberPaginationQuery;
 import java.util.*;
 
 public class MockMemberRepository implements MemberRepository {
@@ -10,7 +9,7 @@ public class MockMemberRepository implements MemberRepository {
   private Long sequence = 1L;
 
   @Override
-  public List<Member> findAll(MemberPaginationRequest request) {
+  public List<Member> findAll(MemberPaginationQuery request) {
     return new ArrayList<>(store.values());
   }
 

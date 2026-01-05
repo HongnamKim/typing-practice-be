@@ -7,7 +7,7 @@ import lombok.ToString;
 
 @Getter
 @ToString
-public class UpdateMemberRoleRequest {
+public class MemberUpdateRoleRequest {
   @NotNull(message = "필수값 누락")
   private MemberRole role;
 }
