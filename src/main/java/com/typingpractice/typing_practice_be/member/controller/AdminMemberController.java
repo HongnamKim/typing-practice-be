@@ -4,11 +4,13 @@ import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.dto.*;
-import com.typingpractice.typing_practice_be.member.dto.admin.BanMemberRequest;
+import com.typingpractice.typing_practice_be.member.dto.admin.MemberBanRequest;
 import com.typingpractice.typing_practice_be.member.dto.admin.MemberPaginationRequest;
 import com.typingpractice.typing_practice_be.member.dto.admin.MemberPaginationResponse;
-import com.typingpractice.typing_practice_be.member.dto.admin.UpdateMemberRoleRequest;
+import com.typingpractice.typing_practice_be.member.dto.admin.MemberUpdateRoleRequest;
 import com.typingpractice.typing_practice_be.member.exception.NotAdminException;
+import com.typingpractice.typing_practice_be.member.query.MemberBanQuery;
+import com.typingpractice.typing_practice_be.member.query.MemberPaginationQuery;
 import com.typingpractice.typing_practice_be.member.service.AdminMemberService;
 import com.typingpractice.typing_practice_be.member.service.MemberService;
 import jakarta.validation.Valid;
@@ -38,7 +40,9 @@ public class AdminMemberController {
       @ModelAttribute @Valid MemberPaginationRequest request) {
     validateAdmin();
 
-    List<Member> allMembers = adminMemberService.findAllMembers(request);
+    MemberPaginationQuery query = MemberPaginationQuery.from(request);
+
+    List<Member> allMembers = adminMemberService.findAllMembers(query);
 
     boolean hasNext = allMembers.size() > request.getSize();
 
@@ -57,7 +61,7 @@ public class AdminMemberController {
 
   @PatchMapping("/admin/members/{memberId}/role")
   public ApiResponse<MemberResponse> updateMemberRole(
-      @PathVariable Long memberId, @RequestBody UpdateMemberRoleRequest request) {
+      @PathVariable Long memberId, @RequestBody MemberUpdateRoleRequest request) {
     validateAdmin();
 
     Member member = adminMemberService.updateRole(memberId, request.getRole());
@@ -67,10 +71,12 @@ public class AdminMemberController {
 
   @PostMapping("/admin/members/{memberId}/ban")
   public ApiResponse<MemberResponse> banMember(
-      @PathVariable Long memberId, @RequestBody BanMemberRequest request) {
+      @PathVariable Long memberId, @RequestBody MemberBanRequest request) {
     validateAdmin();
 
-    Member member = adminMemberService.banMember(memberId, request);
+    MemberBanQuery query = MemberBanQuery.from(request);
+
+    Member member = adminMemberService.banMember(memberId, query);
 
     return ApiResponse.ok(MemberResponse.from(member));
   }

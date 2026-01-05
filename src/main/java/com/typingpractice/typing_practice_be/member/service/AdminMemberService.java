@@ -2,10 +2,10 @@ package com.typingpractice.typing_practice_be.member.service;
 
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
-import com.typingpractice.typing_practice_be.member.dto.admin.BanMemberRequest;
-import com.typingpractice.typing_practice_be.member.dto.admin.MemberPaginationRequest;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotProcessableException;
+import com.typingpractice.typing_practice_be.member.query.MemberBanQuery;
+import com.typingpractice.typing_practice_be.member.query.MemberPaginationQuery;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminMemberService {
   private final MemberRepository memberRepository;
 
-  public List<Member> findAllMembers(MemberPaginationRequest request) {
-    List<Member> members = memberRepository.findAll(request);
+  public List<Member> findAllMembers(MemberPaginationQuery query) {
+    List<Member> members = memberRepository.findAll(query);
 
     return members;
   }
@@ -42,14 +42,14 @@ public class AdminMemberService {
   }
 
   @Transactional
-  public Member banMember(Long memberId, BanMemberRequest request) {
+  public Member banMember(Long memberId, MemberBanQuery query) {
     Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
     if (member.getRole() == MemberRole.ADMIN) {
       throw new MemberNotProcessableException();
     }
 
-    member.ban(request.getBanReason());
+    member.ban(query.getBanReason());
 
     return member;
   }

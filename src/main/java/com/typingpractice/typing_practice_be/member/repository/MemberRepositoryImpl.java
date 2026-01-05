@@ -1,7 +1,7 @@
 package com.typingpractice.typing_practice_be.member.repository;
 
 import com.typingpractice.typing_practice_be.member.domain.Member;
-import com.typingpractice.typing_practice_be.member.dto.admin.MemberPaginationRequest;
+import com.typingpractice.typing_practice_be.member.query.MemberPaginationQuery;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import java.util.List;
@@ -15,23 +15,25 @@ public class MemberRepositoryImpl implements MemberRepository {
   private final EntityManager em;
 
   @Override
-  public List<Member> findAll(MemberPaginationRequest request) {
-    int page = request.getPage();
-    int size = request.getSize();
+  public List<Member> findAll(MemberPaginationQuery query) {
+    int page = query.getPage();
+    int size = query.getSize();
 
     String jpql = "select m from Member m";
 
-    if (request.getRole() != null) {
+    if (query.getRole() != null) {
       jpql += " where m.role = :role";
     }
-    jpql += (" order by m." + request.getOrderBy() + " " + request.getSortDirection());
 
-    TypedQuery<Member> query = em.createQuery(jpql, Member.class);
-    if (request.getRole() != null) {
-      query.setParameter("role", request.getRole());
+    jpql += (" order by m." + query.getOrderBy() + " " + query.getSortDirection());
+
+    TypedQuery<Member> typedQuery = em.createQuery(jpql, Member.class);
+
+    if (query.getRole() != null) {
+      typedQuery.setParameter("role", query.getRole());
     }
 
-    return query.setFirstResult((page - 1) * size).setMaxResults(size + 1).getResultList();
+    return typedQuery.setFirstResult((page - 1) * size).setMaxResults(size + 1).getResultList();
   }
 
   @Override
