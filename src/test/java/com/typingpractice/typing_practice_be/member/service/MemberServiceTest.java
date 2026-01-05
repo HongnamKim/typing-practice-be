@@ -4,7 +4,10 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.dto.LoginRequest;
+import com.typingpractice.typing_practice_be.member.dto.UpdateNicknameRequest;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
+import com.typingpractice.typing_practice_be.member.query.MemberLoginQuery;
+import com.typingpractice.typing_practice_be.member.query.MemberUpdateQuery;
 import com.typingpractice.typing_practice_be.member.repository.MockMemberRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +33,8 @@ class MemberServiceTest {
   void findMemberById() {
     // given
     LoginRequest loginRequest = LoginRequest.create("email", "password");
-    Member member = memberService.loginOrSignIn(loginRequest);
+    MemberLoginQuery query = MemberLoginQuery.from(loginRequest);
+    Member member = memberService.loginOrSignIn(query);
 
     // when
     Member findMember = memberService.findMemberById(member.getId());
@@ -60,10 +64,11 @@ class MemberServiceTest {
   void loginOrSignIn() {
     // given
     LoginRequest loginRequest = LoginRequest.create("memberA", "A");
-    Member memberA = memberService.loginOrSignIn(loginRequest); // 회원가입
+    MemberLoginQuery query = MemberLoginQuery.from(loginRequest);
+    Member memberA = memberService.loginOrSignIn(query); // 회원가입
 
     // when
-    Member loginMember = memberService.loginOrSignIn(loginRequest);
+    Member loginMember = memberService.loginOrSignIn(query);
 
     // then
     // assertThat(loginMember.getEmail()).isEqualTo(loginDto.getEmail());
@@ -76,10 +81,13 @@ class MemberServiceTest {
   void updateNickname() {
     // given
     LoginRequest loginRequest = LoginRequest.create("memberA", "a");
-    Member memberA = memberService.loginOrSignIn(loginRequest); // 회원가입
+    MemberLoginQuery query = MemberLoginQuery.from(loginRequest);
+    Member memberA = memberService.loginOrSignIn(query); // 회원가입
 
     // when
-    memberService.updateNickname(memberA.getId(), "new_nickname");
+    UpdateNicknameRequest request = UpdateNicknameRequest.create("new_nickname");
+    MemberUpdateQuery updateQuery = MemberUpdateQuery.from(request);
+    memberService.updateNickname(memberA.getId(), updateQuery);
     Member findMember = memberService.findMemberById(memberA.getId());
 
     // then
@@ -90,7 +98,8 @@ class MemberServiceTest {
   void deleteMember() {
     // given
     LoginRequest loginRequest = LoginRequest.create("memberA", "a");
-    Member memberA = memberService.loginOrSignIn(loginRequest);
+    MemberLoginQuery query = MemberLoginQuery.from(loginRequest);
+    Member memberA = memberService.loginOrSignIn(query);
 
     // when
     memberService.deleteMember(memberA.getId());

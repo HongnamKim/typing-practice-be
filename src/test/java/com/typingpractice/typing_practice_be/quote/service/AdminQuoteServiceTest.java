@@ -10,6 +10,7 @@ import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteUpdateRequest;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotProcessableException;
+import com.typingpractice.typing_practice_be.quote.query.QuoteUpdateQuery;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
 import java.util.List;
 import java.util.Optional;
@@ -185,7 +186,8 @@ class AdminQuoteServiceTest {
 
       when(quoteRepository.findById(1L)).thenReturn(Optional.of(quote));
       // when
-      Quote result = adminQuoteService.updateQuote(1L, request);
+      QuoteUpdateQuery query = QuoteUpdateQuery.from(request);
+      Quote result = adminQuoteService.updateQuote(1L, query);
 
       // then
       assertThat(result.getSentence()).isEqualTo(newSentence);
@@ -204,7 +206,8 @@ class AdminQuoteServiceTest {
       when(quoteRepository.findById(1L)).thenReturn(Optional.of(quote));
 
       // when & then
-      assertThatThrownBy(() -> adminQuoteService.updateQuote(1L, request))
+      QuoteUpdateQuery query = QuoteUpdateQuery.from(request);
+      assertThatThrownBy(() -> adminQuoteService.updateQuote(1L, query))
           .isInstanceOf(QuoteNotProcessableException.class);
     }
   }
