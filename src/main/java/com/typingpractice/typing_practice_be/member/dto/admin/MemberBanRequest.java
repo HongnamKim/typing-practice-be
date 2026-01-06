@@ -7,4 +7,10 @@ import lombok.ToString;
 @ToString
 public class MemberBanRequest {
   private String banReason;
+
+  public static MemberBanRequest create(String banReason) {
+    MemberBanRequest request = new MemberBanRequest();
+    request.banReason = banReason;
+    return request;
+  }
 }
