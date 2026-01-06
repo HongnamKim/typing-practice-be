@@ -11,6 +11,7 @@ import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
 import com.typingpractice.typing_practice_be.report.domain.Report;
+import com.typingpractice.typing_practice_be.report.domain.ReportStatus;
 import com.typingpractice.typing_practice_be.report.exception.DuplicateReportException;
 import com.typingpractice.typing_practice_be.report.exception.QuoteNotReportableException;
 import com.typingpractice.typing_practice_be.report.exception.ReportNotFoundException;
@@ -86,6 +87,13 @@ public class ReportService {
 
     if (!Objects.equals(report.getMember().getId(), memberId)) {
       throw new ReportNotProcessableException();
+    }
+
+    // 처리되지 않은 신고를 삭제할 경우 신고 횟수 차감
+    if (report.getStatus() != ReportStatus.PROCESSED) {
+      Quote quote = report.getQuote();
+
+      quote.decreaseReportCount();
     }
 
     reportRepository.delete(report);

@@ -94,6 +94,10 @@ public class Quote extends BaseEntity {
     this.reportCount++;
   }
 
+  public void decreaseReportCount() {
+    this.reportCount--;
+  }
+
   public void resetReportCount() {
     this.reportCount = 0;
   }
