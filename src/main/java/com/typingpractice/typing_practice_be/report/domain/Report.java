@@ -53,7 +53,8 @@ public class Report extends BaseEntity {
     return report;
   }
 
-  /*public void updateStatus(ReportStatus status) {
-    this.status = status;
-  }*/
+  public void process(boolean quoteDeleted) {
+    this.status = ReportStatus.PROCESSED;
+    this.quoteDeleted = quoteDeleted;
+  }
 }
