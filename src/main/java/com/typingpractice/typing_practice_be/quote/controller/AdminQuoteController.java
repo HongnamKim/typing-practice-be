@@ -2,10 +2,7 @@ package com.typingpractice.typing_practice_be.quote.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.dto.PageResult;
-import com.typingpractice.typing_practice_be.member.domain.Member;
-import com.typingpractice.typing_practice_be.member.domain.MemberRole;
-import com.typingpractice.typing_practice_be.member.exception.NotAdminException;
-import com.typingpractice.typing_practice_be.member.service.MemberService;
+import com.typingpractice.typing_practice_be.common.security.AdminOnly;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationResponse;
@@ -16,28 +13,17 @@ import com.typingpractice.typing_practice_be.quote.query.QuoteUpdateQuery;
 import com.typingpractice.typing_practice_be.quote.service.AdminQuoteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
+@AdminOnly
 public class AdminQuoteController {
-  private final MemberService memberService;
   private final AdminQuoteService adminQuoteService;
-
-  private void validateAdmin() {
-    Long memberId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    Member member = memberService.findMemberById(memberId);
-
-    if (member.getRole() != MemberRole.ADMIN) {
-      throw new NotAdminException();
-    }
-  }
 
   @GetMapping("/admin/quotes")
   public ApiResponse<QuotePaginationResponse> getQuotes(
       @ModelAttribute @Valid QuotePaginationRequest request) {
-    validateAdmin();
 
     QuotePaginationQuery query = QuotePaginationQuery.from(request);
 
@@ -46,20 +32,9 @@ public class AdminQuoteController {
     return ApiResponse.ok(QuotePaginationResponse.from(result));
   }
 
-  //  // 승인 대기 목록 조회
-  //  @GetMapping("/admin/quotes/pending")
-  //  public ApiResponse<List<QuoteResponse>> getPendingQuotes() {
-  //    validateAdmin();
-  //
-  //    List<Quote> pendingQuotes = adminQuoteService.findPendingQuotes();
-  //
-  //    return ApiResponse.ok(pendingQuotes.stream().map(QuoteResponse::from).toList());
-  //  }
-
   // 승인
   @PostMapping("/admin/quotes/{quoteId}/approve")
   public ApiResponse<QuoteResponse> approvePendingQuote(@PathVariable Long quoteId) {
-    validateAdmin();
 
     Quote quote = adminQuoteService.approvePublish(quoteId);
 
@@ -69,7 +44,6 @@ public class AdminQuoteController {
   // 거부
   @PostMapping("/admin/quotes/{quoteId}/reject")
   public ApiResponse<QuoteResponse> rejectPendingQuote(@PathVariable Long quoteId) {
-    validateAdmin();
 
     Quote quote = adminQuoteService.rejectPublish(quoteId);
 
@@ -80,7 +54,6 @@ public class AdminQuoteController {
   @PatchMapping("/admin/quotes/{quoteId}")
   public ApiResponse<QuoteResponse> patchQuote(
       @PathVariable Long quoteId, @RequestBody QuoteUpdateRequest request) {
-    validateAdmin();
 
     QuoteUpdateQuery query = QuoteUpdateQuery.from(request);
 
@@ -92,27 +65,15 @@ public class AdminQuoteController {
   // 삭제
   @DeleteMapping("/admin/quotes/{quoteId}")
   public ApiResponse<Void> deleteQuote(@PathVariable Long quoteId) {
-    validateAdmin();
 
     adminQuoteService.deleteQuote(quoteId);
 
     return ApiResponse.ok(null);
   }
 
-  //  // 숨김 목록
-  //  @GetMapping("/admin/quotes/hidden")
-  //  public ApiResponse<List<QuoteResponse>> getHiddenQuotes() {
-  //    validateAdmin();
-  //
-  //    List<Quote> hiddenQuotes = adminQuoteService.findHiddenQuotes();
-  //
-  //    return ApiResponse.ok(hiddenQuotes.stream().map(QuoteResponse::from).toList());
-  //  }
-
   // 숨김 해제
   @PostMapping("/admin/quotes/{quoteId}/restore")
   public ApiResponse<QuoteResponse> restoreHiddenQuotes(@PathVariable Long quoteId) {
-    validateAdmin();
 
     Quote quote = adminQuoteService.cancelHidden(quoteId);
 

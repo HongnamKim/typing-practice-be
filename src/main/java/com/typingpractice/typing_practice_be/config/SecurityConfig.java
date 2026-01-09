@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.config;
 
 import com.typingpractice.typing_practice_be.common.jwt.JwtAuthenticationFilter;
+import com.typingpractice.typing_practice_be.common.security.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -40,6 +42,7 @@ public class SecurityConfig {
             //                    .anyRequest()
             //                    .authenticated() // 나머지는 인증 필요
             )
+        .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
