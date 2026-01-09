@@ -31,7 +31,8 @@ public class MemberController {
 
     Member member = this.memberService.loginOrSignIn(query);
 
-    String token = jwtTokenProvider.createToken(member.getId(), member.getEmail());
+    String token =
+        jwtTokenProvider.createToken(member.getId(), member.getEmail(), member.getRole());
 
     return ApiResponse.ok(LoginResponse.of(member, token));
   }

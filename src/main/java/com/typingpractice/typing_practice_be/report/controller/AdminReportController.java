@@ -2,10 +2,7 @@ package com.typingpractice.typing_practice_be.report.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.dto.PageResult;
-import com.typingpractice.typing_practice_be.member.domain.Member;
-import com.typingpractice.typing_practice_be.member.domain.MemberRole;
-import com.typingpractice.typing_practice_be.member.exception.NotAdminException;
-import com.typingpractice.typing_practice_be.member.service.MemberService;
+import com.typingpractice.typing_practice_be.common.security.AdminOnly;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import com.typingpractice.typing_practice_be.report.dto.*;
 import com.typingpractice.typing_practice_be.report.query.ReportPaginationQuery;
@@ -13,28 +10,18 @@ import com.typingpractice.typing_practice_be.report.query.ReportProcessQuery;
 import com.typingpractice.typing_practice_be.report.service.AdminReportService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
+@AdminOnly
 public class AdminReportController {
-  private final MemberService memberService;
+
   private final AdminReportService adminReportService;
-
-  private void validateAdmin() {
-    Long memberId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    Member member = memberService.findMemberById(memberId);
-
-    if (member.getRole() != MemberRole.ADMIN) {
-      throw new NotAdminException();
-    }
-  }
 
   @GetMapping("/admin/reports")
   public ApiResponse<AdminReportPaginationResponse> getReports(
       @ModelAttribute @Valid ReportPaginationRequest request) {
-    validateAdmin();
 
     ReportPaginationQuery query = ReportPaginationQuery.from(request);
 
@@ -46,7 +33,6 @@ public class AdminReportController {
   @PostMapping("/admin/reports/{quoteId}/process")
   public ApiResponse<Void> processReport(
       @PathVariable Long quoteId, @RequestBody @Valid ReportProcessRequest request) {
-    validateAdmin();
 
     ReportProcessQuery query = ReportProcessQuery.from(request);
 
@@ -57,7 +43,6 @@ public class AdminReportController {
 
   @DeleteMapping("/admin/reports/{reportId}")
   public ApiResponse<Void> deleteReport(@PathVariable Long reportId) {
-    validateAdmin();
 
     adminReportService.deleteReport(reportId);
 

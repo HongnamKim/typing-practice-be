@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.common.jwt;
 
+import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -21,13 +22,14 @@ public class JwtTokenProvider {
     this.expiration = expiration;
   }
 
-  public String createToken(Long memberId, String email) {
+  public String createToken(Long memberId, String email, MemberRole role) {
     Date now = new Date();
     Date expiryDate = new Date(now.getTime() + expiration); // 만료 시간
 
     return Jwts.builder()
         .subject(String.valueOf(memberId))
         .claim("email", email)
+        .claim("role", role.name())
         .issuedAt(now)
         .expiration(expiryDate)
         .signWith(secretKey)
@@ -37,6 +39,11 @@ public class JwtTokenProvider {
   public Long getMemberId(String token) {
     Claims claims = parseClaims(token);
     return Long.valueOf(claims.getSubject());
+  }
+
+  public String getRole(String token) {
+    Claims claims = parseClaims(token);
+    return claims.get("role", String.class);
   }
 
   public boolean validateToken(String token) {
