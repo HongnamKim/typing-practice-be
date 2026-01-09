@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.quote.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.dto.*;
 import com.typingpractice.typing_practice_be.quote.exception.EmptyUpdateRequestException;
@@ -10,7 +11,6 @@ import com.typingpractice.typing_practice_be.quote.query.QuotePaginationQuery;
 import com.typingpractice.typing_practice_be.quote.query.QuoteUpdateQuery;
 import com.typingpractice.typing_practice_be.quote.service.QuoteService;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -39,16 +39,16 @@ public class QuoteController {
 
   // 공개 문장 랜덤 조회
   @GetMapping("/quotes")
-  public ApiResponse<List<QuoteResponse>> getPublicQuotes(
+  public ApiResponse<QuotePaginationResponse> getPublicQuotes(
       @ModelAttribute @Valid PublicQuoteRequest request) {
 
     Long memberId = request.getOnlyMyQuotes() ? getMemberId() : null;
 
     PublicQuoteQuery query = PublicQuoteQuery.from(memberId, request);
 
-    List<Quote> quotes = quoteService.findRandomPublicQuotes(query);
+    PageResult<Quote> result = quoteService.findRandomPublicQuotes(query);
 
-    return ApiResponse.ok(quotes.stream().map(QuoteResponse::from).toList());
+    return ApiResponse.ok(QuotePaginationResponse.from(result));
   }
 
   // 내 문장 조회
@@ -59,11 +59,9 @@ public class QuoteController {
 
     QuotePaginationQuery query = QuotePaginationQuery.from(request);
 
-    List<Quote> myQuotes = quoteService.getMyQuotes(memberId, query);
+    PageResult<Quote> result = quoteService.getMyQuotes(memberId, query);
 
-    return ApiResponse.ok(
-        QuotePaginationResponse.from(
-            myQuotes, request.getPage(), request.getSize(), myQuotes.size() > request.getSize()));
+    return ApiResponse.ok(QuotePaginationResponse.from(result));
   }
 
   // 상세 조회

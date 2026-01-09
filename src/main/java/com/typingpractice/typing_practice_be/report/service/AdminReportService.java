@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.report.service;
 
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
@@ -24,15 +25,18 @@ public class AdminReportService {
   private final QuoteRepository quoteRepository;
   private final ReportRepository reportRepository;
 
-  public List<Report> findReports(ReportPaginationQuery query) {
+  public PageResult<Report> findReports(ReportPaginationQuery query) {
 
     if (query.getMemberId() != null) {
       memberRepository.findById(query.getMemberId()).orElseThrow(MemberNotFoundException::new);
     }
 
-    List<Report> all = reportRepository.findAll(query);
+    List<Report> reports = reportRepository.findAll(query);
 
-    return all;
+    boolean hasNext = reports.size() > query.getSize();
+    List<Report> content = hasNext ? reports.subList(0, query.getSize()) : reports;
+
+    return new PageResult<>(content, query.getPage(), query.getSize(), hasNext);
   }
 
   @Transactional

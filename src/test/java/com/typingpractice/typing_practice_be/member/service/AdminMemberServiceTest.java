@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.typingpractice.typing_practice_be.common.domain.SortDirection;
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.domain.MemberOrderBy;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
@@ -59,10 +60,10 @@ class AdminMemberServiceTest {
 
       when(memberRepository.findAll(query)).thenReturn(List.of(member1, member2));
       // when
-      List<Member> result = adminMemberService.findAllMembers(query);
+      PageResult<Member> result = adminMemberService.findAllMembers(query);
 
       // then
-      assertThat(result).hasSize(2);
+      assertThat(result.getContent()).hasSize(2);
     }
   }
 

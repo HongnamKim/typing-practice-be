@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.typingpractice.typing_practice_be.common.domain.SortDirection;
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.dailylimit.DailyLimitService;
 import com.typingpractice.typing_practice_be.dailylimit.exception.DailyReportLimitException;
 import com.typingpractice.typing_practice_be.member.domain.Member;
@@ -247,10 +248,10 @@ class ReportServiceTest {
       when(reportRepository.findMyReports(member, query)).thenReturn(List.of(report));
 
       // when
-      List<Report> result = reportService.findMyReports(1L, query);
+      PageResult<Report> result = reportService.findMyReports(1L, query);
 
       // then
-      assertThat(result).hasSize(1);
+      assertThat(result.getContent()).hasSize(1);
     }
 
     @Test

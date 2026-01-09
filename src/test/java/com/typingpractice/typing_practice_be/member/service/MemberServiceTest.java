@@ -3,7 +3,7 @@ package com.typingpractice.typing_practice_be.member.service;
 import static org.assertj.core.api.Assertions.*;
 
 import com.typingpractice.typing_practice_be.member.domain.Member;
-import com.typingpractice.typing_practice_be.member.dto.LoginRequest;
+import com.typingpractice.typing_practice_be.member.dto.MemberLoginRequest;
 import com.typingpractice.typing_practice_be.member.dto.UpdateNicknameRequest;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.query.MemberLoginQuery;
@@ -32,8 +32,8 @@ class MemberServiceTest {
   @Test
   void findMemberById() {
     // given
-    LoginRequest loginRequest = LoginRequest.create("email", "password");
-    MemberLoginQuery query = MemberLoginQuery.from(loginRequest);
+    MemberLoginRequest memberLoginRequest = MemberLoginRequest.create("email", "password");
+    MemberLoginQuery query = MemberLoginQuery.from(memberLoginRequest);
     Member member = memberService.loginOrSignIn(query);
 
     // when
@@ -63,8 +63,8 @@ class MemberServiceTest {
   @Test
   void loginOrSignIn() {
     // given
-    LoginRequest loginRequest = LoginRequest.create("memberA", "A");
-    MemberLoginQuery query = MemberLoginQuery.from(loginRequest);
+    MemberLoginRequest memberLoginRequest = MemberLoginRequest.create("memberA", "A");
+    MemberLoginQuery query = MemberLoginQuery.from(memberLoginRequest);
     Member memberA = memberService.loginOrSignIn(query); // 회원가입
 
     // when
@@ -80,8 +80,8 @@ class MemberServiceTest {
   @Test
   void updateNickname() {
     // given
-    LoginRequest loginRequest = LoginRequest.create("memberA", "a");
-    MemberLoginQuery query = MemberLoginQuery.from(loginRequest);
+    MemberLoginRequest memberLoginRequest = MemberLoginRequest.create("memberA", "a");
+    MemberLoginQuery query = MemberLoginQuery.from(memberLoginRequest);
     Member memberA = memberService.loginOrSignIn(query); // 회원가입
 
     // when
@@ -97,8 +97,8 @@ class MemberServiceTest {
   @Test
   void deleteMember() {
     // given
-    LoginRequest loginRequest = LoginRequest.create("memberA", "a");
-    MemberLoginQuery query = MemberLoginQuery.from(loginRequest);
+    MemberLoginRequest memberLoginRequest = MemberLoginRequest.create("memberA", "a");
+    MemberLoginQuery query = MemberLoginQuery.from(memberLoginRequest);
     Member memberA = memberService.loginOrSignIn(query);
 
     // when

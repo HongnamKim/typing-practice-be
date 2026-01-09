@@ -1,6 +1,6 @@
 package com.typingpractice.typing_practice_be.member.query;
 
-import com.typingpractice.typing_practice_be.member.dto.LoginRequest;
+import com.typingpractice.typing_practice_be.member.dto.MemberLoginRequest;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -15,7 +15,7 @@ public class MemberLoginQuery {
     this.password = password;
   }
 
-  public static MemberLoginQuery from(LoginRequest request) {
+  public static MemberLoginQuery from(MemberLoginRequest request) {
     return new MemberLoginQuery(request.getEmail(), request.getPassword());
   }
 }

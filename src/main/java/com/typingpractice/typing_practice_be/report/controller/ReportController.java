@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.report.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import com.typingpractice.typing_practice_be.report.dto.ReportCreateRequest;
@@ -11,7 +12,6 @@ import com.typingpractice.typing_practice_be.report.query.ReportCreateQuery;
 import com.typingpractice.typing_practice_be.report.query.ReportPaginationQuery;
 import com.typingpractice.typing_practice_be.report.service.ReportService;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -45,11 +45,9 @@ public class ReportController {
 
     ReportPaginationQuery query = ReportPaginationQuery.from(request);
 
-    List<Report> myReports = reportService.findMyReports(memberId, query);
+    PageResult<Report> result = reportService.findMyReports(memberId, query);
 
-    return ApiResponse.ok(
-        ReportPaginationResponse.from(
-            myReports, request.getPage(), request.getSize(), myReports.size() > request.getSize()));
+    return ApiResponse.ok(ReportPaginationResponse.from(result));
   }
 
   @DeleteMapping("/reports/{reportId}")

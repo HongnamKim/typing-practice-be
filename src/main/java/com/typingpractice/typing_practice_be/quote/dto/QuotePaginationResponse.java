@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.quote.dto;
 
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.common.dto.PaginationResponse;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import lombok.Getter;
@@ -16,11 +17,11 @@ public class QuotePaginationResponse extends PaginationResponse {
     super(page, size, hasNext);
   }
 
-  public static QuotePaginationResponse from(
-      List<Quote> quotes, int page, int size, boolean hasNext) {
-    QuotePaginationResponse response = new QuotePaginationResponse(page, size, hasNext);
+  public static QuotePaginationResponse from(PageResult<Quote> result) {
+    QuotePaginationResponse response =
+        new QuotePaginationResponse(result.getPage(), result.getSize(), result.isHasNext());
 
-    response.content = quotes.stream().limit(size).map(QuoteResponse::from).toList();
+    response.content = result.getContent().stream().map(QuoteResponse::from).toList();
 
     return response;
   }
