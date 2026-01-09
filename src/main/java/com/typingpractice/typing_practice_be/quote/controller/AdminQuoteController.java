@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.quote.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.exception.NotAdminException;
@@ -13,8 +14,6 @@ import com.typingpractice.typing_practice_be.quote.dto.QuoteUpdateRequest;
 import com.typingpractice.typing_practice_be.quote.query.QuotePaginationQuery;
 import com.typingpractice.typing_practice_be.quote.query.QuoteUpdateQuery;
 import com.typingpractice.typing_practice_be.quote.service.AdminQuoteService;
-import java.util.List;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -42,22 +41,20 @@ public class AdminQuoteController {
 
     QuotePaginationQuery query = QuotePaginationQuery.from(request);
 
-    List<Quote> quotes = adminQuoteService.findQuotes(query);
+    PageResult<Quote> result = adminQuoteService.findQuotes(query);
 
-    return ApiResponse.ok(
-        QuotePaginationResponse.from(
-            quotes, request.getPage(), request.getSize(), quotes.size() > request.getSize()));
+    return ApiResponse.ok(QuotePaginationResponse.from(result));
   }
 
-  // 승인 대기 목록 조회
-  @GetMapping("/admin/quotes/pending")
-  public ApiResponse<List<QuoteResponse>> getPendingQuotes() {
-    validateAdmin();
-
-    List<Quote> pendingQuotes = adminQuoteService.findPendingQuotes();
-
-    return ApiResponse.ok(pendingQuotes.stream().map(QuoteResponse::from).toList());
-  }
+  //  // 승인 대기 목록 조회
+  //  @GetMapping("/admin/quotes/pending")
+  //  public ApiResponse<List<QuoteResponse>> getPendingQuotes() {
+  //    validateAdmin();
+  //
+  //    List<Quote> pendingQuotes = adminQuoteService.findPendingQuotes();
+  //
+  //    return ApiResponse.ok(pendingQuotes.stream().map(QuoteResponse::from).toList());
+  //  }
 
   // 승인
   @PostMapping("/admin/quotes/{quoteId}/approve")
@@ -102,15 +99,15 @@ public class AdminQuoteController {
     return ApiResponse.ok(null);
   }
 
-  // 숨김 목록
-  @GetMapping("/admin/quotes/hidden")
-  public ApiResponse<List<QuoteResponse>> getHiddenQuotes() {
-    validateAdmin();
-
-    List<Quote> hiddenQuotes = adminQuoteService.findHiddenQuotes();
-
-    return ApiResponse.ok(hiddenQuotes.stream().map(QuoteResponse::from).toList());
-  }
+  //  // 숨김 목록
+  //  @GetMapping("/admin/quotes/hidden")
+  //  public ApiResponse<List<QuoteResponse>> getHiddenQuotes() {
+  //    validateAdmin();
+  //
+  //    List<Quote> hiddenQuotes = adminQuoteService.findHiddenQuotes();
+  //
+  //    return ApiResponse.ok(hiddenQuotes.stream().map(QuoteResponse::from).toList());
+  //  }
 
   // 숨김 해제
   @PostMapping("/admin/quotes/{quoteId}/restore")

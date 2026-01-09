@@ -3,7 +3,7 @@ package com.typingpractice.typing_practice_be.member.controller;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.jwt.JwtTokenProvider;
 import com.typingpractice.typing_practice_be.member.domain.Member;
-import com.typingpractice.typing_practice_be.member.dto.LoginRequest;
+import com.typingpractice.typing_practice_be.member.dto.MemberLoginRequest;
 import com.typingpractice.typing_practice_be.member.dto.LoginResponse;
 import com.typingpractice.typing_practice_be.member.dto.MemberResponse;
 import com.typingpractice.typing_practice_be.member.dto.UpdateNicknameRequest;
@@ -25,8 +25,9 @@ public class MemberController {
 
   @PostMapping("/login")
   @ResponseStatus(HttpStatus.CREATED)
-  public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
-    MemberLoginQuery query = MemberLoginQuery.from(loginRequest);
+  public ApiResponse<LoginResponse> login(
+      @Valid @RequestBody MemberLoginRequest memberLoginRequest) {
+    MemberLoginQuery query = MemberLoginQuery.from(memberLoginRequest);
 
     Member member = this.memberService.loginOrSignIn(query);
 

@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.quote.service;
 
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.dailylimit.DailyLimitService;
 import com.typingpractice.typing_practice_be.dailylimit.exception.DailyQuoteUploadLimitException;
 import com.typingpractice.typing_practice_be.member.domain.Member;
@@ -30,10 +31,13 @@ public class QuoteService {
 
   private final DailyLimitService dailyLimitService;
 
-  public List<Quote> findRandomPublicQuotes(PublicQuoteQuery query) {
-    List<Quote> all = quoteRepository.findPublicQuotes(query);
+  public PageResult<Quote> findRandomPublicQuotes(PublicQuoteQuery query) {
+    List<Quote> quotes = quoteRepository.findPublicQuotes(query);
 
-    return all;
+    boolean hasNext = quotes.size() > query.getCount();
+    List<Quote> content = hasNext ? quotes.subList(0, query.getCount()) : quotes;
+
+    return new PageResult<>(content, query.getPage(), query.getCount(), hasNext);
   }
 
   public Quote findById(Long quoteId) {
@@ -80,10 +84,15 @@ public class QuoteService {
     quoteRepository.deleteQuote(quote);
   }
 
-  public List<Quote> getMyQuotes(Long memberId, QuotePaginationQuery query) {
+  public PageResult<Quote> getMyQuotes(Long memberId, QuotePaginationQuery query) {
     Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-    return quoteRepository.findByMember(member, query);
+    List<Quote> quotes = quoteRepository.findByMember(member, query);
+
+    boolean hasNext = quotes.size() > query.getSize();
+    List<Quote> content = hasNext ? quotes.subList(0, query.getSize()) : quotes;
+
+    return new PageResult<>(content, query.getPage(), query.getSize(), hasNext);
   }
 
   private Quote findMyQuoteById(Long memberId, Long quoteId) {

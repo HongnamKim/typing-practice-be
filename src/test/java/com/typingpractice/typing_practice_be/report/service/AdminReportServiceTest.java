@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.typingpractice.typing_practice_be.common.domain.SortDirection;
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
@@ -97,10 +98,10 @@ class AdminReportServiceTest {
 
       when(reportRepository.findAll(query)).thenReturn(List.of(report));
       // when
-      List<Report> reports = adminReportService.findReports(query);
+      PageResult<Report> result = adminReportService.findReports(query);
 
       // then
-      assertThat(reports).hasSize(1);
+      assertThat(result.getContent()).hasSize(1);
       verify(memberRepository, never()).findById(any());
     }
 
@@ -116,10 +117,10 @@ class AdminReportServiceTest {
       when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
       when(reportRepository.findAll(query)).thenReturn(List.of(report));
       // when
-      List<Report> result = adminReportService.findReports(query);
+      PageResult<Report> result = adminReportService.findReports(query);
 
       // then
-      assertThat(result).hasSize(1);
+      assertThat(result.getContent()).hasSize(1);
     }
 
     @Test

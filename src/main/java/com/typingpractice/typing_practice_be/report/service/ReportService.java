@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.report.service;
 
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.dailylimit.DailyLimitService;
 import com.typingpractice.typing_practice_be.dailylimit.exception.DailyReportLimitException;
 import com.typingpractice.typing_practice_be.member.domain.Member;
@@ -72,12 +73,15 @@ public class ReportService {
     return report;
   }
 
-  // 내 신고 내역 조회
-  // 페이징 추가 필요
-  public List<Report> findMyReports(Long memberId, ReportPaginationQuery query) {
+  public PageResult<Report> findMyReports(Long memberId, ReportPaginationQuery query) {
     Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-    return reportRepository.findMyReports(member, query);
+    List<Report> myReports = reportRepository.findMyReports(member, query);
+
+    boolean hasNext = myReports.size() > query.getSize();
+    List<Report> content = hasNext ? myReports.subList(0, query.getSize()) : myReports;
+
+    return new PageResult<>(content, query.getPage(), query.getSize(), hasNext);
   }
 
   // 본인 신고 내역 삭제(철회 or 처리된 신고 삭제)

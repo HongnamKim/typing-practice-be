@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.report.dto;
 
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.common.dto.PaginationResponse;
 import com.typingpractice.typing_practice_be.member.dto.MemberResponse;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
@@ -17,13 +18,12 @@ public class AdminReportPaginationResponse extends PaginationResponse {
     super(page, size, hasNext);
   }
 
-  public static AdminReportPaginationResponse from(
-      List<Report> reports, int page, int size, boolean hasNext) {
-    AdminReportPaginationResponse response = new AdminReportPaginationResponse(page, size, hasNext);
+  public static AdminReportPaginationResponse from(PageResult<Report> result) {
+    AdminReportPaginationResponse response =
+        new AdminReportPaginationResponse(result.getPage(), result.getSize(), result.isHasNext());
 
     response.content =
-        reports.stream()
-            .limit(size)
+        result.getContent().stream()
             .map(
                 r -> {
                   MemberResponse member = MemberResponse.from(r.getMember());

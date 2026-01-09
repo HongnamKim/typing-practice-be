@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.typingpractice.typing_practice_be.common.domain.SortDirection;
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.dailylimit.DailyLimitService;
 import com.typingpractice.typing_practice_be.dailylimit.exception.DailyQuoteUploadLimitException;
 import com.typingpractice.typing_practice_be.member.domain.Member;
@@ -325,10 +326,10 @@ class QuoteServiceTest {
       when(quoteRepository.findByMember(member, query)).thenReturn(List.of(quote));
 
       // when
-      List<Quote> result = quoteService.getMyQuotes(1L, query);
+      PageResult<Quote> result = quoteService.getMyQuotes(1L, query);
 
       // then
-      assertThat(result).hasSize(1);
+      assertThat(result.getContent()).hasSize(1);
     }
 
     @Test
@@ -495,10 +496,10 @@ class QuoteServiceTest {
       when(quoteRepository.findPublicQuotes(query)).thenReturn(List.of(quote1, quote2));
 
       // when
-      List<Quote> result = quoteService.findRandomPublicQuotes(query);
+      PageResult<Quote> result = quoteService.findRandomPublicQuotes(query);
 
       // then
-      assertThat(result).hasSize(2);
+      assertThat(result.getContent()).hasSize(2);
       verify(quoteRepository).findPublicQuotes(query);
     }
   }

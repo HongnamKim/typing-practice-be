@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.member.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.dto.*;
@@ -14,7 +15,6 @@ import com.typingpractice.typing_practice_be.member.query.MemberPaginationQuery;
 import com.typingpractice.typing_practice_be.member.service.AdminMemberService;
 import com.typingpractice.typing_practice_be.member.service.MemberService;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -42,12 +42,9 @@ public class AdminMemberController {
 
     MemberPaginationQuery query = MemberPaginationQuery.from(request);
 
-    List<Member> allMembers = adminMemberService.findAllMembers(query);
+    PageResult<Member> result = adminMemberService.findAllMembers(query);
 
-    boolean hasNext = allMembers.size() > request.getSize();
-
-    return ApiResponse.ok(
-        MemberPaginationResponse.from(allMembers, request.getPage(), request.getSize(), hasNext));
+    return ApiResponse.ok(MemberPaginationResponse.from(result));
   }
 
   @GetMapping("/admin/members/{memberId}")

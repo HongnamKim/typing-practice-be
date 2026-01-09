@@ -12,7 +12,6 @@ import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundExcept
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotProcessableException;
 import com.typingpractice.typing_practice_be.quote.query.QuoteUpdateQuery;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -45,42 +44,43 @@ class AdminQuoteServiceTest {
     return quote;
   }
 
-  @Nested
-  @DisplayName("findPendingQuotes")
-  class FindPendingQuotes {
-    @Test
-    @DisplayName("승인 대기 목록 조회 성공")
-    void success() {
-      Quote quote1 = createQuote(QuoteType.PUBLIC, QuoteStatus.PENDING);
-      Quote quote2 = createQuote(QuoteType.PUBLIC, QuoteStatus.PENDING);
+  //  @Nested
+  //  @DisplayName("findPendingQuotes")
+  //  class FindPendingQuotes {
+  //    @Test
+  //    @DisplayName("승인 대기 목록 조회 성공")
+  //    void success() {
+  //      Quote quote1 = createQuote(QuoteType.PUBLIC, QuoteStatus.PENDING);
+  //      Quote quote2 = createQuote(QuoteType.PUBLIC, QuoteStatus.PENDING);
+  //
+  //      when(quoteRepository.findByStatus(QuoteStatus.PENDING)).thenReturn(List.of(quote1,
+  // quote2));
+  //
+  //      List<Quote> result = adminQuoteService.findPendingQuotes();
+  //
+  //      assertThat(result).hasSize(2);
+  //      verify(quoteRepository).findByStatus(QuoteStatus.PENDING);
+  //    }
+  //  }
 
-      when(quoteRepository.findByStatus(QuoteStatus.PENDING)).thenReturn(List.of(quote1, quote2));
-
-      List<Quote> result = adminQuoteService.findPendingQuotes();
-
-      assertThat(result).hasSize(2);
-      verify(quoteRepository).findByStatus(QuoteStatus.PENDING);
-    }
-  }
-
-  @Nested
-  @DisplayName("findHiddenQuotes")
-  class FindHiddenQuotes {
-    @Test
-    @DisplayName("숨김 목록 조회 성공")
-    void success() {
-      Quote quote = createQuote(QuoteType.PUBLIC, QuoteStatus.HIDDEN);
-
-      when(quoteRepository.findByStatus(QuoteStatus.HIDDEN)).thenReturn(List.of(quote));
-
-      // when
-      List<Quote> result = adminQuoteService.findHiddenQuotes();
-
-      // then
-      assertThat(result).hasSize(1);
-      verify(quoteRepository).findByStatus(QuoteStatus.HIDDEN);
-    }
-  }
+  //  @Nested
+  //  @DisplayName("findHiddenQuotes")
+  //  class FindHiddenQuotes {
+  //    @Test
+  //    @DisplayName("숨김 목록 조회 성공")
+  //    void success() {
+  //      Quote quote = createQuote(QuoteType.PUBLIC, QuoteStatus.HIDDEN);
+  //
+  //      when(quoteRepository.findByStatus(QuoteStatus.HIDDEN)).thenReturn(List.of(quote));
+  //
+  //      // when
+  //      List<Quote> result = adminQuoteService.findHiddenQuotes();
+  //
+  //      // then
+  //      assertThat(result).hasSize(1);
+  //      verify(quoteRepository).findByStatus(QuoteStatus.HIDDEN);
+  //    }
+  //  }
 
   @Nested
   @DisplayName("approvePublish")

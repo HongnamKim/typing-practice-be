@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.member.service;
 
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
@@ -18,10 +19,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminMemberService {
   private final MemberRepository memberRepository;
 
-  public List<Member> findAllMembers(MemberPaginationQuery query) {
+  public PageResult<Member> findAllMembers(MemberPaginationQuery query) {
     List<Member> members = memberRepository.findAll(query);
 
-    return members;
+    boolean hasNext = members.size() > query.getSize();
+    List<Member> content = hasNext ? members.subList(0, query.getSize()) : members;
+
+    return new PageResult<>(content, query.getPage(), query.getSize(), hasNext);
   }
 
   public Member findMemberById(Long memberId) {

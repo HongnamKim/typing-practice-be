@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.report.dto;
 
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.common.dto.PaginationResponse;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
 import com.typingpractice.typing_practice_be.report.domain.Report;
@@ -16,13 +17,12 @@ public class ReportPaginationResponse extends PaginationResponse {
     super(page, size, hasNext);
   }
 
-  public static ReportPaginationResponse from(
-      List<Report> reports, int page, int size, boolean hasNext) {
-    ReportPaginationResponse response = new ReportPaginationResponse(page, size, hasNext);
+  public static ReportPaginationResponse from(PageResult<Report> result) {
+    ReportPaginationResponse response =
+        new ReportPaginationResponse(result.getPage(), result.getSize(), result.isHasNext());
 
     response.content =
-        reports.stream()
-            .limit(size)
+        result.getContent().stream()
             .map(
                 r -> {
                   QuoteResponse quote =

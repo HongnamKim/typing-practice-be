@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.quote.service;
 
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
@@ -19,17 +20,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminQuoteService {
   private final QuoteRepository quoteRepository;
 
-  public List<Quote> findPendingQuotes() {
-    List<Quote> pendingQuotes = quoteRepository.findByStatus(QuoteStatus.PENDING);
+  //  public List<Quote> findPendingQuotes() {
+  //    List<Quote> pendingQuotes = quoteRepository.findByStatus(QuoteStatus.PENDING);
+  //
+  //    return pendingQuotes;
+  //  }
 
-    return pendingQuotes;
-  }
-
-  public List<Quote> findHiddenQuotes() {
-    List<Quote> hiddenQuotes = quoteRepository.findByStatus(QuoteStatus.HIDDEN);
-
-    return hiddenQuotes;
-  }
+  //  public List<Quote> findHiddenQuotes() {
+  //    List<Quote> hiddenQuotes = quoteRepository.findByStatus(QuoteStatus.HIDDEN);
+  //
+  //    return hiddenQuotes;
+  //  }
 
   @Transactional
   public Quote approvePublish(Long quoteId) {
@@ -92,7 +93,12 @@ public class AdminQuoteService {
     return quote;
   }
 
-  public List<Quote> findQuotes(QuotePaginationQuery query) {
-    return quoteRepository.findAll(query);
+  public PageResult<Quote> findQuotes(QuotePaginationQuery query) {
+    List<Quote> quotes = quoteRepository.findAll(query);
+
+    boolean hasNext = quotes.size() > query.getSize();
+    List<Quote> content = hasNext ? quotes.subList(0, query.getSize()) : quotes;
+
+    return new PageResult<>(content, query.getPage(), query.getSize(), hasNext);
   }
 }

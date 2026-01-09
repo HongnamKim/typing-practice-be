@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.report.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.exception.NotAdminException;
@@ -10,8 +11,6 @@ import com.typingpractice.typing_practice_be.report.dto.*;
 import com.typingpractice.typing_practice_be.report.query.ReportPaginationQuery;
 import com.typingpractice.typing_practice_be.report.query.ReportProcessQuery;
 import com.typingpractice.typing_practice_be.report.service.AdminReportService;
-import java.util.List;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -39,11 +38,9 @@ public class AdminReportController {
 
     ReportPaginationQuery query = ReportPaginationQuery.from(request);
 
-    List<Report> reports = adminReportService.findReports(query);
+    PageResult<Report> result = adminReportService.findReports(query);
 
-    return ApiResponse.ok(
-        AdminReportPaginationResponse.from(
-            reports, request.getPage(), request.getSize(), reports.size() > request.getSize()));
+    return ApiResponse.ok(AdminReportPaginationResponse.from(result));
   }
 
   @PostMapping("/admin/reports/{quoteId}/process")
