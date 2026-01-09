@@ -82,7 +82,7 @@ public class QuoteRepository {
             .setParameter("status", QuoteStatus.ACTIVE)
             .setParameter("type", QuoteType.PUBLIC)
             .setFirstResult((query.getPage() - 1) * query.getCount())
-            .setMaxResults(query.getCount());
+            .setMaxResults(query.getCount() + 1);
 
     if (query.getOnlyMyQuotes() && query.getMemberId() != null) {
       typedQuery.setParameter("memberId", query.getMemberId());
@@ -91,11 +91,11 @@ public class QuoteRepository {
     return typedQuery.getResultList();
   }
 
-  public List<Quote> findByStatus(QuoteStatus quoteStatus) {
+  /*public List<Quote> findByStatus(QuoteStatus quoteStatus) {
     return em.createQuery("select q from Quote q where q.status = :status", Quote.class)
         .setParameter("status", quoteStatus)
         .getResultList();
-  }
+  }*/
 
   public void deleteQuote(Quote quote) {
     em.remove(quote);
