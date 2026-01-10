@@ -8,6 +8,9 @@ build/
 # application.yaml
 src/main/resources/application.yaml
 
+# config.js
+src/main/resources/config.js
+
 ### STS ###
 .apt_generated
 .classpath
