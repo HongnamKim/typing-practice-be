@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google 로그인 테스트</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        pre {
+            background: #f4f4f4;
+            padding: 16px;
+            overflow-x: auto;
+        }
+
+        .status {
+            margin: 20px 0;
+            padding: 12px;
+            border-radius: 4px;
+        }
+
+        .success {
+            background: #d4edda;
+        }
+
+        .error {
+            background: #f8d7da;
+        }
+
+        .info {
+            background: #d1ecf1;
+        }
+    </style>
+</head>
+<body>
+<h1>Google 로그인 테스트</h1>
+
+<div id="content"></div>
+
+<script src="/config.js"></script>
+<script>
+    const CONFIG = {
+        GOOGLE_CLIENT_ID: GOOGLE_CONFIG.GOOGLE_CLIENT_ID,
+        REDIRECT_URI: GOOGLE_CONFIG.REDIRECT_URI,
+        BACKEND_URL: GOOGLE_CONFIG.BACKEND_URL
+    };
+
+    const content = document.getElementById('content');
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const error = urlParams.get('error');
+
+    if (error) {
+        // Google에서 에러 반환
+        content.innerHTML = `
+        <div class="status error">
+          <strong>로그인 실패:</strong> ${error}
+        </div>
+        <button onclick="location.href='${CONFIG.REDIRECT_URI}'">다시 시도</button>
+      `;
+    } else if (code) {
+
+        // 5단계: code를 받은 상태
+        content.innerHTML = `
+        <div class="status success">
+          <strong>Google 인증 성공!</strong>
+        </div>
+        <h3>받은 Authorization Code:</h3>
+        <pre>${code}</pre>
+        <button id="sendToBackend">6단계: 백엔드로 code 전송</button>
+        <div id="result"></div>
+      `;
+
+        document.getElementById('sendToBackend').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="status info">백엔드로 전송 중...</div>';
+
+            try {
+                const response = await fetch(CONFIG.BACKEND_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({code})
+                });
+
+                const data = await response.json();
+
+                resultDiv.innerHTML = `
+            <h3>백엔드 응답:</h3>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          `;
+            } catch (err) {
+                resultDiv.innerHTML = `
+            <div class="status error">
+              <strong>요청 실패:</strong> ${err.message}
+            </div>
+          `;
+            }
+        });
+    } else {
+        // 1단계: 로그인 버튼 표시
+        const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({
+            client_id: CONFIG.GOOGLE_CLIENT_ID,
+            redirect_uri: CONFIG.REDIRECT_URI,
+            response_type: 'code',
+            scope: 'email profile'
+        });
+
+        content.innerHTML = `
+        <div class="status info">
+          <strong>플로우:</strong> 버튼 클릭 → Google 로그인 → code 수신 → 백엔드 전송
+        </div>
+        <button onclick="location.href='${googleAuthUrl}'">Google 로그인</button>
+        <h3>설정 확인:</h3>
+        <pre>${JSON.stringify(CONFIG, null, 2)}</pre>
+      `;
+    }
+</script>
+</body>
+</html>
