@@ -28,7 +28,7 @@ class AdminQuoteServiceTest {
   @InjectMocks private AdminQuoteService adminQuoteService;
 
   private Member createMember() {
-    return Member.createMember("test@test.com", "password", "testMember");
+    return Member.createMember("test-provider-id", "test@test.com", "testMember");
   }
 
   private Quote createQuote(QuoteType type, QuoteStatus status) {

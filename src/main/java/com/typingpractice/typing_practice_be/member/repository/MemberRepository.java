@@ -10,9 +10,7 @@ public interface MemberRepository {
 
   Optional<Member> findById(Long memberId);
 
-  Optional<Member> findByEmail(String email);
-
-  Optional<Member> login(String email, String password);
+  Optional<Member> findByProviderId(String providerId);
 
   Long save(Member member);
 

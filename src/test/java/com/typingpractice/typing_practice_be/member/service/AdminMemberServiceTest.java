@@ -32,7 +32,7 @@ class AdminMemberServiceTest {
   @InjectMocks private AdminMemberService adminMemberService;
 
   private Member createMember(MemberRole role) {
-    Member member = Member.createMember("test@test.com", "password", "testMember");
+    Member member = Member.createMember("test-provider-id", "test@test.com", "testMember");
     if (role != MemberRole.USER) {
       member.updateRole(role);
     }

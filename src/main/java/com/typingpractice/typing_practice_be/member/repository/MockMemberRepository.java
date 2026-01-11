@@ -19,14 +19,9 @@ public class MockMemberRepository implements MemberRepository {
   }
 
   @Override
-  public Optional<Member> findByEmail(String email) {
-    return store.values().stream().filter(member -> member.getEmail().equals(email)).findFirst();
-  }
-
-  @Override
-  public Optional<Member> login(String email, String password) {
+  public Optional<Member> findByProviderId(String providerId) {
     return store.values().stream()
-        .filter(member -> member.getEmail().equals(email) && member.getPassword().equals(password))
+        .filter(member -> member.getProviderId().equals(providerId))
         .findFirst();
   }
 
