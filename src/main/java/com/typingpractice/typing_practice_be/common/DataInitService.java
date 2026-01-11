@@ -31,7 +31,7 @@ public class DataInitService implements CommandLineRunner {
 
   @Override
   @Transactional
-  public void run(String... args) throws Exception {
+  public void run(String... args) {
     initAdmin();
     List<Member> members = initMembers();
     List<Quote> quotes = initQuotes(members);
@@ -41,7 +41,7 @@ public class DataInitService implements CommandLineRunner {
   }
 
   private void initAdmin() {
-    Member admin = Member.createMember("admin", "admin", "admin");
+    Member admin = Member.createMember("0", "admin@admin.com", "admin");
     memberRepository.save(admin);
 
     admin.updateRole(MemberRole.ADMIN);
@@ -52,7 +52,7 @@ public class DataInitService implements CommandLineRunner {
   private List<Member> initMembers() {
     List<Member> members = new ArrayList<>();
     for (int i = 1; i <= 10; i++) {
-      Member member = Member.createMember("user" + i + "@test.com", "password" + i, "유저" + i);
+      Member member = Member.createMember(String.valueOf(i), "user" + i + "@test.com", "유저" + i);
       memberRepository.save(member);
       members.add(member);
     }

@@ -1,10 +1,10 @@
 package com.typingpractice.typing_practice_be.member.service;
 
+import com.typingpractice.typing_practice_be.auth.dto.GoogleUserInfo;
 import com.typingpractice.typing_practice_be.member.domain.Member;
+import com.typingpractice.typing_practice_be.member.dto.LoginResult;
 import com.typingpractice.typing_practice_be.member.query.MemberCreateQuery;
-import com.typingpractice.typing_practice_be.member.exception.DuplicateEmailException;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
-import com.typingpractice.typing_practice_be.member.query.MemberLoginQuery;
 import com.typingpractice.typing_practice_be.member.query.MemberUpdateQuery;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
 import java.util.Optional;
@@ -23,30 +23,32 @@ public class MemberService {
   }
 
   @Transactional
-  public Member loginOrSignIn(MemberLoginQuery query) {
-    Optional<Member> byEmail = memberRepository.findByEmail(query.getEmail());
+  public LoginResult loginOrSignIn(GoogleUserInfo googleUserInfo) {
+    Optional<Member> optionalMember =
+        memberRepository.findByProviderId(googleUserInfo.getProviderId());
 
-    if (byEmail.isPresent()) {
-      return memberRepository
-          .login(query.getEmail(), query.getPassword())
-          .orElseThrow(MemberNotFoundException::new);
+    // 가입 완료한 회원
+    if (optionalMember.isPresent()) {
+      Member member = optionalMember.get();
+
+      return LoginResult.create(member, false);
     } else {
+      // 신규 회원
       MemberCreateQuery memberCreateQuery =
-          MemberCreateQuery.of(query.getEmail(), query.getPassword(), Member.DEFAULT_NICKNAME);
-      return this.join(memberCreateQuery);
+          MemberCreateQuery.of(
+              googleUserInfo.getProviderId(), googleUserInfo.getEmail(), googleUserInfo.getName());
+
+      Member member = join(memberCreateQuery);
+      return LoginResult.create(member, true);
     }
   }
 
   private Member join(MemberCreateQuery memberCreateQuery) {
     Member member =
         Member.createMember(
+            memberCreateQuery.getProviderId(),
             memberCreateQuery.getEmail(),
-            memberCreateQuery.getPassword(),
             memberCreateQuery.getNickname());
-
-    if (memberRepository.findByEmail(memberCreateQuery.getEmail()).isPresent()) {
-      throw new DuplicateEmailException();
-    }
 
     memberRepository.save(member);
 

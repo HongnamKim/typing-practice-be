@@ -21,8 +21,9 @@ public class Member extends BaseEntity {
   @Column(name = "member_id")
   private Long id;
 
+  private String providerId;
+
   private String email;
-  private String password;
 
   private String nickname;
 
@@ -42,11 +43,11 @@ public class Member extends BaseEntity {
 
   public static String DEFAULT_NICKNAME = "nickname";
 
-  public static Member createMember(String email, String password, String nickname) {
+  public static Member createMember(String providerId, String email, String nickname) {
     Member member = new Member();
+    member.providerId = providerId;
     member.email = email;
-    member.password = password;
-    member.nickname = nickname;
+    member.nickname = nickname != null ? nickname : DEFAULT_NICKNAME;
     member.role = MemberRole.USER;
 
     member.reportCount = 0;

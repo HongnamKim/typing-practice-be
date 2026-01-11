@@ -7,6 +7,9 @@ import org.springframework.http.HttpStatus;
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
+  GOOGLE_AUTH_FAILED(HttpStatus.BAD_REQUEST, "Google 인증에 실패했습니다."),
+  GOOGLE_SERVER_ERROR(HttpStatus.BAD_GATEWAY, "Google 서버 오류가 발생했습니다."),
+
   MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없습니다."),
   DUPLICATE_EMAIL(HttpStatus.BAD_REQUEST, "이미 가입된 이메일입니다."),
   MEMBER_NOT_PROCESSABLE(HttpStatus.BAD_REQUEST, "처리할 수 없는 회원입니다."),

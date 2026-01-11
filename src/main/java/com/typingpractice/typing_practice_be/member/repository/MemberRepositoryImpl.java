@@ -37,30 +37,18 @@ public class MemberRepositoryImpl implements MemberRepository {
   }
 
   @Override
+  public Optional<Member> findByProviderId(String providerId) {
+    return em.createQuery("select m from Member m where m.providerId = :providerId", Member.class)
+        .setParameter("providerId", providerId)
+        .setMaxResults(1)
+        .getResultStream()
+        .findAny();
+  }
+
+  @Override
   public Optional<Member> findById(Long memberId) {
     return em.createQuery("select m from Member m where m.id = :memberId", Member.class)
         .setParameter("memberId", memberId)
-        .setMaxResults(1)
-        .getResultStream()
-        .findFirst();
-  }
-
-  @Override
-  public Optional<Member> findByEmail(String email) {
-    return em.createQuery("select m from Member m where m.email = :email", Member.class)
-        .setParameter("email", email)
-        .setMaxResults(1)
-        .getResultStream()
-        .findFirst();
-  }
-
-  @Override
-  public Optional<Member> login(String email, String password) {
-    return em.createQuery(
-            "select m from Member m where m.email = :email and m.password = :password",
-            Member.class)
-        .setParameter("email", email)
-        .setParameter("password", password)
         .setMaxResults(1)
         .getResultStream()
         .findFirst();

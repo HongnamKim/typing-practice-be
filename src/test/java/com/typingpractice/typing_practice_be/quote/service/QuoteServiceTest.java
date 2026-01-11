@@ -46,7 +46,7 @@ class QuoteServiceTest {
   @InjectMocks private QuoteService quoteService;
 
   private Member createMember(Long id) {
-    Member member = Member.createMember("test@test.com", "password", "testMember");
+    Member member = Member.createMember("test-provider-id", "test@test.com", "testMember");
     setId(member, id);
     return member;
   }
