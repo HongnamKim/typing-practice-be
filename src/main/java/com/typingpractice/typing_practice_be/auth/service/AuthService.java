@@ -1,13 +1,18 @@
-package com.typingpractice.typing_practice_be.auth;
+package com.typingpractice.typing_practice_be.auth.service;
 
-import com.typingpractice.typing_practice_be.auth.dto.GoogleTokenResponse;
-import com.typingpractice.typing_practice_be.auth.dto.GoogleUserInfo;
+import com.typingpractice.typing_practice_be.auth.domain.JwtBlackList;
+import com.typingpractice.typing_practice_be.auth.dto.google.GoogleTokenResponse;
+import com.typingpractice.typing_practice_be.auth.dto.google.GoogleUserInfo;
+import com.typingpractice.typing_practice_be.common.jwt.JwtPayload;
 import com.typingpractice.typing_practice_be.auth.exception.GoogleAuthException;
 import com.typingpractice.typing_practice_be.auth.exception.GoogleServerException;
+import com.typingpractice.typing_practice_be.auth.repository.JwtBlackListRepository;
+import com.typingpractice.typing_practice_be.common.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
@@ -16,6 +21,7 @@ import org.springframework.web.client.RestClient;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AuthService {
   @Value("${google.client-id}")
   private String clientId;
@@ -30,6 +36,8 @@ public class AuthService {
   private String tokenUri;
 
   private final RestClient restClient = RestClient.create();
+  private final JwtTokenProvider jwtTokenProvider;
+  private final JwtBlackListRepository jwtBlackListRepository;
 
   public GoogleTokenResponse getAccessToken(String code) {
     try {
@@ -68,5 +76,19 @@ public class AuthService {
     } catch (HttpServerErrorException e) {
       throw new GoogleServerException();
     }
+  }
+
+  @Transactional
+  public void logout(String token) {
+    JwtPayload jwtPayload = jwtTokenProvider.getJwtPayload(token);
+
+    JwtBlackList jwtBlackList =
+        JwtBlackList.create(jwtPayload.getJwtId(), jwtPayload.getExpiresIn());
+
+    jwtBlackListRepository.save(jwtBlackList);
+  }
+
+  public boolean isBlacklistedJwt(String jwtId) {
+    return jwtBlackListRepository.existByJwtId(jwtId);
   }
 }

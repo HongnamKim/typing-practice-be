@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 public class JwtTokenProvider {
@@ -22,14 +23,14 @@ public class JwtTokenProvider {
     this.expiration = expiration;
   }
 
-  public String createToken(Long memberId, String email, MemberRole role) {
+  public String createToken(Long memberId, MemberRole role) {
     Date now = new Date();
     Date expiryDate = new Date(now.getTime() + expiration); // 만료 시간
 
     return Jwts.builder()
         .subject(String.valueOf(memberId))
-        .claim("email", email)
         .claim("role", role.name())
+        .claim("jwtId", UUID.randomUUID().toString())
         .issuedAt(now)
         .expiration(expiryDate)
         .signWith(secretKey)
@@ -44,6 +45,11 @@ public class JwtTokenProvider {
   public String getRole(String token) {
     Claims claims = parseClaims(token);
     return claims.get("role", String.class);
+  }
+
+  public JwtPayload getJwtPayload(String token) {
+    Claims claims = parseClaims(token);
+    return JwtPayload.create(claims);
   }
 
   public boolean validateToken(String token) {

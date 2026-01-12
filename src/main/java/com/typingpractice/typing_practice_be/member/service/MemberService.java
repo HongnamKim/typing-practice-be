@@ -1,6 +1,6 @@
 package com.typingpractice.typing_practice_be.member.service;
 
-import com.typingpractice.typing_practice_be.auth.dto.GoogleUserInfo;
+import com.typingpractice.typing_practice_be.auth.dto.google.GoogleUserInfo;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.dto.LoginResult;
 import com.typingpractice.typing_practice_be.member.query.MemberCreateQuery;
