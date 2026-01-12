@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.common.jwt;
 
+import com.typingpractice.typing_practice_be.auth.service.AuthService;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -8,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -15,10 +17,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final JwtTokenProvider jwtTokenProvider;
+  // private final JwtBlackListRepository jwtBlackListRepository;
+  private final AuthService authService;
 
   //  @Override
   //  protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -43,7 +48,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String role = jwtTokenProvider.getRole(token);
         MemberRole memberRole = MemberRole.valueOf(role);
 
-        if (memberRole == MemberRole.BANNED) {
+        String jwtId = jwtTokenProvider.getJwtPayload(token).getJwtId();
+
+        if (authService.isBlacklistedJwt(jwtId)) {
+          SecurityContextHolder.clearContext();
+        } else if (memberRole == MemberRole.BANNED) {
           SecurityContextHolder.clearContext();
         } else {
           List<SimpleGrantedAuthority> authorities =

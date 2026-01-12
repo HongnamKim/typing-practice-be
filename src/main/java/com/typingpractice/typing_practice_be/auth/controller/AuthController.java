@@ -1,16 +1,18 @@
-package com.typingpractice.typing_practice_be.auth;
+package com.typingpractice.typing_practice_be.auth.controller;
 
+import com.typingpractice.typing_practice_be.auth.dto.google.GoogleLoginRequest;
+import com.typingpractice.typing_practice_be.auth.dto.google.GoogleTokenResponse;
+import com.typingpractice.typing_practice_be.auth.dto.google.GoogleUserInfo;
+import com.typingpractice.typing_practice_be.auth.service.AuthService;
 import com.typingpractice.typing_practice_be.auth.dto.*;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.jwt.JwtTokenProvider;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.dto.LoginResult;
 import com.typingpractice.typing_practice_be.member.service.MemberService;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -30,8 +32,7 @@ public class AuthController {
 
     Member member = loginResult.getMember();
 
-    String token =
-        jwtTokenProvider.createToken(member.getId(), member.getEmail(), member.getRole());
+    String token = jwtTokenProvider.createToken(member.getId(), member.getRole());
 
     return ApiResponse.ok(LoginResponse.from(loginResult, token));
   }
@@ -46,9 +47,19 @@ public class AuthController {
     LoginResult loginResult = memberService.loginOrSignIn(userInfo);
 
     Member member = loginResult.getMember();
-    String token =
-        jwtTokenProvider.createToken(member.getId(), member.getEmail(), member.getRole());
+    String token = jwtTokenProvider.createToken(member.getId(), member.getRole());
 
     return ApiResponse.ok(LoginResponse.from(loginResult, token));
+  }
+
+  @PostMapping("/logout")
+  public ApiResponse<Void> logout(
+      @Parameter(hidden = true) @RequestHeader("Authorization") String authHeader) {
+
+    String token = authHeader.substring("Bearer ".length());
+
+    authService.logout(token);
+
+    return ApiResponse.ok(null);
   }
 }
