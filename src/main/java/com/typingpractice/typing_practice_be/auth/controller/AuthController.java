@@ -33,8 +33,9 @@ public class AuthController {
     Member member = loginResult.getMember();
 
     String token = jwtTokenProvider.createToken(member.getId(), member.getRole());
+    String refreshToken = authService.createRefreshToken(member);
 
-    return ApiResponse.ok(LoginResponse.from(loginResult, token));
+    return ApiResponse.ok(LoginResponse.from(loginResult, token, refreshToken));
   }
 
   @PostMapping("/google")
@@ -48,8 +49,9 @@ public class AuthController {
 
     Member member = loginResult.getMember();
     String token = jwtTokenProvider.createToken(member.getId(), member.getRole());
+    String refreshToken = authService.createRefreshToken(member);
 
-    return ApiResponse.ok(LoginResponse.from(loginResult, token));
+    return ApiResponse.ok(LoginResponse.from(loginResult, token, refreshToken));
   }
 
   @PostMapping("/logout")
@@ -61,5 +63,16 @@ public class AuthController {
     authService.logout(token);
 
     return ApiResponse.ok(null);
+  }
+
+  @PostMapping("/refresh")
+  public ApiResponse<AuthTokenRefreshResponse> refresh(
+      @RequestBody AuthTokenRefreshRequest request) {
+
+    TokenRotation tokenRotation = authService.rotateToken(request.getRefreshToken());
+
+    return ApiResponse.ok(
+        AuthTokenRefreshResponse.from(
+            tokenRotation.getAccessToken(), tokenRotation.getRefreshToken()));
   }
 }
