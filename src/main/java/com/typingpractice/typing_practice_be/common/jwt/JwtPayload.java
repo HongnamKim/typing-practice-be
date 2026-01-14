@@ -21,6 +21,14 @@ public class JwtPayload {
 
   private JwtPayload() {}
 
+  public static JwtPayload create(Long memberId, String jwtId, LocalDateTime expiresIn) {
+    JwtPayload jwtPayload = new JwtPayload();
+    jwtPayload.memberId = memberId;
+    jwtPayload.jwtId = jwtId;
+    jwtPayload.expiresIn = expiresIn;
+    return jwtPayload;
+  }
+
   public static JwtPayload create(Claims jwtClaims) {
     JwtPayload jwtPayload = new JwtPayload();
 

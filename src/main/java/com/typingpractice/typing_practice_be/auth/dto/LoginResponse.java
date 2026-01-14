@@ -20,9 +20,10 @@ public class LoginResponse {
 
   private boolean isNewMember;
 
-  private String token;
+  private String accessToken;
+  private String refreshToken;
 
-  public static LoginResponse from(LoginResult result, String token) {
+  public static LoginResponse from(LoginResult result, String accessToken, String refreshToken) {
     Member member = result.getMember();
     return new LoginResponse(
         member.getId(),
@@ -31,6 +32,7 @@ public class LoginResponse {
         member.getRole(),
         member.getCreatedAt(),
         result.isNewMember(),
-        token);
+        accessToken,
+        refreshToken);
   }
 }
