@@ -107,6 +107,7 @@ public class AuthService {
             .orElseThrow(AuthInvalidRefreshTokenException::new);
 
     if (refreshTokenInfo.getExpiresIn().isBefore(LocalDateTime.now())) {
+      refreshTokenRepository.deleteByToken(refreshToken);
       throw new AuthInvalidRefreshTokenException();
     }
 
@@ -131,6 +132,9 @@ public class AuthService {
 
   @Transactional
   public String createRefreshToken(Member member) {
+    // 기존 refresh token 삭제
+    refreshTokenRepository.deleteByMemberId(member.getId());
+
     RefreshToken refreshToken =
         RefreshToken.create(
             member.getId(),

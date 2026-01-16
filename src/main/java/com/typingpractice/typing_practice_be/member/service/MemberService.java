@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.member.service;
 
 import com.typingpractice.typing_practice_be.auth.dto.google.GoogleUserInfo;
+import com.typingpractice.typing_practice_be.auth.repository.RefreshTokenRepository;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.dto.LoginResult;
 import com.typingpractice.typing_practice_be.member.query.MemberCreateQuery;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class MemberService {
   private final MemberRepository memberRepository;
+  private final RefreshTokenRepository refreshTokenRepository;
 
   public Member findMemberById(Long memberId) {
     return memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
@@ -74,6 +76,8 @@ public class MemberService {
   @Transactional
   public void deleteMember(Long memberId) {
     Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+
+    refreshTokenRepository.deleteByMemberId(memberId);
 
     memberRepository.deleteMember(member);
   }
