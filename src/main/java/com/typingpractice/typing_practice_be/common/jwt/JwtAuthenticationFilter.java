@@ -53,7 +53,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (authService.isBlacklistedJwt(jwtId)) {
           SecurityContextHolder.clearContext();
         } else if (memberRole == MemberRole.BANNED) {
-          SecurityContextHolder.clearContext();
+          // TODO
+          // Banned 사용자 처리 방식 결정 필요
+          // SecurityContextHolder.clearContext();
         } else {
           List<SimpleGrantedAuthority> authorities =
               List.of(new SimpleGrantedAuthority(memberRole.getAuthority()));
