@@ -15,4 +15,6 @@ public interface MemberRepository {
   Long save(Member member);
 
   void deleteMember(Member member);
+
+  boolean existByNickname(String nickname);
 }

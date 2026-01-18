@@ -25,6 +25,15 @@ public class MemberController {
     return ApiResponse.ok(MemberResponse.from(member));
   }
 
+  @GetMapping("/check-nickname")
+  public ApiResponse<Boolean> checkNicknameDuplicated(
+      @ModelAttribute CheckNicknameRequest request) {
+
+    boolean isExist = memberService.checkNicknameDuplicated(request.getNickname());
+
+    return ApiResponse.ok(isExist);
+  }
+
   @PatchMapping("/me")
   public ApiResponse<MemberResponse> updateNickname(
       @RequestBody UpdateNicknameRequest updateNicknameRequest) {
