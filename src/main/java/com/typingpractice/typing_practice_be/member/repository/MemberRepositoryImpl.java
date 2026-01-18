@@ -15,6 +15,16 @@ public class MemberRepositoryImpl implements MemberRepository {
   private final EntityManager em;
 
   @Override
+  public boolean existByNickname(String nickname) {
+    return em.createQuery("select m from Member m where m.nickname = :nickname", Member.class)
+        .setParameter("nickname", nickname)
+        .setMaxResults(1)
+        .getResultStream()
+        .findAny()
+        .isPresent();
+  }
+
+  @Override
   public List<Member> findAll(MemberPaginationQuery query) {
     int page = query.getPage();
     int size = query.getSize();

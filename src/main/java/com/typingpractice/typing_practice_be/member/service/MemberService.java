@@ -4,6 +4,7 @@ import com.typingpractice.typing_practice_be.auth.dto.google.GoogleUserInfo;
 import com.typingpractice.typing_practice_be.auth.repository.RefreshTokenRepository;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.dto.LoginResult;
+import com.typingpractice.typing_practice_be.member.exception.DuplicateNicknameException;
 import com.typingpractice.typing_practice_be.member.query.MemberCreateQuery;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.query.MemberUpdateQuery;
@@ -57,6 +58,10 @@ public class MemberService {
     return member;
   }
 
+  public boolean checkNicknameDuplicated(String nickname) {
+    return memberRepository.existByNickname(nickname);
+  }
+
   @Transactional
   public Member updateNickname(Long memberId, MemberUpdateQuery query) {
     Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
@@ -66,6 +71,10 @@ public class MemberService {
     // 변경하지 않은 경우 그냥 반환
     if (member.getNickname().equals(nickname)) {
       return member;
+    }
+
+    if (memberRepository.existByNickname(nickname)) {
+      throw new DuplicateNicknameException();
     }
 
     member.updateNickName(nickname);
