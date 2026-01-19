@@ -22,7 +22,7 @@ import java.util.List;
 
 @Slf4j
 @Component
-@Profile("dev")
+@Profile("local")
 @RequiredArgsConstructor
 public class DataInitService implements CommandLineRunner {
   private final MemberRepository memberRepository;
