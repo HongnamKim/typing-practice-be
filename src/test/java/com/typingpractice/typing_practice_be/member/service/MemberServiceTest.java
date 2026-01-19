@@ -8,6 +8,7 @@ import com.typingpractice.typing_practice_be.auth.repository.RefreshTokenReposit
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.dto.LoginResult;
 import com.typingpractice.typing_practice_be.member.dto.UpdateNicknameRequest;
+import com.typingpractice.typing_practice_be.member.exception.DuplicateNicknameException;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.query.MemberUpdateQuery;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
@@ -114,6 +115,38 @@ class MemberServiceTest {
   }
 
   @Nested
+  @DisplayName("checkNicknameDuplicated")
+  class CheckNicknameDuplicated {
+    @Test
+    @DisplayName("중복된 닉네임 - true 반환")
+    void duplicated() {
+      // given
+      String nickname = "existingNickname";
+      when(memberRepository.existByNickname(nickname)).thenReturn(true);
+
+      // when
+      boolean result = memberService.checkNicknameDuplicated(nickname);
+
+      // then
+      assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("사용 가능한 닉네임 - false 반환")
+    void available() {
+      // given
+      String nickname = "newNickname";
+      when(memberRepository.existByNickname(nickname)).thenReturn(false);
+
+      // when
+      boolean result = memberService.checkNicknameDuplicated(nickname);
+
+      // then
+      assertThat(result).isFalse();
+    }
+  }
+
+  @Nested
   @DisplayName("updateNickname")
   class UpdateNickname {
     @Test
@@ -125,12 +158,28 @@ class MemberServiceTest {
       MemberUpdateQuery query = MemberUpdateQuery.from(request);
 
       when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+      when(memberRepository.existByNickname("new_nickname")).thenReturn(false);
 
       // when
       Member updated = memberService.updateNickname(1L, query);
 
       // then
       assertThat(updated.getNickname()).isEqualTo("new_nickname");
+    }
+
+    @Test
+    @DisplayName("중복된 닉네임으로 변경 시도 - 예외 발생")
+    void duplicateNickname() {
+      // given
+      Member member = createMember(1L, "provider-1");
+      UpdateNicknameRequest request = UpdateNicknameRequest.create("duplicatedNickname");
+      MemberUpdateQuery query = MemberUpdateQuery.from(request);
+
+      when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+      when(memberRepository.existByNickname("duplicatedNickname")).thenReturn(true);
+      // when & then
+      assertThatThrownBy(() -> memberService.updateNickname(1L, query))
+          .isInstanceOf(DuplicateNicknameException.class);
     }
 
     @Test
