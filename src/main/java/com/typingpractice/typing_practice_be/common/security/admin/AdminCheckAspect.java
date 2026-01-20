@@ -1,4 +1,4 @@
-package com.typingpractice.typing_practice_be.common.security;
+package com.typingpractice.typing_practice_be.common.security.admin;
 
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.exception.NotAdminException;
@@ -11,7 +11,8 @@ import org.springframework.stereotype.Component;
 @Aspect
 @Component
 public class AdminCheckAspect {
-  @Before("@within(AdminOnly) || @annotation(AdminOnly)")
+  @Before(
+      "@within(com.typingpractice.typing_practice_be.common.security.admin.AdminOnly) || @annotation(com.typingpractice.typing_practice_be.common.security.admin.AdminOnly)")
   public void checkAdmin() {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     boolean isAdmin =

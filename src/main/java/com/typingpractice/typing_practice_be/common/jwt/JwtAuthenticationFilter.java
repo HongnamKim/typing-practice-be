@@ -22,7 +22,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final JwtTokenProvider jwtTokenProvider;
-  // private final JwtBlackListRepository jwtBlackListRepository;
   private final AuthService authService;
 
   //  @Override
@@ -52,11 +51,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (authService.isBlacklistedJwt(jwtId)) {
           SecurityContextHolder.clearContext();
-        } else if (memberRole == MemberRole.BANNED) {
-          // TODO
-          // Banned 사용자 처리 방식 결정 필요
-          // SecurityContextHolder.clearContext();
         } else {
+          // BANNED 포함 모든 Role 인증 설정
           List<SimpleGrantedAuthority> authorities =
               List.of(new SimpleGrantedAuthority(memberRole.getAuthority()));
 

@@ -5,6 +5,7 @@ import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.dto.*;
 import com.typingpractice.typing_practice_be.member.query.MemberUpdateQuery;
 import com.typingpractice.typing_practice_be.member.service.MemberService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,7 +28,7 @@ public class MemberController {
 
   @GetMapping("/check-nickname")
   public ApiResponse<Boolean> checkNicknameDuplicated(
-      @ModelAttribute CheckNicknameRequest request) {
+      @ModelAttribute @Valid CheckNicknameRequest request) {
 
     boolean isExist = memberService.checkNicknameDuplicated(request.getNickname());
 

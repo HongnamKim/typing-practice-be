@@ -20,7 +20,15 @@ public class QuoteCreateQuery {
     this.type = type;
   }
 
-  public static QuoteCreateQuery from(QuoteCreateRequest request) {
-    return new QuoteCreateQuery(request.getSentence(), request.getAuthor(), request.getType());
+  public static QuoteCreateQuery from(QuoteCreateRequest request, QuoteType type) {
+    return new QuoteCreateQuery(request.getSentence(), request.getAuthor(), type);
+  }
+
+  public static QuoteCreateQuery ofPublic(QuoteCreateRequest request) {
+    return new QuoteCreateQuery(request.getSentence(), request.getAuthor(), QuoteType.PUBLIC);
+  }
+
+  public static QuoteCreateQuery ofPrivate(QuoteCreateRequest request) {
+    return new QuoteCreateQuery(request.getSentence(), request.getAuthor(), QuoteType.PRIVATE);
   }
 }

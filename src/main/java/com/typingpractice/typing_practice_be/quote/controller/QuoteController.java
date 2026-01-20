@@ -2,6 +2,7 @@ package com.typingpractice.typing_practice_be.quote.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.dto.PageResult;
+import com.typingpractice.typing_practice_be.common.security.banned.BannedNotAllowed;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.dto.*;
 import com.typingpractice.typing_practice_be.quote.exception.EmptyUpdateRequestException;
@@ -23,18 +24,6 @@ public class QuoteController {
 
   private Long getMemberId() {
     return (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-  }
-
-  // 문장 업로드
-  @PostMapping("/quotes")
-  public ApiResponse<QuoteResponse> create(@RequestBody @Valid QuoteCreateRequest request) {
-    Long memberId = getMemberId();
-
-    QuoteCreateQuery query = QuoteCreateQuery.from(request);
-
-    Quote quote = quoteService.create(memberId, query);
-
-    return ApiResponse.ok(QuoteResponse.from(quote));
   }
 
   // 공개 문장 랜덤 조회
@@ -72,6 +61,33 @@ public class QuoteController {
     return ApiResponse.ok(QuoteResponse.from(quote));
   }
 
+  // 공개 문장 업로드
+  @BannedNotAllowed
+  @PostMapping("/quotes/public")
+  public ApiResponse<QuoteResponse> createPublicQuote(
+      @RequestBody @Valid QuoteCreateRequest request) {
+    Long memberId = getMemberId();
+
+    QuoteCreateQuery query = QuoteCreateQuery.ofPublic(request);
+
+    Quote quote = quoteService.create(memberId, query);
+
+    return ApiResponse.ok(QuoteResponse.from(quote));
+  }
+
+  // 비공개 문장 업로드
+  @PostMapping("/quotes/private")
+  public ApiResponse<QuoteResponse> createPrivateQuote(
+      @RequestBody @Valid QuoteCreateRequest request) {
+    Long memberId = getMemberId();
+
+    QuoteCreateQuery query = QuoteCreateQuery.ofPrivate(request);
+
+    Quote quote = quoteService.create(memberId, query);
+
+    return ApiResponse.ok(QuoteResponse.from(quote));
+  }
+
   // 비공개 문장 수정
   @PatchMapping("/quotes/{quoteId}")
   public ApiResponse<QuoteResponse> updatePrivateQuote(
@@ -99,6 +115,7 @@ public class QuoteController {
   }
 
   // 개인용 문장 공개 전환
+  @BannedNotAllowed
   @PostMapping("/quotes/{quoteId}/publish")
   public ApiResponse<QuoteResponse> publishQuote(@PathVariable Long quoteId) {
     Long memberId = getMemberId();
