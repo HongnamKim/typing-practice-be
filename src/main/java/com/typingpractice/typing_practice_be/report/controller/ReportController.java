@@ -2,6 +2,7 @@ package com.typingpractice.typing_practice_be.report.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.dto.PageResult;
+import com.typingpractice.typing_practice_be.common.security.banned.BannedNotAllowed;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import com.typingpractice.typing_practice_be.report.dto.ReportCreateRequest;
@@ -25,6 +26,7 @@ public class ReportController {
     return (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
   }
 
+  @BannedNotAllowed
   @PostMapping("/reports")
   public ApiResponse<ReportResponse> reportQuote(@RequestBody @Valid ReportCreateRequest request) {
     Long memberId = getMemberId();

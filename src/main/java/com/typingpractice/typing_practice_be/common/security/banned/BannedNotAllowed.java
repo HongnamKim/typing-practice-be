@@ -1,10 +1,10 @@
-package com.typingpractice.typing_practice_be.common.security;
+package com.typingpractice.typing_practice_be.common.security.banned;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target({ElementType.TYPE, ElementType.METHOD})
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface AdminOnly {}
+public @interface BannedNotAllowed {}

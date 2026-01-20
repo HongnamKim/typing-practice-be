@@ -2,7 +2,7 @@ package com.typingpractice.typing_practice_be.quote.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.dto.PageResult;
-import com.typingpractice.typing_practice_be.common.security.AdminOnly;
+import com.typingpractice.typing_practice_be.common.security.admin.AdminOnly;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationResponse;

@@ -2,7 +2,7 @@ package com.typingpractice.typing_practice_be.member.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.dto.PageResult;
-import com.typingpractice.typing_practice_be.common.security.AdminOnly;
+import com.typingpractice.typing_practice_be.common.security.admin.AdminOnly;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.dto.*;
 import com.typingpractice.typing_practice_be.member.dto.admin.MemberBanRequest;

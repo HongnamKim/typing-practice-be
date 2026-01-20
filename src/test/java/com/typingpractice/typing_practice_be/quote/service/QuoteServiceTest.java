@@ -71,8 +71,8 @@ class QuoteServiceTest {
   }
 
   private QuoteCreateQuery createCreateQuery(QuoteType type) {
-    QuoteCreateRequest request = QuoteCreateRequest.create("테스트 문장입니다.", "저자", type);
-    return QuoteCreateQuery.from(request);
+    QuoteCreateRequest request = QuoteCreateRequest.create("테스트 문장입니다.", "저자");
+    return QuoteCreateQuery.from(request, type);
   }
 
   private QuoteUpdateQuery createUpdateQuery(String sentence, String author) {
