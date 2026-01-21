@@ -1,6 +1,8 @@
 package com.typingpractice.typing_practice_be.config;
 
+import com.typingpractice.typing_practice_be.auth.service.AuthService;
 import com.typingpractice.typing_practice_be.common.jwt.JwtAuthenticationFilter;
+import com.typingpractice.typing_practice_be.common.jwt.JwtTokenProvider;
 import com.typingpractice.typing_practice_be.common.security.CustomAccessDeniedHandler;
 import com.typingpractice.typing_practice_be.common.security.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +27,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-  private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final JwtTokenProvider jwtTokenProvider;
+  private final AuthService authService;
   private final CustomAuthenticationEntryPoint authenticationEntryPoint;
   private final CustomAccessDeniedHandler accessDeniedHandler;
+
+  @Bean
+  public JwtAuthenticationFilter jwtAuthenticationFilter(
+      JwtTokenProvider jwtTokenProvider, AuthService authService) {
+    return new JwtAuthenticationFilter(jwtTokenProvider, authService);
+  }
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -43,9 +52,15 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/h2-console/**")
                     .permitAll()
-                    .requestMatchers("/auth/**")
+                    .requestMatchers("/auth/google")
+                    .permitAll()
+                    .requestMatchers("/auth/test")
+                    .permitAll()
+                    .requestMatchers("/auth/refresh")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/quotes")
+                    .permitAll()
+                    .requestMatchers("/error")
                     .permitAll()
 
                     // 관리자 전용
@@ -65,7 +80,9 @@ public class SecurityConfig {
             ex ->
                 ex.authenticationEntryPoint(authenticationEntryPoint)
                     .accessDeniedHandler(accessDeniedHandler))
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        .addFilterBefore(
+            jwtAuthenticationFilter(jwtTokenProvider, authService),
+            UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }
