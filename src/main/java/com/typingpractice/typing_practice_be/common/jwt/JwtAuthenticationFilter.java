@@ -14,23 +14,13 @@ import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final JwtTokenProvider jwtTokenProvider;
   private final AuthService authService;
-
-  //  @Override
-  //  protected boolean shouldNotFilter(HttpServletRequest request) {
-  //    String path = request.getRequestURI();
-  //    return path.startsWith("/swagger-ui")
-  //        || path.startsWith("/v3/api-docs")
-  //        || path.startsWith("/h2-console");
-  //  }
 
   @Override
   protected void doFilterInternal(
