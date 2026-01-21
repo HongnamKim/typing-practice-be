@@ -2,7 +2,6 @@ package com.typingpractice.typing_practice_be.report.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.dto.PageResult;
-import com.typingpractice.typing_practice_be.common.security.admin.AdminOnly;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import com.typingpractice.typing_practice_be.report.dto.*;
 import com.typingpractice.typing_practice_be.report.query.ReportPaginationQuery;
@@ -14,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@AdminOnly
+// @AdminOnly
 public class AdminReportController {
 
   private final AdminReportService adminReportService;

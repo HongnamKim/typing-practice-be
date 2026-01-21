@@ -1,10 +1,12 @@
 package com.typingpractice.typing_practice_be.config;
 
 import com.typingpractice.typing_practice_be.common.jwt.JwtAuthenticationFilter;
+import com.typingpractice.typing_practice_be.common.security.CustomAccessDeniedHandler;
 import com.typingpractice.typing_practice_be.common.security.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -25,6 +27,7 @@ public class SecurityConfig {
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
   private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+  private final CustomAccessDeniedHandler accessDeniedHandler;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -33,23 +36,35 @@ public class SecurityConfig {
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 안 씀
         .authorizeHttpRequests(
-            auth -> auth.anyRequest().permitAll()
-            //                auth.requestMatchers(
-            //                        "/swagger-ui/**",
-            //                        "/swagger-ui.html",
-            //                        "/swagger-ui/index.html",
-            //                        "/api-docs/**",
-            //                        "/api-docs",
-            //                        "/api-docs/swagger-config",
-            //                        "/swagger-resources/**",
-            //                        "/webjars/**")
-            //                    .permitAll()
-            //                    .requestMatchers("/members/login")
-            //                    .permitAll() // 로그인은 인증 없이
-            //                    .anyRequest()
-            //                    .authenticated() // 나머지는 인증 필요
-            )
-        .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
+            auth ->
+                auth
+                    // 인증 불필요
+                    .requestMatchers("/swagger-ui/**", "/api-docs/**")
+                    .permitAll()
+                    .requestMatchers("/h2-console/**")
+                    .permitAll()
+                    .requestMatchers("/auth/**")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/quotes")
+                    .permitAll()
+
+                    // 관리자 전용
+                    .requestMatchers("/admin/**")
+                    .hasRole("ADMIN")
+
+                    // BANNED 제외 (USER, ADMIN만)
+                    .requestMatchers(HttpMethod.POST, "/quotes/public")
+                    .hasAnyRole("USER", "ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/quotes/*/publish")
+                    .hasAnyRole("USER", "ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/reports")
+                    .hasAnyRole("USER", "ADMIN")
+                    .anyRequest()
+                    .authenticated())
+        .exceptionHandling(
+            ex ->
+                ex.authenticationEntryPoint(authenticationEntryPoint)
+                    .accessDeniedHandler(accessDeniedHandler))
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
