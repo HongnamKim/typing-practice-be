@@ -2,7 +2,6 @@ package com.typingpractice.typing_practice_be.quote.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.dto.PageResult;
-import com.typingpractice.typing_practice_be.common.security.banned.BannedNotAllowed;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.dto.*;
 import com.typingpractice.typing_practice_be.quote.exception.EmptyUpdateRequestException;
@@ -62,7 +61,7 @@ public class QuoteController {
   }
 
   // 공개 문장 업로드
-  @BannedNotAllowed
+  // @BannedNotAllowed
   @PostMapping("/quotes/public")
   public ApiResponse<QuoteResponse> createPublicQuote(
       @RequestBody @Valid QuoteCreateRequest request) {
@@ -115,7 +114,7 @@ public class QuoteController {
   }
 
   // 개인용 문장 공개 전환
-  @BannedNotAllowed
+  // @BannedNotAllowed
   @PostMapping("/quotes/{quoteId}/publish")
   public ApiResponse<QuoteResponse> publishQuote(@PathVariable Long quoteId) {
     Long memberId = getMemberId();
