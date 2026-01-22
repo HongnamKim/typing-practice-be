@@ -14,6 +14,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -28,7 +30,11 @@ public class AuthController {
 
     LoginResult loginResult =
         memberService.loginOrSignIn(
-            GoogleUserInfo.create(request.getProviderId(), "email", "name", "picture"));
+            GoogleUserInfo.create(
+                request.getProviderId(),
+                "email",
+                "user_" + UUID.randomUUID().toString().substring(0, 8),
+                "picture"));
 
     Member member = loginResult.getMember();
 
