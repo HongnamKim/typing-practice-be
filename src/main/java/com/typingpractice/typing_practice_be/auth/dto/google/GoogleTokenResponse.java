@@ -15,4 +15,14 @@ public class GoogleTokenResponse {
 
   @JsonProperty("expires_in")
   private Integer expiresIn;
+
+  public static GoogleTokenResponse create(
+      String accessToken, String tokenType, Integer expiresIn) {
+    GoogleTokenResponse tokenResponse = new GoogleTokenResponse();
+    tokenResponse.accessToken = accessToken;
+    tokenResponse.tokenType = tokenType;
+    tokenResponse.expiresIn = expiresIn;
+
+    return tokenResponse;
+  }
 }
