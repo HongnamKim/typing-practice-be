@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.member.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,6 +10,7 @@ import org.hibernate.validator.constraints.Length;
 @Setter
 public class CheckNicknameRequest {
   @NotNull
+  @NotBlank
   @Length(min = 2, max = 10)
   private String nickname;
 

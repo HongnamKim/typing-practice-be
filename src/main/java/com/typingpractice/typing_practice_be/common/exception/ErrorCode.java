@@ -17,7 +17,7 @@ public enum ErrorCode {
 
   MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없습니다."),
   MEMBER_NOT_PROCESSABLE(HttpStatus.BAD_REQUEST, "처리할 수 없는 회원입니다."),
-  MEMBER_DUPLICATE_NICKNAME(HttpStatus.BAD_REQUEST, "중복된 닉네임입니다."),
+  MEMBER_DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "중복된 닉네임입니다."),
   MEMBER_BANNED(HttpStatus.FORBIDDEN, "활동이 제한된 계정입니다."),
 
   NOT_ADMIN(HttpStatus.FORBIDDEN, "관리자 권한이 필요합니다."),
