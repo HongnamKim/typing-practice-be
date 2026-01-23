@@ -37,7 +37,7 @@ public class MemberController {
 
   @PatchMapping("/me")
   public ApiResponse<MemberResponse> updateNickname(
-      @RequestBody UpdateNicknameRequest updateNicknameRequest) {
+      @RequestBody @Valid UpdateNicknameRequest updateNicknameRequest) {
     Long memberId = getAuthenticatedMemberId();
 
     MemberUpdateQuery query = MemberUpdateQuery.from(updateNicknameRequest);
