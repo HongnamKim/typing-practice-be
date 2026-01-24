@@ -42,7 +42,7 @@ public class AdminMemberController {
 
   @PatchMapping("/admin/members/{memberId}/role")
   public ApiResponse<MemberResponse> updateMemberRole(
-      @PathVariable Long memberId, @RequestBody MemberUpdateRoleRequest request) {
+      @PathVariable Long memberId, @RequestBody @Valid MemberUpdateRoleRequest request) {
 
     Member member = adminMemberService.updateRole(memberId, request.getRole());
 

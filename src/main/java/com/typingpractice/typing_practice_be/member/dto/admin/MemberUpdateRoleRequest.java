@@ -10,4 +10,11 @@ import lombok.ToString;
 public class MemberUpdateRoleRequest {
   @NotNull(message = "필수값 누락")
   private MemberRole role;
+
+  public static MemberUpdateRoleRequest create(MemberRole role) {
+    MemberUpdateRoleRequest request = new MemberUpdateRoleRequest();
+    request.role = role;
+
+    return request;
+  }
 }
