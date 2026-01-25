@@ -4,11 +4,8 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.typingpractice.typing_practice_be.auth.dto.TestLoginRequest;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
-import com.typingpractice.typing_practice_be.member.dto.MemberResponse;
 import com.typingpractice.typing_practice_be.member.dto.admin.MemberBanRequest;
 import com.typingpractice.typing_practice_be.member.dto.admin.MemberUpdateRoleRequest;
-import jakarta.persistence.EntityManager;
-
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -22,8 +19,6 @@ import org.springframework.http.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class AdminMemberE2ETest {
   @Autowired private TestRestTemplate restTemplate;
-
-  @Autowired private EntityManager em;
 
   private static final String ADMIN_PROVIDER_ID = "0";
   private static final String USER_PROVIDER_ID = "1";
