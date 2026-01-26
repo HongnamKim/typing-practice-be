@@ -101,4 +101,13 @@ public class AdminQuoteService {
 
     return new PageResult<>(content, query.getPage(), query.getSize(), hasNext);
   }
+
+  @Transactional
+  public Quote hideQuote(Long quoteId) {
+    Quote quote = quoteRepository.findById(quoteId).orElseThrow(QuoteNotFoundException::new);
+
+    quote.updateStatus(QuoteStatus.HIDDEN);
+
+    return quote;
+  }
 }
