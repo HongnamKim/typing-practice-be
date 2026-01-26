@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.*;
 import com.typingpractice.typing_practice_be.auth.dto.LoginResponse;
 import com.typingpractice.typing_practice_be.auth.dto.TestLoginRequest;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
+import com.typingpractice.typing_practice_be.member.dto.MemberResponse;
+import com.typingpractice.typing_practice_be.member.dto.admin.MemberBanRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteCreateRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationResponse;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
@@ -24,6 +26,7 @@ import org.springframework.http.*;
 public class QuoteE2ETest {
   @Autowired private TestRestTemplate restTemplate;
 
+  private static final String ADMIN_PROVIDER_ID = "0";
   private static final String USER_PROVIDER_ID = "1";
 
   private String getAccessToken(String providerId) {
@@ -73,12 +76,55 @@ public class QuoteE2ETest {
           restTemplate.exchange(
               "/quotes?seed=0.5", HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
 
+      assert response1.getBody() != null;
       List<Long> quoteIds1 =
           response1.getBody().data().getContent().stream().map(QuoteResponse::getQuoteId).toList();
+      assert response2.getBody() != null;
       List<Long> quoteIds2 =
           response2.getBody().data().getContent().stream().map(QuoteResponse::getQuoteId).toList();
 
       assertThat(quoteIds1).isEqualTo(quoteIds2);
+    }
+
+    @Test
+    @DisplayName("onlyMyQuotes=true일 때 내 문장만 조회")
+    void onlyMyQuotes() {
+      // 내 문장 생성
+      String token = getAccessToken("1");
+      HttpHeaders headers = createAuthHeader(token);
+
+      QuoteCreateRequest createRequest = QuoteCreateRequest.create("내 문장 필터링 테스트입니다.", null);
+      ResponseEntity<ApiResponse<QuoteResponse>> createResponse =
+          restTemplate.exchange(
+              "/quotes/public",
+              HttpMethod.POST,
+              new HttpEntity<>(createRequest, headers),
+              new ParameterizedTypeReference<>() {});
+      assert createResponse.getBody() != null;
+      Long myQuoteId = createResponse.getBody().data().getQuoteId();
+
+      // 승인 (ACTIVE로 변경) - admin 토큰 필요
+      String adminToken = getAccessToken("0");
+      HttpHeaders adminHeaders = createAuthHeader(adminToken);
+      restTemplate.exchange(
+          "/admin/quotes/" + myQuoteId + "/approve",
+          HttpMethod.POST,
+          new HttpEntity<>(adminHeaders),
+          new ParameterizedTypeReference<ApiResponse<QuoteResponse>>() {});
+
+      // onlyMyQuotes=true로 조회
+      ResponseEntity<ApiResponse<QuotePaginationResponse>> response =
+          restTemplate.exchange(
+              "/quotes?seed=0.5&onlyMyQuotes=true",
+              HttpMethod.GET,
+              new HttpEntity<>(headers),
+              new ParameterizedTypeReference<>() {});
+
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+      assert response.getBody() != null;
+      List<Long> quoteIds =
+          response.getBody().data().getContent().stream().map(QuoteResponse::getQuoteId).toList();
+      assertThat(quoteIds).contains(myQuoteId);
     }
 
     @Test
@@ -149,6 +195,58 @@ public class QuoteE2ETest {
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
       assertThat(response.getBody()).isNotNull();
       assertThat(response.getBody().success()).isTrue();
+    }
+
+    @Test
+    @DisplayName("생성한 문장이 조회됨")
+    void containsMyQuote() {
+      String token = getAccessToken("1");
+      HttpHeaders headers = createAuthHeader(token);
+
+      // 비공개 문장 생성
+      QuoteCreateRequest createRequest = QuoteCreateRequest.create("내 문장 조회 테스트입니다.", null);
+      ResponseEntity<ApiResponse<QuoteResponse>> createResponse =
+          restTemplate.exchange(
+              "/quotes/private",
+              HttpMethod.POST,
+              new HttpEntity<>(createRequest, headers),
+              new ParameterizedTypeReference<>() {});
+      assert createResponse.getBody() != null;
+      Long myQuoteId = createResponse.getBody().data().getQuoteId();
+
+      // 내 문장 조회
+      ResponseEntity<ApiResponse<QuotePaginationResponse>> response =
+          restTemplate.exchange(
+              "/quotes/my",
+              HttpMethod.GET,
+              new HttpEntity<>(headers),
+              new ParameterizedTypeReference<>() {});
+
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+      assert response.getBody() != null;
+      List<Long> quoteIds =
+          response.getBody().data().getContent().stream().map(QuoteResponse::getQuoteId).toList();
+      assertThat(quoteIds).contains(myQuoteId);
+    }
+
+    @Test
+    @DisplayName("페이지네이션 동작 확인")
+    void pagination() {
+      String token = getAccessToken("1");
+      HttpHeaders headers = createAuthHeader(token);
+
+      ResponseEntity<ApiResponse<QuotePaginationResponse>> response =
+          restTemplate.exchange(
+              "/quotes/my?page=1&size=3",
+              HttpMethod.GET,
+              new HttpEntity<>(headers),
+              new ParameterizedTypeReference<>() {});
+
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+      assert response.getBody() != null;
+      assertThat(response.getBody().data().getPage()).isEqualTo(1);
+      assertThat(response.getBody().data().getSize()).isEqualTo(3);
+      assertThat(response.getBody().data().getContent().size()).isLessThanOrEqualTo(3);
     }
 
     @Test
@@ -274,6 +372,53 @@ public class QuoteE2ETest {
     }
 
     @Test
+    @DisplayName("BANNED 유저 - 403")
+    void forbiddenWhenBanned() {
+      // 새 유저 생성 후 ban 처리
+      String uniqueProviderId = "banned-test-" + System.currentTimeMillis();
+      String userToken = getAccessToken(uniqueProviderId);
+
+      // admin 으로 ban 처리
+      String adminToken = getAccessToken(ADMIN_PROVIDER_ID);
+      HttpHeaders adminHeaders = createAuthHeader(adminToken);
+
+      // 유저 ID 조회
+      ResponseEntity<ApiResponse<LoginResponse>> loginResponse =
+          restTemplate.exchange(
+              "/auth/test",
+              HttpMethod.POST,
+              new HttpEntity<>(TestLoginRequest.create(uniqueProviderId)),
+              new ParameterizedTypeReference<>() {});
+
+      assert loginResponse.getBody() != null;
+      Long memberId = loginResponse.getBody().data().getId();
+
+      // ban
+      restTemplate.exchange(
+          "/admin/members/" + memberId + "/ban",
+          HttpMethod.POST,
+          new HttpEntity<>(MemberBanRequest.create("테스트 밴"), adminHeaders),
+          new ParameterizedTypeReference<>() {});
+
+      // 다시 로그인하여 BANNED 토큰 발급
+      String bannedToken = getAccessToken(uniqueProviderId);
+      HttpHeaders bannedHeaders = createAuthHeader(bannedToken);
+
+      QuoteCreateRequest request = QuoteCreateRequest.create("밴 유저 테스트 문장", null);
+
+      // when
+      ResponseEntity<ApiResponse<QuoteResponse>> exchange =
+          restTemplate.exchange(
+              "/quotes/public",
+              HttpMethod.POST,
+              new HttpEntity<>(request, bannedHeaders),
+              new ParameterizedTypeReference<>() {});
+
+      // then
+      assertThat(exchange.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
     @DisplayName("토큰 없이 요청 - 401")
     void unauthorizedWithoutToken() {
       QuoteCreateRequest request = QuoteCreateRequest.create("테스트 공개 문장입니다.", null);
@@ -307,6 +452,7 @@ public class QuoteE2ETest {
               new ParameterizedTypeReference<>() {});
 
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+      assert response.getBody() != null;
       assertThat(response.getBody().data().getType().name()).isEqualTo("PRIVATE");
       assertThat(response.getBody().data().getStatus().name()).isEqualTo("ACTIVE");
     }
@@ -415,6 +561,7 @@ public class QuoteE2ETest {
               HttpMethod.POST,
               new HttpEntity<>(createRequest, headers),
               new ParameterizedTypeReference<>() {});
+      assert createResponse.getBody() != null;
       Long quoteId = createResponse.getBody().data().getQuoteId();
 
       // 삭제
@@ -457,6 +604,7 @@ public class QuoteE2ETest {
               HttpMethod.POST,
               new HttpEntity<>(createRequest, headers),
               new ParameterizedTypeReference<>() {});
+      assert createResponse.getBody() != null;
       Long quoteId = createResponse.getBody().data().getQuoteId();
 
       // 공개 전환
@@ -468,6 +616,7 @@ public class QuoteE2ETest {
               new ParameterizedTypeReference<>() {});
 
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+      assert response.getBody() != null;
       assertThat(response.getBody().data().getType().name()).isEqualTo("PUBLIC");
       assertThat(response.getBody().data().getStatus().name()).isEqualTo("PENDING");
     }
@@ -480,6 +629,61 @@ public class QuoteE2ETest {
               "/quotes/5/publish", HttpMethod.POST, null, new ParameterizedTypeReference<>() {});
 
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("BANNED 유저 - 403")
+    void forbiddenWhenBanned() {
+      // 새 유저 생성
+      String uniqueProviderId = "banned-publish-" + System.currentTimeMillis();
+      String userToken = getAccessToken(uniqueProviderId);
+      HttpHeaders userHeaders = createAuthHeader(userToken);
+
+      // 비공개 문장 생성
+      QuoteCreateRequest createRequest = QuoteCreateRequest.create("밴 전 생성한 문장", null);
+      ResponseEntity<ApiResponse<QuoteResponse>> createResponse =
+          restTemplate.exchange(
+              "/quotes/private",
+              HttpMethod.POST,
+              new HttpEntity<>(createRequest, userHeaders),
+              new ParameterizedTypeReference<>() {});
+      assert createResponse.getBody() != null;
+      Long quoteId = createResponse.getBody().data().getQuoteId();
+
+      // admin 으로 ban 처리
+      String adminToken = getAccessToken(ADMIN_PROVIDER_ID);
+      HttpHeaders adminHeaders = createAuthHeader(adminToken);
+
+      ResponseEntity<ApiResponse<MemberResponse>> loginResponse =
+          restTemplate.exchange(
+              "/members/me",
+              HttpMethod.GET,
+              new HttpEntity<>(userHeaders),
+              new ParameterizedTypeReference<>() {});
+
+      assert loginResponse.getBody() != null;
+      Long memberId = loginResponse.getBody().data().id();
+
+      restTemplate.exchange(
+          "/admin/members/" + memberId + "/ban",
+          HttpMethod.POST,
+          new HttpEntity<>(MemberBanRequest.create("테스트 밴"), adminHeaders),
+          new ParameterizedTypeReference<>() {});
+
+      // 다시 로그인하여 BANNED 토큰 발급
+      String bannedToken = getAccessToken(uniqueProviderId);
+      HttpHeaders bannedHeaders = createAuthHeader(bannedToken);
+
+      // when
+      ResponseEntity<ApiResponse<QuoteResponse>> response =
+          restTemplate.exchange(
+              "/quotes/" + quoteId + "/publish",
+              HttpMethod.POST,
+              new HttpEntity<>(bannedHeaders),
+              new ParameterizedTypeReference<>() {});
+
+      // then
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
   }
 
@@ -501,6 +705,7 @@ public class QuoteE2ETest {
               HttpMethod.POST,
               new HttpEntity<>(createRequest, headers),
               new ParameterizedTypeReference<>() {});
+      assert createResponse.getBody() != null;
       Long quoteId = createResponse.getBody().data().getQuoteId();
 
       // 공개 전환
@@ -519,6 +724,7 @@ public class QuoteE2ETest {
               new ParameterizedTypeReference<>() {});
 
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+      assert response.getBody() != null;
       assertThat(response.getBody().data().getType().name()).isEqualTo("PRIVATE");
       assertThat(response.getBody().data().getStatus().name()).isEqualTo("ACTIVE");
     }

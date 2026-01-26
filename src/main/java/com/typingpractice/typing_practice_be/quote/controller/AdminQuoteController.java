@@ -70,6 +70,13 @@ public class AdminQuoteController {
     return ApiResponse.ok(null);
   }
 
+  @PatchMapping("/admin/quotes/{quoteId}/hide")
+  public ApiResponse<QuoteResponse> hideQuote(@PathVariable Long quoteId) {
+    Quote hideQuote = adminQuoteService.hideQuote(quoteId);
+
+    return ApiResponse.ok(QuoteResponse.from(hideQuote));
+  }
+
   // 숨김 해제
   @PostMapping("/admin/quotes/{quoteId}/restore")
   public ApiResponse<QuoteResponse> restoreHiddenQuotes(@PathVariable Long quoteId) {
