@@ -56,5 +56,8 @@ public class Report extends BaseEntity {
   public void process(boolean quoteDeleted) {
     this.status = ReportStatus.PROCESSED;
     this.quoteDeleted = quoteDeleted;
+    if (quoteDeleted) {
+      this.quote = null;
+    }
   }
 }

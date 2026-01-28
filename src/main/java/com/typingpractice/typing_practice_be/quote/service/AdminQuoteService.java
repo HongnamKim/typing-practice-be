@@ -10,6 +10,9 @@ import com.typingpractice.typing_practice_be.quote.query.QuotePaginationQuery;
 import com.typingpractice.typing_practice_be.quote.query.QuoteUpdateQuery;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
 import java.util.List;
+
+import com.typingpractice.typing_practice_be.report.domain.Report;
+import com.typingpractice.typing_practice_be.report.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class AdminQuoteService {
   private final QuoteRepository quoteRepository;
+  private final ReportRepository reportRepository;
 
   //  public List<Quote> findPendingQuotes() {
   //    List<Quote> pendingQuotes = quoteRepository.findByStatus(QuoteStatus.PENDING);
@@ -77,7 +81,13 @@ public class AdminQuoteService {
 
   @Transactional
   public void deleteQuote(Long quoteId) {
-    quoteRepository.deleteQuote(findQuoteById(quoteId));
+    Quote targetQuote = findQuoteById(quoteId);
+
+    List<Report> reports = reportRepository.findByQuote(targetQuote);
+
+    reports.forEach(report -> report.process(true));
+
+    quoteRepository.deleteQuote(targetQuote);
   }
 
   @Transactional

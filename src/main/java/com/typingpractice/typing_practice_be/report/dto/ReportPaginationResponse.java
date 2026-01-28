@@ -26,7 +26,7 @@ public class ReportPaginationResponse extends PaginationResponse {
             .map(
                 r -> {
                   QuoteResponse quote =
-                      r.getQuote() != null ? QuoteResponse.from(r.getQuote()) : null;
+                      !r.isQuoteDeleted() ? QuoteResponse.from(r.getQuote()) : null;
 
                   return ReportResponse.from(r, quote);
                 })
