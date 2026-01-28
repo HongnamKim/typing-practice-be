@@ -28,7 +28,7 @@ public class AdminReportPaginationResponse extends PaginationResponse {
                 r -> {
                   MemberResponse member = MemberResponse.from(r.getMember());
                   QuoteResponse quote =
-                      r.getQuote() != null ? QuoteResponse.from(r.getQuote()) : null;
+                      !r.isQuoteDeleted() ? QuoteResponse.from(r.getQuote()) : null;
 
                   return AdminReportResponse.from(r, member, quote);
                 })

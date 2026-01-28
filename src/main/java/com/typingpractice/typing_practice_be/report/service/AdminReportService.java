@@ -74,4 +74,8 @@ public class AdminReportService {
 
     reportRepository.delete(report);
   }
+
+  public Report findReportById(Long reportId) {
+    return reportRepository.findById(reportId).orElseThrow(ReportNotFoundException::new);
+  }
 }

@@ -2,6 +2,7 @@ package com.typingpractice.typing_practice_be.report.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.dto.PageResult;
+import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import com.typingpractice.typing_practice_be.report.dto.*;
 import com.typingpractice.typing_practice_be.report.query.ReportPaginationQuery;
@@ -27,6 +28,16 @@ public class AdminReportController {
     PageResult<Report> result = adminReportService.findReports(query);
 
     return ApiResponse.ok(AdminReportPaginationResponse.from(result));
+  }
+
+  @GetMapping("/admin/reports/{reportId}")
+  public ApiResponse<ReportResponse> getReportById(@PathVariable Long reportId) {
+    Report report = adminReportService.findReportById(reportId);
+
+    QuoteResponse quoteResponse =
+        report.isQuoteDeleted() ? null : QuoteResponse.from(report.getQuote());
+
+    return ApiResponse.ok(ReportResponse.from(report, quoteResponse));
   }
 
   @PostMapping("/admin/reports/{quoteId}/process")
