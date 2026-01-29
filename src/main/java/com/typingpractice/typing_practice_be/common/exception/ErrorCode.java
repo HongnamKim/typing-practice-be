@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
-  DATA_INTEGRITY_VIOLATION(HttpStatus.BAD_REQUEST, "데이터 중복 오류"),
+  DATA_INTEGRITY_VIOLATION(HttpStatus.CONFLICT, "데이터 중복 오류"),
 
   GOOGLE_AUTH_FAILED(HttpStatus.BAD_REQUEST, "Google 인증에 실패했습니다."),
   GOOGLE_SERVER_ERROR(HttpStatus.BAD_GATEWAY, "Google 서버 오류가 발생했습니다."),
@@ -28,12 +28,12 @@ public enum ErrorCode {
   EMPTY_UPDATE_REQUEST(HttpStatus.BAD_REQUEST, "수정할 내용이 없습니다."),
 
   REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "신고 내역을 찾을 수 없습니다."),
-  DUPLICATE_REPORT(HttpStatus.BAD_REQUEST, "중복된 신고 내역이 존재합니다."),
+  DUPLICATE_REPORT(HttpStatus.CONFLICT, "중복된 신고 내역이 존재합니다."),
   QUOTE_NOT_REPORTABLE(HttpStatus.BAD_REQUEST, "신고 불가능한 문장입니다."),
   REPORT_NOT_PROCESSABLE(HttpStatus.BAD_REQUEST, "처리할 수 없는 신고 내역입니다."),
 
-  DAILY_REPORT_LIMIT(HttpStatus.BAD_REQUEST, "하루 신고 제한 횟수에 도달했습니다."),
-  DAILY_QUOTE_UPLOAD_LIMIT(HttpStatus.BAD_REQUEST, "하루 업로드 제한 횟수에 도달했습니다.");
+  DAILY_REPORT_LIMIT(HttpStatus.CONFLICT, "하루 신고 제한 횟수에 도달했습니다."),
+  DAILY_QUOTE_UPLOAD_LIMIT(HttpStatus.CONFLICT, "하루 업로드 제한 횟수에 도달했습니다.");
 
   private final HttpStatus status;
   private final String message;
