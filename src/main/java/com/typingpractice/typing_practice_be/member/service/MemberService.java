@@ -9,7 +9,10 @@ import com.typingpractice.typing_practice_be.member.query.MemberCreateQuery;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.query.MemberUpdateQuery;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
+
 import java.util.Optional;
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,76 +21,78 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class MemberService {
-  private final MemberRepository memberRepository;
-  private final RefreshTokenRepository refreshTokenRepository;
+	private final MemberRepository memberRepository;
+	private final RefreshTokenRepository refreshTokenRepository;
 
-  public Member findMemberById(Long memberId) {
-    return memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
-  }
+	public Member findMemberById(Long memberId) {
+		return memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+	}
 
-  @Transactional
-  public LoginResult loginOrSignIn(GoogleUserInfo googleUserInfo) {
-    Optional<Member> optionalMember =
-        memberRepository.findByProviderId(googleUserInfo.getProviderId());
+	@Transactional
+	public LoginResult loginOrSignIn(GoogleUserInfo googleUserInfo) {
+		Optional<Member> optionalMember =
+						memberRepository.findByProviderId(googleUserInfo.getProviderId());
 
-    // 가입 완료한 회원
-    if (optionalMember.isPresent()) {
-      Member member = optionalMember.get();
+		// 가입 완료한 회원
+		if (optionalMember.isPresent()) {
+			Member member = optionalMember.get();
 
-      return LoginResult.create(member, false);
-    } else {
-      // 신규 회원
-      MemberCreateQuery memberCreateQuery =
-          MemberCreateQuery.of(
-              googleUserInfo.getProviderId(), googleUserInfo.getEmail(), googleUserInfo.getName());
+			return LoginResult.create(member, false);
+		} else {
+			// 신규 회원
+			MemberCreateQuery memberCreateQuery =
+							MemberCreateQuery.of(
+											googleUserInfo.getProviderId(),
+											googleUserInfo.getEmail(),
+											UUID.randomUUID().toString());
 
-      Member member = join(memberCreateQuery);
-      return LoginResult.create(member, true);
-    }
-  }
+			Member member = join(memberCreateQuery);
+			return LoginResult.create(member, true);
+		}
+	}
 
-  private Member join(MemberCreateQuery memberCreateQuery) {
-    Member member =
-        Member.createMember(
-            memberCreateQuery.getProviderId(),
-            memberCreateQuery.getEmail(),
-            memberCreateQuery.getNickname());
+	private Member join(MemberCreateQuery memberCreateQuery) {
+		Member member =
+						Member.createMember(
+										memberCreateQuery.getProviderId(),
+										memberCreateQuery.getEmail(),
+										memberCreateQuery.getNickname());
 
-    memberRepository.save(member);
+		memberRepository.save(member);
 
-    return member;
-  }
+		return member;
+	}
 
-  public boolean checkNicknameDuplicated(String nickname) {
-    return memberRepository.existByNickname(nickname);
-  }
+	public boolean checkNicknameDuplicated(String nickname) {
+		return memberRepository.existByNickname(nickname);
+	}
 
-  @Transactional
-  public Member updateNickname(Long memberId, MemberUpdateQuery query) {
-    Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+	@Transactional
+	public Member updateNickname(Long memberId, MemberUpdateQuery query) {
+		Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-    String nickname = query.getNickname();
+		String nickname = query.getNickname();
 
-    // 변경하지 않은 경우 그냥 반환
-    if (member.getNickname().equals(nickname)) {
-      return member;
-    }
+		// 변경하지 않은 경우 그냥 반환
+		if (member.getNickname().equals(nickname)) {
+			return member;
+		}
 
-    if (memberRepository.existByNickname(nickname)) {
-      throw new DuplicateNicknameException();
-    }
+		if (memberRepository.existByNickname(nickname)) {
+			throw new DuplicateNicknameException();
+		}
 
-    member.updateNickName(nickname);
+		member.updateNickName(nickname);
 
-    return member;
-  }
+		return member;
+	}
 
-  @Transactional
-  public void deleteMember(Long memberId) {
-    Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+	@Transactional
+	public void deleteMember(Long memberId) {
+		Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-    refreshTokenRepository.deleteByMemberId(memberId);
+		refreshTokenRepository.deleteByMemberId(memberId);
 
-    memberRepository.deleteMember(member);
-  }
+		memberRepository.deleteMember(member);
+	}
 }
