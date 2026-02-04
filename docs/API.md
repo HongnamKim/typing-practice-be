@@ -9,7 +9,9 @@ Swagger UI: `/swagger-ui/index.html`
 ```json
 {
   "success": true,
-  "data": { ... },
+  "data": {
+    ...
+  },
   "timestamp": "2026-01-29T12:00:00"
 }
 ```
@@ -47,7 +49,7 @@ Authorization: Bearer {accessToken}
   "nickname": "user_abc12345",
   "role": "USER",
   "createdAt": "2026-01-29T12:00:00",
-  "isNewMember": true,
+  "newMember": true,
   "accessToken": "eyJ...",
   "refreshToken": "abc123..."
 }
@@ -148,7 +150,8 @@ Google OAuth 로그인
 ```json
 {
   "success": true,
-  "data": true  // true: 중복, false: 사용 가능
+  "data": true
+  // true: 중복, false: 사용 가능
 }
 ```
 
@@ -239,7 +242,9 @@ Google OAuth 로그인
   "page": 1,
   "size": 10,
   "hasNext": false,
-  "content": [...]
+  "content": [
+    ...
+  ]
 }
 ```
 
@@ -272,8 +277,10 @@ Google OAuth 로그인
 
 ```json
 {
-  "sentence": "새로운 문장입니다.",  // 5-100자
-  "author": "작성자"                 // 1-20자, 선택
+  "sentence": "새로운 문장입니다.",
+  // 5-100자
+  "author": "작성자"
+  // 1-20자, 선택
 }
 ```
 
@@ -317,8 +324,10 @@ PRIVATE + ACTIVE 상태의 본인 문장만 수정 가능
 
 ```json
 {
-  "sentence": "수정된 문장",  // 선택
-  "author": "수정된 작성자"  // 선택
+  "sentence": "수정된 문장",
+  // 선택
+  "author": "수정된 작성자"
+  // 선택
 }
 ```
 
@@ -368,8 +377,10 @@ PUBLIC + PENDING 상태의 본인 문장을 PRIVATE + ACTIVE로 변경
 ```json
 {
   "quoteId": 1,
-  "reason": "MODIFY",        // MODIFY 또는 DELETE
-  "detail": "오타가 있습니다"  // 1-200자
+  "reason": "MODIFY",
+  // MODIFY 또는 DELETE
+  "detail": "오타가 있습니다"
+  // 1-200자
 }
 ```
 
@@ -384,7 +395,9 @@ PUBLIC + PENDING 상태의 본인 문장을 PRIVATE + ACTIVE로 변경
   "detail": "오타가 있습니다",
   "createdAt": "2026-01-29T12:00:00",
   "updatedAt": "2026-01-29T12:00:00",
-  "quote": { ... }
+  "quote": {
+    ...
+  }
 }
 ```
 
@@ -415,7 +428,9 @@ PUBLIC + PENDING 상태의 본인 문장을 PRIVATE + ACTIVE로 변경
       "detail": "오타가 있습니다",
       "createdAt": "2026-01-29T12:00:00",
       "updatedAt": "2026-01-29T12:00:00",
-      "quote": { ... }
+      "quote": {
+        ...
+      }
     }
   ]
 }
