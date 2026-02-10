@@ -48,7 +48,10 @@ public class ReportService {
     }
 
     // 신고 횟수 가능 검증
-    if (!dailyLimitService.canReport(memberId)) {
+    /*if (!dailyLimitService.canReport(memberId)) {
+      throw new DailyReportLimitException();
+    }*/
+    if (!dailyLimitService.tryIncrementReportCount(memberId)) {
       throw new DailyReportLimitException();
     }
 
@@ -64,7 +67,7 @@ public class ReportService {
 
     // 문장, 회원 신고 횟수 증가
     quote.increaseReportCount();
-    dailyLimitService.incrementReportCount(memberId);
+    // dailyLimitService.incrementReportCount(memberId);
 
     if (quote.shouldBeHidden()) {
       quote.updateStatus(QuoteStatus.HIDDEN);

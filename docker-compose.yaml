@@ -11,5 +11,11 @@ services:
       POSTGRES_PASSWORD: user
       POSTGRES_DB: typing
 
+  redis:
+    image: redis:8
+    restart: always
+    ports:
+      - '6379:6379'
+
 volumes:
   postgres-data:
