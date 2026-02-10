@@ -17,9 +17,12 @@ import com.typingpractice.typing_practice_be.common.jwt.JwtTokenProvider;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,118 +32,121 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClient;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AuthService {
 
-  private final RestClient restClient = RestClient.create();
-  private final JwtTokenProvider jwtTokenProvider;
-  private final JwtBlackListRepository jwtBlackListRepository;
-  private final RefreshTokenRepository refreshTokenRepository;
+	private final RestClient restClient = RestClient.create();
+	private final JwtTokenProvider jwtTokenProvider;
+	private final JwtBlackListRepository jwtBlackListRepository;
+	private final RefreshTokenRepository refreshTokenRepository;
 
-  private final GoogleOAuthProperties googleOAuthProperties;
-  private final JwtProperties jwtProperties;
+	private final GoogleOAuthProperties googleOAuthProperties;
+	private final JwtProperties jwtProperties;
 
-  private final MemberRepository memberRepository;
+	private final MemberRepository memberRepository;
 
-  public GoogleTokenResponse getAccessToken(String code) {
-    try {
-      MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-      params.add("code", code);
-      params.add("client_id", googleOAuthProperties.getClientId());
-      params.add("client_secret", googleOAuthProperties.getClientSecret());
-      params.add("redirect_uri", googleOAuthProperties.getRedirectUri());
-      params.add("grant_type", googleOAuthProperties.getGrantType());
+	public GoogleTokenResponse getAccessToken(String code) {
+		try {
+			MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+			params.add("code", code);
+			params.add("client_id", googleOAuthProperties.getClientId());
+			params.add("client_secret", googleOAuthProperties.getClientSecret());
+			params.add("redirect_uri", googleOAuthProperties.getRedirectUri());
+			params.add("grant_type", googleOAuthProperties.getGrantType());
 
-      return restClient
-          .post()
-          .uri(googleOAuthProperties.getTokenUri())
-          .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-          .body(params)
-          .retrieve()
-          .body(GoogleTokenResponse.class);
-    } catch (HttpClientErrorException e) {
-      throw new GoogleAuthException();
-    } catch (HttpServerErrorException e) {
-      throw new GoogleServerException();
-    }
-  }
+			return restClient
+							.post()
+							.uri(googleOAuthProperties.getTokenUri())
+							.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+							.body(params)
+							.retrieve()
+							.body(GoogleTokenResponse.class);
+		} catch (HttpClientErrorException e) {
+			log.warn(e.getMessage());
 
-  public GoogleUserInfo getUserInfo(String accessToken) {
-    try {
-      return restClient
-          .get()
-          .uri("https://www.googleapis.com/oauth2/v2/userinfo")
-          .header("Authorization", "Bearer " + accessToken)
-          .retrieve()
-          .body(GoogleUserInfo.class);
+			throw new GoogleAuthException();
+		} catch (HttpServerErrorException e) {
+			throw new GoogleServerException();
+		}
+	}
 
-    } catch (HttpClientErrorException e) {
-      throw new GoogleAuthException();
-    } catch (HttpServerErrorException e) {
-      throw new GoogleServerException();
-    }
-  }
+	public GoogleUserInfo getUserInfo(String accessToken) {
+		try {
+			return restClient
+							.get()
+							.uri("https://www.googleapis.com/oauth2/v2/userinfo")
+							.header("Authorization", "Bearer " + accessToken)
+							.retrieve()
+							.body(GoogleUserInfo.class);
 
-  @Transactional
-  public void logout(String token) {
-    JwtPayload jwtPayload = jwtTokenProvider.getJwtPayload(token);
+		} catch (HttpClientErrorException e) {
+			throw new GoogleAuthException();
+		} catch (HttpServerErrorException e) {
+			throw new GoogleServerException();
+		}
+	}
 
-    JwtBlackList jwtBlackList =
-        JwtBlackList.create(jwtPayload.getJwtId(), jwtPayload.getExpiresIn());
+	@Transactional
+	public void logout(String token) {
+		JwtPayload jwtPayload = jwtTokenProvider.getJwtPayload(token);
 
-    refreshTokenRepository.deleteByMemberId(jwtPayload.getMemberId());
+		JwtBlackList jwtBlackList =
+						JwtBlackList.create(jwtPayload.getJwtId(), jwtPayload.getExpiresIn());
 
-    jwtBlackListRepository.save(jwtBlackList);
-  }
+		refreshTokenRepository.deleteByMemberId(jwtPayload.getMemberId());
 
-  public boolean isBlacklistedJwt(String jwtId) {
-    return jwtBlackListRepository.existByJwtId(jwtId);
-  }
+		jwtBlackListRepository.save(jwtBlackList);
+	}
 
-  @Transactional
-  public TokenRotation rotateToken(String refreshToken) {
-    RefreshToken refreshTokenInfo =
-        refreshTokenRepository
-            .findByToken(refreshToken)
-            .orElseThrow(AuthInvalidRefreshTokenException::new);
+	public boolean isBlacklistedJwt(String jwtId) {
+		return jwtBlackListRepository.existByJwtId(jwtId);
+	}
 
-    if (refreshTokenInfo.getExpiresIn().isBefore(LocalDateTime.now())) {
-      refreshTokenRepository.deleteByToken(refreshToken);
-      throw new AuthInvalidRefreshTokenException();
-    }
+	@Transactional
+	public TokenRotation rotateToken(String refreshToken) {
+		RefreshToken refreshTokenInfo =
+						refreshTokenRepository
+										.findByToken(refreshToken)
+										.orElseThrow(AuthInvalidRefreshTokenException::new);
 
-    Long memberId = refreshTokenInfo.getMemberId();
+		if (refreshTokenInfo.getExpiresIn().isBefore(LocalDateTime.now())) {
+			refreshTokenRepository.deleteByToken(refreshToken);
+			throw new AuthInvalidRefreshTokenException();
+		}
 
-    Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+		Long memberId = refreshTokenInfo.getMemberId();
 
-    String newAccessToken = jwtTokenProvider.createToken(memberId, member.getRole());
-    String newRefreshToken = UUID.randomUUID().toString();
+		Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-    RefreshToken newRefreshTokenInfo =
-        RefreshToken.create(
-            memberId,
-            newRefreshToken,
-            LocalDateTime.now().plusDays(jwtProperties.getRefreshTokenExpirationDays()));
+		String newAccessToken = jwtTokenProvider.createToken(memberId, member.getRole());
+		String newRefreshToken = UUID.randomUUID().toString();
 
-    refreshTokenRepository.deleteByToken(refreshToken); // 기존 토큰 삭제
-    refreshTokenRepository.save(newRefreshTokenInfo);
+		RefreshToken newRefreshTokenInfo =
+						RefreshToken.create(
+										memberId,
+										newRefreshToken,
+										LocalDateTime.now().plusDays(jwtProperties.getRefreshTokenExpirationDays()));
 
-    return TokenRotation.create(newAccessToken, newRefreshToken);
-  }
+		refreshTokenRepository.deleteByToken(refreshToken); // 기존 토큰 삭제
+		refreshTokenRepository.save(newRefreshTokenInfo);
 
-  @Transactional
-  public String createRefreshToken(Member member) {
-    // 기존 refresh token 삭제
-    refreshTokenRepository.deleteByMemberId(member.getId());
+		return TokenRotation.create(newAccessToken, newRefreshToken);
+	}
 
-    RefreshToken refreshToken =
-        RefreshToken.create(
-            member.getId(),
-            UUID.randomUUID().toString(),
-            LocalDateTime.now().plusDays(jwtProperties.getRefreshTokenExpirationDays()));
-    refreshTokenRepository.save(refreshToken);
-    return refreshToken.getToken();
-  }
+	@Transactional
+	public String createRefreshToken(Member member) {
+		// 기존 refresh token 삭제
+		refreshTokenRepository.deleteByMemberId(member.getId());
+
+		RefreshToken refreshToken =
+						RefreshToken.create(
+										member.getId(),
+										UUID.randomUUID().toString(),
+										LocalDateTime.now().plusDays(jwtProperties.getRefreshTokenExpirationDays()));
+		refreshTokenRepository.save(refreshToken);
+		return refreshToken.getToken();
+	}
 }
