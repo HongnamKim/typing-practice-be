@@ -12,6 +12,7 @@ public enum ErrorCode {
   GOOGLE_AUTH_FAILED(HttpStatus.BAD_REQUEST, "Google 인증에 실패했습니다."),
   GOOGLE_SERVER_ERROR(HttpStatus.BAD_GATEWAY, "Google 서버 오류가 발생했습니다."),
   UNAUTHORIZED_ERROR(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다."),
+  AUTH_DUPLICATE_USER(HttpStatus.CONFLICT, "이미 가입된 계정입니다."),
 
   AUTH_INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
 
