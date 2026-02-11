@@ -21,6 +21,7 @@ public class Member extends BaseEntity {
   @Column(name = "member_id")
   private Long id;
 
+  @Column(unique = true)
   private String providerId;
 
   private String email;
@@ -84,7 +85,7 @@ public class Member extends BaseEntity {
     return this.dailyQuoteUploadCount < limit;
   }
 
-  public void incrementReportCount() {
+  /*public void incrementReportCount() {
     LocalDate today = LocalDate.now();
     if (today.isAfter(this.lastReportDate)) {
       this.reportCount = 0;
@@ -92,7 +93,7 @@ public class Member extends BaseEntity {
     }
 
     this.reportCount++;
-  }
+  }*/
 
   public void incrementQuoteUploadCount() {
     LocalDate today = LocalDate.now();
