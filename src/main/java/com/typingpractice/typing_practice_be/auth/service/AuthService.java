@@ -2,8 +2,6 @@ package com.typingpractice.typing_practice_be.auth.service;
 
 import com.typingpractice.typing_practice_be.auth.GoogleOAuthProperties;
 import com.typingpractice.typing_practice_be.auth.JwtProperties;
-import com.typingpractice.typing_practice_be.auth.domain.JwtBlackList;
-import com.typingpractice.typing_practice_be.auth.domain.RefreshToken;
 import com.typingpractice.typing_practice_be.auth.dto.TokenRotation;
 import com.typingpractice.typing_practice_be.auth.dto.google.GoogleLoginRequest;
 import com.typingpractice.typing_practice_be.auth.dto.google.GoogleTokenResponse;
@@ -19,7 +17,7 @@ import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
 
-import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
@@ -100,12 +98,9 @@ public class AuthService {
   public void logout(String token) {
     JwtPayload jwtPayload = jwtTokenProvider.getJwtPayload(token);
 
-    JwtBlackList jwtBlackList =
-        JwtBlackList.create(jwtPayload.getJwtId(), jwtPayload.getExpiresIn());
-
     refreshTokenRepository.deleteByMemberId(jwtPayload.getMemberId());
 
-    jwtBlackListRepository.save(jwtBlackList);
+    jwtBlackListRepository.save(jwtPayload.getJwtId(), jwtPayload.getExpiresIn());
   }
 
   public boolean isBlacklistedJwt(String jwtId) {
@@ -114,31 +109,20 @@ public class AuthService {
 
   @Transactional
   public TokenRotation rotateToken(String refreshToken) {
-    RefreshToken refreshTokenInfo =
+    // refresh token 으로 member id 조회
+    Long memberId =
         refreshTokenRepository
-            .findByToken(refreshToken)
+            .findMemberIdByToken(refreshToken)
             .orElseThrow(AuthInvalidRefreshTokenException::new);
-
-    if (refreshTokenInfo.getExpiresIn().isBefore(LocalDateTime.now())) {
-      refreshTokenRepository.deleteByToken(refreshToken);
-      throw new AuthInvalidRefreshTokenException();
-    }
-
-    Long memberId = refreshTokenInfo.getMemberId();
 
     Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
     String newAccessToken = jwtTokenProvider.createToken(memberId, member.getRole());
+
+    refreshTokenRepository.deleteByToken(refreshToken); // 기존 리프레시 토큰 삭제
     String newRefreshToken = UUID.randomUUID().toString();
-
-    RefreshToken newRefreshTokenInfo =
-        RefreshToken.create(
-            memberId,
-            newRefreshToken,
-            LocalDateTime.now().plusDays(jwtProperties.getRefreshTokenExpirationDays()));
-
-    refreshTokenRepository.deleteByToken(refreshToken); // 기존 토큰 삭제
-    refreshTokenRepository.save(newRefreshTokenInfo);
+    Duration ttl = Duration.ofDays(jwtProperties.getRefreshTokenExpirationDays());
+    refreshTokenRepository.save(memberId, newRefreshToken, ttl);
 
     return TokenRotation.create(newAccessToken, newRefreshToken);
   }
@@ -148,12 +132,9 @@ public class AuthService {
     // 기존 refresh token 삭제
     refreshTokenRepository.deleteByMemberId(member.getId());
 
-    RefreshToken refreshToken =
-        RefreshToken.create(
-            member.getId(),
-            UUID.randomUUID().toString(),
-            LocalDateTime.now().plusDays(jwtProperties.getRefreshTokenExpirationDays()));
-    refreshTokenRepository.save(refreshToken);
-    return refreshToken.getToken();
+    String token = UUID.randomUUID().toString();
+    Duration ttl = Duration.ofDays(jwtProperties.getRefreshTokenExpirationDays());
+    refreshTokenRepository.save(member.getId(), token, ttl);
+    return token;
   }
 }
