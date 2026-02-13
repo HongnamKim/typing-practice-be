@@ -1,47 +1,50 @@
 package com.typingpractice.typing_practice_be.auth.repository;
 
-import com.typingpractice.typing_practice_be.auth.domain.RefreshToken;
-import jakarta.persistence.EntityManager;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
-
-import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
 public class RefreshTokenRepository {
-  private final EntityManager em;
+  private final StringRedisTemplate redisTemplate;
 
-  public Long save(RefreshToken refreshToken) {
-    em.persist(refreshToken);
+  private static final String TOKEN_PREFIX = "refresh:";
+  private static final String MEMBER_PREFIX = "refresh:member:";
 
-    return refreshToken.getId();
+  public void save(Long memberId, String token, Duration ttl) {
+    redisTemplate.opsForValue().set(TOKEN_PREFIX + token, String.valueOf(memberId), ttl);
+    redisTemplate.opsForValue().set(MEMBER_PREFIX + memberId, token, ttl);
   }
 
-  public Optional<RefreshToken> findByToken(String token) {
-    return em.createQuery("select t from RefreshToken t where t.token = :token", RefreshToken.class)
-        .setParameter("token", token)
-        .setMaxResults(1)
-        .getResultStream()
-        .findFirst();
+  public Optional<Long> findMemberIdByToken(String token) {
+    String memberId = redisTemplate.opsForValue().get(TOKEN_PREFIX + token);
+
+    if (memberId == null) {
+      return Optional.empty();
+    }
+
+    return Optional.of(Long.valueOf(memberId));
   }
 
   public void deleteByToken(String token) {
-    em.createQuery("delete from RefreshToken t where t.token = :token")
-        .setParameter("token", token)
-        .executeUpdate();
+    String memberId = redisTemplate.opsForValue().get(TOKEN_PREFIX + token);
+
+    redisTemplate.delete(TOKEN_PREFIX + token);
+
+    if (memberId != null) {
+      redisTemplate.delete(MEMBER_PREFIX + memberId);
+    }
   }
 
   public void deleteByMemberId(Long memberId) {
-    em.createQuery("delete from RefreshToken t where t.memberId = :memberId")
-        .setParameter("memberId", memberId)
-        .executeUpdate();
-  }
+    String token = redisTemplate.opsForValue().get(MEMBER_PREFIX + memberId);
+    redisTemplate.delete(MEMBER_PREFIX + memberId);
 
-  public void deleteExpiredTokens(LocalDateTime now) {
-    em.createQuery("delete from RefreshToken t where t.expiresIn < :now")
-        .setParameter("now", now)
-        .executeUpdate();
+    if (token != null) {
+      redisTemplate.delete(TOKEN_PREFIX + token);
+    }
   }
 }

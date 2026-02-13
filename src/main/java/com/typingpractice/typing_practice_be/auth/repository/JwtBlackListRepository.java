@@ -1,6 +1,5 @@
 package com.typingpractice.typing_practice_be.auth.repository;
 
-import com.typingpractice.typing_practice_be.auth.domain.JwtBlackList;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -16,14 +15,14 @@ public class JwtBlackListRepository {
 
   private static final String KEY_PREFIX = "blacklist:";
 
-  public void save(JwtBlackList jwtBlackList) {
-    Duration ttl = Duration.between(LocalDateTime.now(ZoneOffset.UTC), jwtBlackList.getExpiresIn());
+  public void save(String jwtId, LocalDateTime expiresIn) {
+    Duration ttl = Duration.between(LocalDateTime.now(ZoneOffset.UTC), expiresIn);
 
     if (ttl.isNegative() || ttl.isZero()) {
       return;
     }
 
-    redisTemplate.opsForValue().set(KEY_PREFIX + jwtBlackList.getJwtId(), "true", ttl);
+    redisTemplate.opsForValue().set(KEY_PREFIX + jwtId, "true", ttl);
   }
 
   public boolean existByJwtId(String jwtId) {

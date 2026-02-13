@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.typingpractice.typing_practice_be.auth.JwtProperties;
-import com.typingpractice.typing_practice_be.auth.domain.JwtBlackList;
-import com.typingpractice.typing_practice_be.auth.domain.RefreshToken;
 import com.typingpractice.typing_practice_be.auth.dto.TokenRotation;
 import com.typingpractice.typing_practice_be.auth.exception.AuthInvalidRefreshTokenException;
 import com.typingpractice.typing_practice_be.auth.repository.JwtBlackListRepository;
