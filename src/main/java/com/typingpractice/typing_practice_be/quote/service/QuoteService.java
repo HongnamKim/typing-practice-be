@@ -48,10 +48,6 @@ public class QuoteService {
   public Quote create(Long memberId, QuoteCreateQuery query) {
     Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-    /*if (!dailyLimitService.canUploadQuote(memberId)) {
-      throw new DailyQuoteUploadLimitException();
-    }*/
-
     if (!dailyLimitService.tryIncrementQuoteUploadCount(memberId)) {
       throw new DailyQuoteUploadLimitException();
     }
@@ -59,7 +55,6 @@ public class QuoteService {
     Quote quote = Quote.create(member, query.getSentence(), query.getAuthor(), query.getType());
 
     quoteRepository.save(quote);
-    // dailyLimitService.incrementQuoteUploadCount(memberId);
 
     return quote;
   }

@@ -35,6 +35,7 @@ public class RedisDailyLimitService implements DailyLimitService {
     return Duration.between(now, midnight);
   }
 
+  @Override
   public boolean tryIncrementReportCount(Long memberId) {
     Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
@@ -53,7 +54,7 @@ public class RedisDailyLimitService implements DailyLimitService {
       redisTemplate.expire(key, ttlUntilMidnight());
     }
 
-    return count <= DailyLimitPolicy.MAX_QUOTE_UPLOAD;
+    return count <= DailyLimitPolicy.MAX_REPORT;
   }
 
   @Override
@@ -77,24 +78,4 @@ public class RedisDailyLimitService implements DailyLimitService {
 
     return count <= DailyLimitPolicy.MAX_QUOTE_UPLOAD;
   }
-
-  @Override
-  public boolean canReport(Long memberId) {
-    String key = reportKey(memberId);
-    String value = redisTemplate.opsForValue().get(key);
-
-    if (value == null) {
-      return true;
-    }
-
-    return Integer.parseInt(value) < DailyLimitPolicy.MAX_REPORT;
-  }
-
-  @Override
-  public boolean canUploadQuote(Long memberId) {
-    return false;
-  }
-
-  @Override
-  public void incrementQuoteUploadCount(Long memberId) {}
 }

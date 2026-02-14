@@ -94,7 +94,6 @@ public class AuthService {
     }
   }
 
-  @Transactional
   public void logout(String token) {
     JwtPayload jwtPayload = jwtTokenProvider.getJwtPayload(token);
 
@@ -107,7 +106,6 @@ public class AuthService {
     return jwtBlackListRepository.existByJwtId(jwtId);
   }
 
-  @Transactional
   public TokenRotation rotateToken(String refreshToken) {
     // refresh token 으로 member id 조회
     Long memberId =
@@ -127,7 +125,6 @@ public class AuthService {
     return TokenRotation.create(newAccessToken, newRefreshToken);
   }
 
-  @Transactional
   public String createRefreshToken(Member member) {
     // 기존 refresh token 삭제
     refreshTokenRepository.deleteByMemberId(member.getId());
