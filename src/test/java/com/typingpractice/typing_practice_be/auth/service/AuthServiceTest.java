@@ -15,6 +15,7 @@ import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
 import java.lang.reflect.Field;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -52,10 +53,6 @@ class AuthServiceTest {
     }
   }
 
-  private RefreshToken createRefreshToken(Long memberId, String token, LocalDateTime expiresIn) {
-    return RefreshToken.create(memberId, token, expiresIn);
-  }
-
   @Nested
   @DisplayName("logout")
   class Logout {
@@ -73,7 +70,7 @@ class AuthServiceTest {
 
       // then
       verify(refreshTokenRepository).deleteByMemberId(1L);
-      verify(jwtBlackListRepository).save(any(JwtBlackList.class));
+      verify(jwtBlackListRepository).save(eq("jwt-id-123"), any(LocalDateTime.class));
     }
   }
 
@@ -113,11 +110,9 @@ class AuthServiceTest {
       String oldRefreshToken = "old-refresh-token";
       Long memberId = 1L;
       Member member = createMember(memberId);
-      RefreshToken refreshTokenEntity =
-          createRefreshToken(memberId, oldRefreshToken, LocalDateTime.now().plusDays(15));
 
-      when(refreshTokenRepository.findByToken(oldRefreshToken))
-          .thenReturn(Optional.of(refreshTokenEntity));
+      when(refreshTokenRepository.findMemberIdByToken(oldRefreshToken))
+          .thenReturn(Optional.of(memberId));
       when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
       when(jwtTokenProvider.createToken(memberId, MemberRole.USER)).thenReturn("new-access-token");
       when(jwtProperties.getRefreshTokenExpirationDays()).thenReturn(15L);
@@ -129,7 +124,7 @@ class AuthServiceTest {
       assertThat(result.getAccessToken()).isEqualTo("new-access-token");
       assertThat(result.getRefreshToken()).isNotEqualTo(oldRefreshToken);
       verify(refreshTokenRepository).deleteByToken(oldRefreshToken);
-      verify(refreshTokenRepository).save(any(RefreshToken.class));
+      verify(refreshTokenRepository).save(eq(memberId), anyString(), any(Duration.class));
     }
 
     @Test
@@ -137,26 +132,10 @@ class AuthServiceTest {
     void tokenInvalid() {
       // given
       String invalidToken = "invalid-token";
-      when(refreshTokenRepository.findByToken(invalidToken)).thenReturn(Optional.empty());
+      when(refreshTokenRepository.findMemberIdByToken(invalidToken)).thenReturn(Optional.empty());
 
       // when & then
       assertThatThrownBy(() -> authService.rotateToken(invalidToken))
-          .isInstanceOf(AuthInvalidRefreshTokenException.class);
-    }
-
-    @Test
-    @DisplayName("만료된 RefreshToken - 예외 발생 및 토큰 삭제")
-    void expiredToken() {
-      // given
-      String expiredToken = "expired-token";
-      RefreshToken refreshTokenEntity =
-          RefreshToken.create(1L, expiredToken, LocalDateTime.now().minusDays(1));
-
-      when(refreshTokenRepository.findByToken(expiredToken))
-          .thenReturn(Optional.of(refreshTokenEntity));
-
-      // when & then
-      assertThatThrownBy(() -> authService.rotateToken(expiredToken))
           .isInstanceOf(AuthInvalidRefreshTokenException.class);
     }
 
@@ -166,11 +145,9 @@ class AuthServiceTest {
       // given
       String refreshToken = "valid-token";
       Long memberId = 999L;
-      RefreshToken refreshTokenEntity =
-          createRefreshToken(memberId, refreshToken, LocalDateTime.now().plusDays(15));
 
-      when(refreshTokenRepository.findByToken(refreshToken))
-          .thenReturn(Optional.of(refreshTokenEntity));
+      when(refreshTokenRepository.findMemberIdByToken(refreshToken))
+          .thenReturn(Optional.of(memberId));
       when(memberRepository.findById(memberId)).thenReturn(Optional.empty());
 
       // when & then
@@ -195,7 +172,7 @@ class AuthServiceTest {
       // then
       assertThat(result).isNotNull();
       verify(refreshTokenRepository).deleteByMemberId(1L);
-      verify(refreshTokenRepository).save(any(RefreshToken.class));
+      verify(refreshTokenRepository).save(eq(1L), anyString(), any(Duration.class));
     }
   }
 }
