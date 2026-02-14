@@ -36,9 +36,6 @@ public class Quote extends BaseEntity {
   @JoinColumn(name = "member_id")
   private Member member;
 
-  //  @OneToMany(mappedBy = "quote", cascade = CascadeType.REMOVE)
-  //  private List<Report> reports = new ArrayList<>();
-
   public static final String DEFAULT_AUTHOR = "작자 미상";
   public static final int HIDDEN_THRESHOLD = 5; // 자동 숨김 기준값
 
@@ -73,14 +70,6 @@ public class Quote extends BaseEntity {
       this.author = StringUtils.hasText(author) ? author : DEFAULT_AUTHOR;
     }
   }
-
-  /*public void updateSentence(String sentence) {
-    this.sentence = sentence;
-  }*/
-
-  /*public void updateAuthor(String author) {
-    this.author = author;
-  }*/
 
   public void updateType(QuoteType quoteType) {
     this.type = quoteType;

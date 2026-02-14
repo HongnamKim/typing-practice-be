@@ -24,18 +24,6 @@ public class AdminQuoteService {
   private final QuoteRepository quoteRepository;
   private final ReportRepository reportRepository;
 
-  //  public List<Quote> findPendingQuotes() {
-  //    List<Quote> pendingQuotes = quoteRepository.findByStatus(QuoteStatus.PENDING);
-  //
-  //    return pendingQuotes;
-  //  }
-
-  //  public List<Quote> findHiddenQuotes() {
-  //    List<Quote> hiddenQuotes = quoteRepository.findByStatus(QuoteStatus.HIDDEN);
-  //
-  //    return hiddenQuotes;
-  //  }
-
   @Transactional
   public Quote approvePublish(Long quoteId) {
     Quote quote = findQuoteById(quoteId);

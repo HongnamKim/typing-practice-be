@@ -128,7 +128,7 @@ class QuoteServiceTest {
       QuoteCreateQuery query = createCreateQuery(QuoteType.PRIVATE);
 
       when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
-      when(dailyLimitService.canUploadQuote(1L)).thenReturn(true);
+      when(dailyLimitService.tryIncrementQuoteUploadCount(1L)).thenReturn(true);
 
       // when
       Quote result = quoteService.create(1L, query);
@@ -137,7 +137,7 @@ class QuoteServiceTest {
       assertThat(result.getType()).isEqualTo(QuoteType.PRIVATE);
       assertThat(result.getStatus()).isEqualTo(QuoteStatus.ACTIVE);
       verify(quoteRepository).save(any(Quote.class));
-      verify(dailyLimitService).incrementQuoteUploadCount(1L);
+      // verify(dailyLimitService).incrementQuoteUploadCount(1L);
     }
 
     @Test
@@ -148,7 +148,7 @@ class QuoteServiceTest {
       QuoteCreateQuery query = createCreateQuery(QuoteType.PUBLIC);
 
       when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
-      when(dailyLimitService.canUploadQuote(1L)).thenReturn(true);
+      when(dailyLimitService.tryIncrementQuoteUploadCount(1L)).thenReturn(true);
 
       // when
       Quote result = quoteService.create(1L, query);
@@ -179,7 +179,7 @@ class QuoteServiceTest {
       QuoteCreateQuery query = createCreateQuery(QuoteType.PUBLIC);
 
       when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
-      when(dailyLimitService.canUploadQuote(1L)).thenReturn(false);
+      when(dailyLimitService.tryIncrementQuoteUploadCount(1L)).thenReturn(false);
 
       // when & then
       assertThatThrownBy(() -> quoteService.create(1L, query))

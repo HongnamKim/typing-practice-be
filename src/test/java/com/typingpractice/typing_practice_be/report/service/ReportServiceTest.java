@@ -104,7 +104,7 @@ class ReportServiceTest {
 
       when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
       when(quoteRepository.findById(1L)).thenReturn(Optional.of(quote));
-      when(dailyLimitService.canReport(1L)).thenReturn(true);
+      when(dailyLimitService.tryIncrementReportCount(1L)).thenReturn(true);
       when(reportRepository.existsByQuoteAndMember(quote, member)).thenReturn(false);
 
       // when
@@ -126,7 +126,7 @@ class ReportServiceTest {
 
       when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
       when(quoteRepository.findById(1L)).thenReturn(Optional.of(quote));
-      when(dailyLimitService.canReport(1L)).thenReturn(true);
+      when(dailyLimitService.tryIncrementReportCount(1L)).thenReturn(true);
       when(reportRepository.existsByQuoteAndMember(quote, member)).thenReturn(false);
       // when
       reportService.createReport(1L, 1L, query);
@@ -206,7 +206,7 @@ class ReportServiceTest {
 
       when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
       when(quoteRepository.findById(1L)).thenReturn(Optional.of(quote));
-      when(dailyLimitService.canReport(1L)).thenReturn(false);
+      when(dailyLimitService.tryIncrementReportCount(1L)).thenReturn(false);
 
       // when & then
       assertThatThrownBy(() -> reportService.createReport(1L, 1L, query))
@@ -223,7 +223,7 @@ class ReportServiceTest {
 
       when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
       when(quoteRepository.findById(1L)).thenReturn(Optional.of(quote));
-      when(dailyLimitService.canReport(1L)).thenReturn(true);
+      when(dailyLimitService.tryIncrementReportCount(1L)).thenReturn(true);
       when(reportRepository.existsByQuoteAndMember(quote, member)).thenReturn(true);
 
       // when & then
@@ -283,7 +283,7 @@ class ReportServiceTest {
       when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
       when(quoteRepository.findById(1L)).thenReturn(Optional.of(quote));
       when(reportRepository.findById(1L)).thenReturn(Optional.of(report));
-      when(dailyLimitService.canReport(1L)).thenReturn(true);
+      when(dailyLimitService.tryIncrementReportCount(1L)).thenReturn(true);
       when(reportRepository.existsByQuoteAndMember(quote, member)).thenReturn(false);
 
       // when
