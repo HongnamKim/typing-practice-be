@@ -10,10 +10,7 @@ import com.typingpractice.typing_practice_be.dailylimit.exception.DailyQuoteUplo
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
-import com.typingpractice.typing_practice_be.quote.domain.Quote;
-import com.typingpractice.typing_practice_be.quote.domain.QuoteOrderBy;
-import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
-import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
+import com.typingpractice.typing_practice_be.quote.domain.*;
 import com.typingpractice.typing_practice_be.quote.dto.PublicQuoteRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteCreateRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationRequest;
@@ -62,7 +59,7 @@ class QuoteServiceTest {
   }
 
   private Quote createQuote(Member member, QuoteType type, QuoteStatus status) {
-    Quote quote = Quote.create(member, "테스트 문장입니다.", "저자", type);
+    Quote quote = Quote.create(member, "테스트 문장입니다.", "저자", type, QuoteLanguage.KOREAN, 0f);
     if (type == QuoteType.PUBLIC && status == QuoteStatus.ACTIVE) {
       quote.approvePublish();
     }

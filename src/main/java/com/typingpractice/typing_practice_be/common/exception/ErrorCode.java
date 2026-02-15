@@ -25,6 +25,7 @@ public enum ErrorCode {
   QUOTE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 예문을 찾을 수 없습니다."),
   QUOTE_NOT_OWNED(HttpStatus.FORBIDDEN, "문장에 대한 권한이 없습니다."),
   QUOTE_NOT_PROCESSABLE(HttpStatus.BAD_REQUEST, "처리할 수 없는 문장입니다."),
+  QUOTE_LANGUAGE_MISMATCH(HttpStatus.BAD_REQUEST, "선택한 언어와 맞지 않는 문자가 포함되어 있습니다."),
 
   EMPTY_UPDATE_REQUEST(HttpStatus.BAD_REQUEST, "수정할 내용이 없습니다."),
 

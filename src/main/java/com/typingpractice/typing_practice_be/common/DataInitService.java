@@ -4,6 +4,7 @@ import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
@@ -67,7 +68,8 @@ public class DataInitService implements CommandLineRunner {
       Member owner = members.get(i % 10);
       QuoteType type = i % 5 == 0 ? QuoteType.PRIVATE : QuoteType.PUBLIC;
 
-      Quote quote = Quote.create(owner, "테스트 문장입니다. 번호: " + i, "작자 " + i, type);
+      Quote quote =
+          Quote.create(owner, "테스트 문장입니다. 번호: " + i, "작자 " + i, type, QuoteLanguage.KOREAN, 0f);
 
       if (type == QuoteType.PUBLIC && i % 5 < 4) {
         quote.approvePublish();
