@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.quote.dto;
 
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import java.time.LocalDateTime;
@@ -12,6 +13,8 @@ import lombok.ToString;
 public class QuoteResponse {
   private Long quoteId;
   private String sentence;
+  private QuoteLanguage language;
+  private Float difficulty;
   private String author;
   private QuoteType type;
   private QuoteStatus status;
@@ -24,6 +27,8 @@ public class QuoteResponse {
 
     response.quoteId = quote.getId();
     response.sentence = quote.getSentence();
+    response.language = quote.getLanguage();
+    response.difficulty = quote.getDifficulty();
     response.author = quote.getAuthor();
     response.type = quote.getType();
     response.status = quote.getStatus();

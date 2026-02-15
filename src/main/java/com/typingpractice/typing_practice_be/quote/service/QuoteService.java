@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class QuoteService {
+  private final QuoteLanguageValidator quoteLanguageValidator;
   private final QuoteRepository quoteRepository;
   private final MemberRepository memberRepository;
 
@@ -52,7 +53,16 @@ public class QuoteService {
       throw new DailyQuoteUploadLimitException();
     }
 
-    Quote quote = Quote.create(member, query.getSentence(), query.getAuthor(), query.getType());
+    quoteLanguageValidator.validate(query.getSentence(), query.getLanguage());
+
+    Quote quote =
+        Quote.create(
+            member,
+            query.getSentence(),
+            query.getAuthor(),
+            query.getType(),
+            query.getLanguage(),
+            0f);
 
     quoteRepository.save(quote);
 

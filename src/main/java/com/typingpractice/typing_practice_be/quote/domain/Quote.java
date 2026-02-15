@@ -27,6 +27,11 @@ public class Quote extends BaseEntity {
   @Enumerated(EnumType.STRING)
   private QuoteType type;
 
+  @Enumerated(EnumType.STRING)
+  private QuoteLanguage language;
+
+  private Float difficulty;
+
   private String sentence;
   private String author;
 
@@ -39,12 +44,20 @@ public class Quote extends BaseEntity {
   public static final String DEFAULT_AUTHOR = "작자 미상";
   public static final int HIDDEN_THRESHOLD = 5; // 자동 숨김 기준값
 
-  public static Quote create(Member member, String sentence, String author, QuoteType type) {
+  public static Quote create(
+      Member member,
+      String sentence,
+      String author,
+      QuoteType type,
+      QuoteLanguage language,
+      Float difficulty) {
     Quote quote = new Quote();
     quote.member = member;
     quote.sentence = sentence;
     quote.author = author != null ? author : DEFAULT_AUTHOR;
     quote.type = type;
+    quote.language = language;
+    quote.difficulty = difficulty;
     quote.reportCount = 0;
     quote.status = quote.type == QuoteType.PUBLIC ? QuoteStatus.PENDING : QuoteStatus.ACTIVE;
 
