@@ -32,6 +32,8 @@ public class Quote extends BaseEntity {
 
   private Float difficulty;
 
+  @Embedded private QuoteProfile profile;
+
   private String sentence;
   private String author;
 
@@ -50,6 +52,7 @@ public class Quote extends BaseEntity {
       String author,
       QuoteType type,
       QuoteLanguage language,
+      QuoteProfile profile,
       Float difficulty) {
     Quote quote = new Quote();
     quote.member = member;
@@ -57,6 +60,7 @@ public class Quote extends BaseEntity {
     quote.author = author != null ? author : DEFAULT_AUTHOR;
     quote.type = type;
     quote.language = language;
+    quote.profile = profile;
     quote.difficulty = difficulty;
     quote.reportCount = 0;
     quote.status = quote.type == QuoteType.PUBLIC ? QuoteStatus.PENDING : QuoteStatus.ACTIVE;

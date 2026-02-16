@@ -69,7 +69,8 @@ public class DataInitService implements CommandLineRunner {
       QuoteType type = i % 5 == 0 ? QuoteType.PRIVATE : QuoteType.PUBLIC;
 
       Quote quote =
-          Quote.create(owner, "테스트 문장입니다. 번호: " + i, "작자 " + i, type, QuoteLanguage.KOREAN, 0f);
+          Quote.create(
+              owner, "테스트 문장입니다. 번호: " + i, "작자 " + i, type, QuoteLanguage.KOREAN, null, 0f);
 
       if (type == QuoteType.PUBLIC && i % 5 < 4) {
         quote.approvePublish();
