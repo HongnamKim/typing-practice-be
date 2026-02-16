@@ -6,9 +6,7 @@ import com.typingpractice.typing_practice_be.dailylimit.exception.DailyQuoteUplo
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
-import com.typingpractice.typing_practice_be.quote.domain.Quote;
-import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
-import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
+import com.typingpractice.typing_practice_be.quote.domain.*;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotOwnedException;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotProcessableException;
@@ -18,6 +16,9 @@ import com.typingpractice.typing_practice_be.quote.query.QuotePaginationQuery;
 import com.typingpractice.typing_practice_be.quote.query.QuoteUpdateQuery;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
 import java.util.List;
+
+import com.typingpractice.typing_practice_be.statistics.domain.GlobalQuoteStatistics;
+import com.typingpractice.typing_practice_be.statistics.service.GlobalQuoteStatisticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class QuoteService {
   private final QuoteLanguageValidator quoteLanguageValidator;
+  private final QuoteProfileCalculator quoteProfileCalculator;
+  private final DifficultySeedCalculator difficultySeedCalculator;
+  private final GlobalQuoteStatisticsService globalQuoteStatisticsService;
+
   private final QuoteRepository quoteRepository;
   private final MemberRepository memberRepository;
 
@@ -53,7 +58,17 @@ public class QuoteService {
       throw new DailyQuoteUploadLimitException();
     }
 
-    quoteLanguageValidator.validate(query.getSentence(), query.getLanguage());
+    String sentence = query.getSentence();
+    QuoteLanguage language = query.getLanguage();
+    // 언어 검증
+    quoteLanguageValidator.validate(sentence, language);
+    // 입력 변수
+    QuoteProfile profile = quoteProfileCalculator.calculate(sentence, language);
+    // 전역 통계
+    GlobalQuoteStatistics stats = globalQuoteStatisticsService.getByLanguage(language);
+    // difficulty seed 계산
+    float seed = difficultySeedCalculator.calculate(profile, stats, language);
+    profile.setDifficultySeed(seed);
 
     Quote quote =
         Quote.create(
@@ -62,6 +77,7 @@ public class QuoteService {
             query.getAuthor(),
             query.getType(),
             query.getLanguage(),
+            profile,
             0f);
 
     quoteRepository.save(quote);
