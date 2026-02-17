@@ -11,6 +11,8 @@ import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import com.typingpractice.typing_practice_be.report.domain.ReportReason;
 import com.typingpractice.typing_practice_be.report.repository.ReportRepository;
+import com.typingpractice.typing_practice_be.statistics.domain.GlobalQuoteStatistics;
+import com.typingpractice.typing_practice_be.statistics.repository.GlobalQuoteStatisticsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -29,16 +31,26 @@ public class DataInitService implements CommandLineRunner {
   private final MemberRepository memberRepository;
   private final QuoteRepository quoteRepository;
   private final ReportRepository reportRepository;
+  private final GlobalQuoteStatisticsRepository globalQuoteStatisticsRepository;
 
   @Override
   @Transactional
   public void run(String... args) {
+    initGlobalQuoteStatistics();
     initAdmin();
     List<Member> members = initMembers();
     List<Quote> quotes = initQuotes(members);
     initReports(members, quotes);
 
     log.info("초기 데이터 생성 완료");
+  }
+
+  private void initGlobalQuoteStatistics() {
+    if (globalQuoteStatisticsRepository.count() == 0) {
+      globalQuoteStatisticsRepository.save(GlobalQuoteStatistics.createKoreanDefault());
+      globalQuoteStatisticsRepository.save(GlobalQuoteStatistics.createEnglishDefault());
+      log.info("전역 통계 초기값 생성 완료");
+    }
   }
 
   private void initAdmin() {

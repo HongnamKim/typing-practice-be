@@ -26,6 +26,9 @@ import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
+
+import com.typingpractice.typing_practice_be.statistics.domain.GlobalQuoteStatistics;
+import com.typingpractice.typing_practice_be.statistics.service.GlobalQuoteStatisticsService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -39,6 +42,11 @@ class QuoteServiceTest {
   @Mock private QuoteRepository quoteRepository;
   @Mock private MemberRepository memberRepository;
   @Mock private DailyLimitService dailyLimitService;
+
+  @Mock private QuoteLanguageValidator quoteLanguageValidator;
+  @Mock private QuoteProfileCalculator quoteProfileCalculator;
+  @Mock private DifficultySeedCalculator difficultySeedCalculator;
+  @Mock private GlobalQuoteStatisticsService globalQuoteStatisticsService;
 
   @InjectMocks private QuoteService quoteService;
 
@@ -59,7 +67,7 @@ class QuoteServiceTest {
   }
 
   private Quote createQuote(Member member, QuoteType type, QuoteStatus status) {
-    Quote quote = Quote.create(member, "테스트 문장입니다.", "저자", type, QuoteLanguage.KOREAN, 0f);
+    Quote quote = Quote.create(member, "테스트 문장입니다.", "저자", type, QuoteLanguage.KOREAN, null, 0f);
     if (type == QuoteType.PUBLIC && status == QuoteStatus.ACTIVE) {
       quote.approvePublish();
     }
@@ -68,8 +76,9 @@ class QuoteServiceTest {
   }
 
   private QuoteCreateQuery createCreateQuery(QuoteType type) {
-    QuoteCreateRequest request = QuoteCreateRequest.create("테스트 문장입니다.", "저자");
-    return QuoteCreateQuery.from(request, type);
+    QuoteCreateRequest request =
+        QuoteCreateRequest.create("테스트 문장입니다.", "저자", QuoteLanguage.KOREAN);
+    return QuoteCreateQuery.from(request, type, QuoteLanguage.KOREAN);
   }
 
   private QuoteUpdateQuery createUpdateQuery(String sentence, String author) {
@@ -126,6 +135,11 @@ class QuoteServiceTest {
 
       when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
       when(dailyLimitService.tryIncrementQuoteUploadCount(1L)).thenReturn(true);
+      when(quoteProfileCalculator.calculate(anyString(), any(QuoteLanguage.class)))
+          .thenReturn(QuoteProfile.create());
+      when(globalQuoteStatisticsService.getByLanguage(any(QuoteLanguage.class)))
+          .thenReturn(GlobalQuoteStatistics.createKoreanDefault());
+      when(difficultySeedCalculator.calculate(any(), any(), any())).thenReturn(0f);
 
       // when
       Quote result = quoteService.create(1L, query);
@@ -134,7 +148,6 @@ class QuoteServiceTest {
       assertThat(result.getType()).isEqualTo(QuoteType.PRIVATE);
       assertThat(result.getStatus()).isEqualTo(QuoteStatus.ACTIVE);
       verify(quoteRepository).save(any(Quote.class));
-      // verify(dailyLimitService).incrementQuoteUploadCount(1L);
     }
 
     @Test
@@ -146,6 +159,11 @@ class QuoteServiceTest {
 
       when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
       when(dailyLimitService.tryIncrementQuoteUploadCount(1L)).thenReturn(true);
+      when(quoteProfileCalculator.calculate(anyString(), any(QuoteLanguage.class)))
+          .thenReturn(QuoteProfile.create());
+      when(globalQuoteStatisticsService.getByLanguage(any(QuoteLanguage.class)))
+          .thenReturn(GlobalQuoteStatistics.createKoreanDefault());
+      when(difficultySeedCalculator.calculate(any(), any(), any())).thenReturn(0f);
 
       // when
       Quote result = quoteService.create(1L, query);

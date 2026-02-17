@@ -7,6 +7,7 @@ import com.typingpractice.typing_practice_be.auth.dto.TestLoginRequest;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.member.dto.MemberResponse;
 import com.typingpractice.typing_practice_be.member.dto.admin.MemberBanRequest;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteCreateRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationResponse;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
@@ -93,7 +94,8 @@ public class QuoteE2ETest {
       String token = getAccessToken("1");
       HttpHeaders headers = createAuthHeader(token);
 
-      QuoteCreateRequest createRequest = QuoteCreateRequest.create("내 문장 필터링 테스트입니다.", null);
+      QuoteCreateRequest createRequest =
+          QuoteCreateRequest.create("내 문장 필터링 테스트입니다.", null, QuoteLanguage.KOREAN);
       ResponseEntity<ApiResponse<QuoteResponse>> createResponse =
           restTemplate.exchange(
               "/quotes/public",
@@ -204,7 +206,8 @@ public class QuoteE2ETest {
       HttpHeaders headers = createAuthHeader(token);
 
       // 비공개 문장 생성
-      QuoteCreateRequest createRequest = QuoteCreateRequest.create("내 문장 조회 테스트입니다.", null);
+      QuoteCreateRequest createRequest =
+          QuoteCreateRequest.create("내 문장 조회 테스트입니다.", null, QuoteLanguage.KOREAN);
       ResponseEntity<ApiResponse<QuoteResponse>> createResponse =
           restTemplate.exchange(
               "/quotes/private",
@@ -315,7 +318,8 @@ public class QuoteE2ETest {
     void success() {
       String token = getAccessToken(USER_PROVIDER_ID);
       HttpHeaders headers = createAuthHeader(token);
-      QuoteCreateRequest request = QuoteCreateRequest.create("테스트 공개 문장입니다.", "저자");
+      QuoteCreateRequest request =
+          QuoteCreateRequest.create("테스트 공개 문장입니다.", "저자", QuoteLanguage.KOREAN);
 
       ResponseEntity<ApiResponse<QuoteResponse>> response =
           restTemplate.exchange(
@@ -342,7 +346,8 @@ public class QuoteE2ETest {
                   .exchange(
                       "/quotes/public",
                       HttpMethod.POST,
-                      new HttpEntity<>(QuoteCreateRequest.create("1234", null), headers),
+                      new HttpEntity<>(
+                          QuoteCreateRequest.create("1234", null, QuoteLanguage.KOREAN), headers),
                       new ParameterizedTypeReference<ApiResponse<QuoteResponse>>() {})
                   .getStatusCode())
           .isEqualTo(HttpStatus.BAD_REQUEST);
@@ -353,7 +358,9 @@ public class QuoteE2ETest {
                   .exchange(
                       "/quotes/public",
                       HttpMethod.POST,
-                      new HttpEntity<>(QuoteCreateRequest.create("a".repeat(101), null), headers),
+                      new HttpEntity<>(
+                          QuoteCreateRequest.create("a".repeat(101), null, QuoteLanguage.ENGLISH),
+                          headers),
                       new ParameterizedTypeReference<ApiResponse<QuoteResponse>>() {})
                   .getStatusCode())
           .isEqualTo(HttpStatus.BAD_REQUEST);
@@ -365,7 +372,9 @@ public class QuoteE2ETest {
                       "/quotes/public",
                       HttpMethod.POST,
                       new HttpEntity<>(
-                          QuoteCreateRequest.create("테스트 문장입니다.", "a".repeat(21)), headers),
+                          QuoteCreateRequest.create(
+                              "테스트 문장입니다.", "a".repeat(21), QuoteLanguage.KOREAN),
+                          headers),
                       new ParameterizedTypeReference<ApiResponse<QuoteResponse>>() {})
                   .getStatusCode())
           .isEqualTo(HttpStatus.BAD_REQUEST);
@@ -404,7 +413,8 @@ public class QuoteE2ETest {
       String bannedToken = getAccessToken(uniqueProviderId);
       HttpHeaders bannedHeaders = createAuthHeader(bannedToken);
 
-      QuoteCreateRequest request = QuoteCreateRequest.create("밴 유저 테스트 문장", null);
+      QuoteCreateRequest request =
+          QuoteCreateRequest.create("밴 유저 테스트 문장", null, QuoteLanguage.KOREAN);
 
       // when
       ResponseEntity<ApiResponse<QuoteResponse>> exchange =
@@ -421,7 +431,8 @@ public class QuoteE2ETest {
     @Test
     @DisplayName("토큰 없이 요청 - 401")
     void unauthorizedWithoutToken() {
-      QuoteCreateRequest request = QuoteCreateRequest.create("테스트 공개 문장입니다.", null);
+      QuoteCreateRequest request =
+          QuoteCreateRequest.create("테스트 공개 문장입니다.", null, QuoteLanguage.KOREAN);
 
       ResponseEntity<ApiResponse<QuoteResponse>> response =
           restTemplate.exchange(
@@ -442,7 +453,8 @@ public class QuoteE2ETest {
     void success() {
       String token = getAccessToken("1");
       HttpHeaders headers = createAuthHeader(token);
-      QuoteCreateRequest request = QuoteCreateRequest.create("테스트 비공개 문장입니다.", null);
+      QuoteCreateRequest request =
+          QuoteCreateRequest.create("테스트 비공개 문장입니다.", null, QuoteLanguage.KOREAN);
 
       ResponseEntity<ApiResponse<QuoteResponse>> response =
           restTemplate.exchange(
@@ -460,7 +472,8 @@ public class QuoteE2ETest {
     @Test
     @DisplayName("토큰 없이 요청 - 401")
     void unauthorizedWithoutToken() {
-      QuoteCreateRequest request = QuoteCreateRequest.create("테스트 비공개 문장입니다.", null);
+      QuoteCreateRequest request =
+          QuoteCreateRequest.create("테스트 비공개 문장입니다.", null, QuoteLanguage.KOREAN);
 
       ResponseEntity<ApiResponse<QuoteResponse>> response =
           restTemplate.exchange(
@@ -484,7 +497,8 @@ public class QuoteE2ETest {
       String token = getAccessToken("1");
       HttpHeaders headers = createAuthHeader(token);
 
-      QuoteCreateRequest createRequest = QuoteCreateRequest.create("수정 테스트용 문장입니다.", null);
+      QuoteCreateRequest createRequest =
+          QuoteCreateRequest.create("수정 테스트용 문장입니다.", null, QuoteLanguage.KOREAN);
       ResponseEntity<ApiResponse<QuoteResponse>> createResponse =
           restTemplate.exchange(
               "/quotes/private",
@@ -554,7 +568,8 @@ public class QuoteE2ETest {
       String token = getAccessToken("1");
       HttpHeaders headers = createAuthHeader(token);
 
-      QuoteCreateRequest createRequest = QuoteCreateRequest.create("삭제 테스트용 문장입니다.", null);
+      QuoteCreateRequest createRequest =
+          QuoteCreateRequest.create("삭제 테스트용 문장입니다.", null, QuoteLanguage.KOREAN);
       ResponseEntity<ApiResponse<QuoteResponse>> createResponse =
           restTemplate.exchange(
               "/quotes/private",
@@ -597,7 +612,8 @@ public class QuoteE2ETest {
       String token = getAccessToken("1");
       HttpHeaders headers = createAuthHeader(token);
 
-      QuoteCreateRequest createRequest = QuoteCreateRequest.create("공개 전환 테스트용 문장입니다.", null);
+      QuoteCreateRequest createRequest =
+          QuoteCreateRequest.create("공개 전환 테스트용 문장입니다.", null, QuoteLanguage.KOREAN);
       ResponseEntity<ApiResponse<QuoteResponse>> createResponse =
           restTemplate.exchange(
               "/quotes/private",
@@ -640,7 +656,8 @@ public class QuoteE2ETest {
       HttpHeaders userHeaders = createAuthHeader(userToken);
 
       // 비공개 문장 생성
-      QuoteCreateRequest createRequest = QuoteCreateRequest.create("밴 전 생성한 문장", null);
+      QuoteCreateRequest createRequest =
+          QuoteCreateRequest.create("밴 전 생성한 문장", null, QuoteLanguage.KOREAN);
       ResponseEntity<ApiResponse<QuoteResponse>> createResponse =
           restTemplate.exchange(
               "/quotes/private",
@@ -698,7 +715,8 @@ public class QuoteE2ETest {
       String token = getAccessToken("1");
       HttpHeaders headers = createAuthHeader(token);
 
-      QuoteCreateRequest createRequest = QuoteCreateRequest.create("공개 취소 테스트용 문장입니다.", null);
+      QuoteCreateRequest createRequest =
+          QuoteCreateRequest.create("공개 취소 테스트용 문장입니다.", null, QuoteLanguage.KOREAN);
       ResponseEntity<ApiResponse<QuoteResponse>> createResponse =
           restTemplate.exchange(
               "/quotes/private",
