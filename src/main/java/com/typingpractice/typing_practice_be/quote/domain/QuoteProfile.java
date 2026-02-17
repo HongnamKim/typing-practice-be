@@ -1,14 +1,12 @@
 package com.typingpractice.typing_practice_be.quote.domain;
 
 import jakarta.persistence.Embeddable;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Embeddable
 @Getter
 @Setter
+@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class QuoteProfile {
   // 공통
@@ -27,4 +25,8 @@ public class QuoteProfile {
   // 영어 전용 (한국어 문장이면 null)
   private Float caseFlipRate; // 대소문자
   private Float avgWordLen; // 평균 단어 길이
+
+  public static QuoteProfile create() {
+    return new QuoteProfile();
+  }
 }

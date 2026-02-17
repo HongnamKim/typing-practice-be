@@ -66,6 +66,7 @@ public class QuoteService {
     QuoteProfile profile = quoteProfileCalculator.calculate(sentence, language);
     // 전역 통계
     GlobalQuoteStatistics stats = globalQuoteStatisticsService.getByLanguage(language);
+
     // difficulty seed 계산
     float seed = difficultySeedCalculator.calculate(profile, stats, language);
     profile.setDifficultySeed(seed);
@@ -78,7 +79,7 @@ public class QuoteService {
             query.getType(),
             query.getLanguage(),
             profile,
-            0f);
+            seed);
 
     quoteRepository.save(quote);
 

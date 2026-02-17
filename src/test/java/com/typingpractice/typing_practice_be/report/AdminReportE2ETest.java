@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.typingpractice.typing_practice_be.BaseE2ETest;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteCreateRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
 import com.typingpractice.typing_practice_be.report.domain.ReportReason;
@@ -31,7 +32,8 @@ public class AdminReportE2ETest extends BaseE2ETest {
     String userToken = getAccessToken(USER_PROVIDER_ID);
     HttpHeaders userHeaders = createAuthHeader(userToken);
 
-    QuoteCreateRequest request = QuoteCreateRequest.create("신고 테스트용 문장", null);
+    QuoteCreateRequest request =
+        QuoteCreateRequest.create("신고 테스트용 문장", null, QuoteLanguage.KOREAN);
     ResponseEntity<ApiResponse<QuoteResponse>> createResponse =
         restTemplate.exchange(
             "/quotes/public",

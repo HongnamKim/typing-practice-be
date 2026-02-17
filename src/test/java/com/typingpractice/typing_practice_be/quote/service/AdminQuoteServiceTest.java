@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteUpdateRequest;
@@ -32,7 +33,8 @@ class AdminQuoteServiceTest {
   }
 
   private Quote createQuote(QuoteType type, QuoteStatus status) {
-    Quote quote = Quote.create(createMember(), "테스트 문장입니다.", "작자", type);
+    Quote quote =
+        Quote.create(createMember(), "테스트 문장입니다.", "작자", type, QuoteLanguage.KOREAN, null, 0f);
 
     if (type == QuoteType.PUBLIC && status == QuoteStatus.ACTIVE) {
       quote.approvePublish();

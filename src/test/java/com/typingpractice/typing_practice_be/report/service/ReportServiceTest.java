@@ -11,6 +11,7 @@ import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
@@ -65,7 +66,8 @@ class ReportServiceTest {
   }
 
   private Quote createQuote(QuoteType type, QuoteStatus status) {
-    Quote quote = Quote.create(createMember(99L), "테스트 문장", "저자", type);
+    Quote quote =
+        Quote.create(createMember(99L), "테스트 문장", "저자", type, QuoteLanguage.KOREAN, null, 0f);
     if (type == QuoteType.PUBLIC && status == QuoteStatus.ACTIVE) {
       quote.approvePublish();
     }
