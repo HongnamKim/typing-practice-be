@@ -10,10 +10,12 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -31,6 +33,7 @@ public class GlobalQuoteStatisticsService {
           if (globalQuoteStatisticsRepository.count() == 0) {
             globalQuoteStatisticsRepository.save(GlobalQuoteStatistics.createKoreanDefault());
             globalQuoteStatisticsRepository.save(GlobalQuoteStatistics.createEnglishDefault());
+            log.info("전역 통계 초기값 생성");
           }
 
           cache =
@@ -41,11 +44,16 @@ public class GlobalQuoteStatisticsService {
                   .collect(
                       Collectors.toMap(GlobalQuoteStatistics::getLanguage, Function.identity()));
 
+          log.info("전역 통계 캐시 로드 완료 — keys={}", cache.keySet());
           return null;
         });
   }
 
   public GlobalQuoteStatistics getByLanguage(QuoteLanguage language) {
+    log.info(
+        "getByLanguage 호출 - language={}, cache keys={}",
+        language,
+        cache != null ? cache.keySet() : "null");
     return cache.get(language);
   }
 

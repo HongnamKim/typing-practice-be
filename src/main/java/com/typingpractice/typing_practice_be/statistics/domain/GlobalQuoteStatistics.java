@@ -6,11 +6,13 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Getter
+@ToString
 @SQLRestriction("deleted = false")
 @SQLDelete(
     sql =
@@ -104,4 +106,44 @@ public class GlobalQuoteStatistics extends BaseEntity {
 
     return stats;
   }
+
+  public static GlobalQuoteStatistics createFromAggregation(QuoteLanguage language, Object[] row) {
+    GlobalQuoteStatistics stats = new GlobalQuoteStatistics();
+    stats.language = language;
+
+    stats.lenMean = toFloat(row[0]);
+    stats.lenStd = toFloat(row[1]);
+    stats.puncMean = toFloat(row[2]);
+    stats.puncStd = toFloat(row[3]);
+    stats.spaceMean = toFloat(row[4]);
+    stats.spaceStd = toFloat(row[5]);
+    stats.digitMean = toFloat(row[6]);
+    stats.digitStd = toFloat(row[7]);
+
+    if (language == QuoteLanguage.KOREAN) {
+      stats.jamoMean = toFloat(row[8]);
+      stats.jamoStd = toFloat(row[9]);
+      stats.diphthongMean = toFloat(row[10]);
+      stats.diphthongStd = toFloat(row[11]);
+      stats.shiftJamoMean = toFloat(row[12]);
+      stats.shiftJamoStd = toFloat(row[13]);
+    } else {
+      stats.caseMean = toFloat(row[14]);
+      stats.caseStd = toFloat(row[15]);
+      stats.wordLenMean = toFloat(row[16]);
+      stats.wordLenStd = toFloat(row[17]);
+    }
+
+    return stats;
+  }
+
+  private static float toFloat(Object value) {
+    if (value == null) return 0f;
+    return ((Number) value).floatValue();
+  }
+
+  /*private static Float toFloatOrNull(Object value) {
+    if (value == null) return null;
+    return ((Number) value).floatValue();
+  }*/
 }

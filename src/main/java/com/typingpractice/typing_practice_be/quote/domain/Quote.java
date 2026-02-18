@@ -92,6 +92,15 @@ public class Quote extends BaseEntity {
     this.type = quoteType;
   }
 
+  public void updateProfile(QuoteProfile profile) {
+    this.profile = profile;
+  }
+
+  public void updateDifficulty(float seed) {
+    this.profile.setDifficultySeed(seed);
+    this.difficulty = seed;
+  }
+
   public void updateStatus(QuoteStatus quoteStatus) {
     this.status = quoteStatus;
   }
