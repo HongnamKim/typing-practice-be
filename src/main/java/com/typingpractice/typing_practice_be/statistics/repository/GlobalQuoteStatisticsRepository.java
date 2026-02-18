@@ -35,4 +35,25 @@ public class GlobalQuoteStatisticsRepository {
     return em.createQuery("select count(s) from GlobalQuoteStatistics  s", Long.class)
         .getSingleResult();
   }
+
+  public Object[] aggregateByLanguage(QuoteLanguage language) {
+    return (Object[])
+        em.createNativeQuery(
+                """
+								SELECT
+										COALESCE(AVG(length), 0), COALESCE(STDDEV_POP(length), 0),
+										COALESCE(AVG(punc_rate), 0), COALESCE(STDDEV_POP(punc_rate), 0),
+										COALESCE(AVG(space_rate), 0), COALESCE(STDDEV_POP(space_rate), 0),
+										COALESCE(AVG(digit_rate), 0), COALESCE(STDDEV_POP(digit_rate), 0),
+										COALESCE(AVG(jamo_complex), 0), COALESCE(STDDEV_POP(jamo_complex), 0),
+										COALESCE(AVG(diphthong_rate), 0), COALESCE(STDDEV_POP(diphthong_rate), 0),
+										COALESCE(AVG(shift_jamo_rate), 0), COALESCE(STDDEV_POP(shift_jamo_rate), 0),
+										COALESCE(AVG(case_flip_rate), 0), COALESCE(STDDEV_POP(case_flip_rate), 0),
+										COALESCE(AVG(avg_word_len), 0), COALESCE(STDDEV_POP(avg_word_len), 0)
+								FROM quote
+								WHERE language = :language AND deleted = false
+								""")
+            .setParameter("language", language.name())
+            .getSingleResult();
+  }
 }
