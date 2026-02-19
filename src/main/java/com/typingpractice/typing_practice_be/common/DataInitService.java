@@ -36,13 +36,13 @@ public class DataInitService implements CommandLineRunner {
   @Override
   @Transactional
   public void run(String... args) {
-    initGlobalQuoteStatistics();
-    initAdmin();
-    List<Member> members = initMembers();
-    List<Quote> quotes = initQuotes(members);
-    initReports(members, quotes);
-
-    log.info("초기 데이터 생성 완료");
+    //    initGlobalQuoteStatistics();
+    //    initAdmin();
+    //    List<Member> members = initMembers();
+    //    List<Quote> quotes = initQuotes(members);
+    //    initReports(members, quotes);
+    //
+    //    log.info("초기 데이터 생성 완료");
   }
 
   private void initGlobalQuoteStatistics() {
@@ -82,7 +82,14 @@ public class DataInitService implements CommandLineRunner {
 
       Quote quote =
           Quote.create(
-              owner, "테스트 문장입니다. 번호: " + i, "작자 " + i, type, QuoteLanguage.KOREAN, null, 0f);
+              owner,
+              "테스트 문장입니다. 번호: " + i,
+              "작자 " + i,
+              type,
+              QuoteLanguage.KOREAN,
+              null,
+              0f,
+              "hash" + i);
 
       if (type == QuoteType.PUBLIC && i % 5 < 4) {
         quote.approvePublish();

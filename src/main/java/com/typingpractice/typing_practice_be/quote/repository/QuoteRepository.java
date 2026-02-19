@@ -117,11 +117,58 @@ public class QuoteRepository {
     }
   }
 
-  /*public List<Quote> findByStatus(QuoteStatus quoteStatus) {
-    return em.createQuery("select q from Quote q where q.status = :status", Quote.class)
-        .setParameter("status", quoteStatus)
-        .getResultList();
-  }*/
+  public boolean existsBySentenceHash(String sentenceHash, Long memberId) {
+    Long count =
+        em.createQuery(
+                "select count(q) from Quote q where q.sentenceHash = :hash and (q.member.id = :memberId or q.type = :publicType)",
+                Long.class)
+            .setParameter("hash", sentenceHash)
+            .setParameter("memberId", memberId)
+            .setParameter("publicType", QuoteType.PUBLIC)
+            .getSingleResult();
+
+    return count > 0;
+  }
+
+  public boolean existsBySentenceHashExcluding(String sentenceHash, Long memberId, Long excludeId) {
+    Long count =
+        em.createQuery(
+                "select count(q) from Quote q where q.id != :excludeId and q.sentenceHash = :hash and (q.member.id = :memberId or q.type = :publicType)",
+                Long.class)
+            .setParameter("hash", sentenceHash)
+            .setParameter("memberId", memberId)
+            .setParameter("publicType", QuoteType.PUBLIC)
+            .setParameter("excludeId", excludeId)
+            .getSingleResult();
+
+    return count > 0;
+  }
+
+  public boolean existsBySentenceHashInMyQuotes(String sentenceHash, Long memberId) {
+    Long count =
+        em.createQuery(
+                "select count(q) from Quote q where q.sentenceHash = :hash and q.member.id = :memberId",
+                Long.class)
+            .setParameter("hash", sentenceHash)
+            .setParameter("memberId", memberId)
+            .getSingleResult();
+
+    return count > 0;
+  }
+
+  public boolean existsBySentenceHashInMyQuotesExcluding(
+      String sentenceHash, Long memberId, Long excludeId) {
+    Long count =
+        em.createQuery(
+                "select count(q) from Quote q where q.sentenceHash = :hash and q.member.id = :memberId and q.id != :excludeId",
+                Long.class)
+            .setParameter("hash", sentenceHash)
+            .setParameter("memberId", memberId)
+            .setParameter("excludeId", excludeId)
+            .getSingleResult();
+
+    return count > 0;
+  }
 
   public void deleteQuote(Quote quote) {
     em.remove(quote);
