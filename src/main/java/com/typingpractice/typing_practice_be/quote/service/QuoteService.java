@@ -7,6 +7,7 @@ import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
 import com.typingpractice.typing_practice_be.quote.domain.*;
+import com.typingpractice.typing_practice_be.quote.exception.QuoteDuplicateException;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotOwnedException;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotProcessableException;
@@ -28,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class QuoteService {
   private final QuoteLanguageValidator quoteLanguageValidator;
+  private final SentenceHashGenerator sentenceHashGenerator;
   private final QuoteProfileCalculator quoteProfileCalculator;
   private final DifficultySeedCalculator difficultySeedCalculator;
   private final GlobalQuoteStatisticsService globalQuoteStatisticsService;
@@ -62,6 +64,19 @@ public class QuoteService {
     QuoteLanguage language = query.getLanguage();
     // 언어 검증
     quoteLanguageValidator.validate(sentence, language);
+
+    // 중복 검증
+    String sentenceHash = sentenceHashGenerator.generate(sentence);
+    if (query.getType() == QuoteType.PUBLIC
+        && quoteRepository.existsBySentenceHash(sentenceHash, memberId)) {
+      // 공개 문장 업로드
+      throw new QuoteDuplicateException();
+    } else if (query.getType() == QuoteType.PRIVATE
+        && quoteRepository.existsBySentenceHashInMyQuotes(sentenceHash, memberId)) {
+      // 비공개 문장 업로드
+      throw new QuoteDuplicateException();
+    }
+
     // 입력 변수
     QuoteProfile profile = quoteProfileCalculator.calculate(sentence, language);
     // 전역 통계
@@ -79,7 +94,8 @@ public class QuoteService {
             query.getType(),
             query.getLanguage(),
             profile,
-            seed);
+            seed,
+            sentenceHash);
 
     quoteRepository.save(quote);
 
@@ -92,6 +108,15 @@ public class QuoteService {
 
     if (quote.getType() != QuoteType.PRIVATE || quote.getStatus() != QuoteStatus.ACTIVE) {
       throw new QuoteNotProcessableException();
+    }
+
+    if (query.getSentence() != null) {
+      String sentenceHash = sentenceHashGenerator.generate(query.getSentence());
+      if (quoteRepository.existsBySentenceHashInMyQuotesExcluding(
+          sentenceHash, memberId, quoteId)) {
+        throw new QuoteDuplicateException();
+      }
+      quote.updateSentenceHash(sentenceHash);
     }
 
     quote.update(query.getSentence(), query.getAuthor());
@@ -137,6 +162,10 @@ public class QuoteService {
 
     if (quote.getType() != QuoteType.PRIVATE || quote.getStatus() != QuoteStatus.ACTIVE) {
       throw new QuoteNotProcessableException();
+    }
+
+    if (quoteRepository.existsBySentenceHashExcluding(quote.getSentenceHash(), memberId, quoteId)) {
+      throw new QuoteDuplicateException();
     }
 
     quote.updateType(QuoteType.PUBLIC);

@@ -37,6 +37,9 @@ public class Quote extends BaseEntity {
   private String sentence;
   private String author;
 
+  @Column(length = 64)
+  private String sentenceHash; // 문장 완전일치 검증용
+
   private int reportCount;
 
   @ManyToOne(fetch = FetchType.LAZY)
@@ -53,9 +56,11 @@ public class Quote extends BaseEntity {
       QuoteType type,
       QuoteLanguage language,
       QuoteProfile profile,
-      Float difficulty) {
+      Float difficulty,
+      String sentenceHash) {
     Quote quote = new Quote();
     quote.member = member;
+    quote.sentenceHash = sentenceHash;
     quote.sentence = sentence;
     quote.author = author != null ? author : DEFAULT_AUTHOR;
     quote.type = type;
@@ -86,6 +91,10 @@ public class Quote extends BaseEntity {
     if (author != null) {
       this.author = StringUtils.hasText(author) ? author : DEFAULT_AUTHOR;
     }
+  }
+
+  public void updateSentenceHash(String sentenceHash) {
+    this.sentenceHash = sentenceHash;
   }
 
   public void updateType(QuoteType quoteType) {

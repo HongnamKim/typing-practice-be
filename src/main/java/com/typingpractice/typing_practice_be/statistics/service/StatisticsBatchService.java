@@ -27,7 +27,7 @@ public class StatisticsBatchService {
   private final QuoteProfileCalculator quoteProfileCalculator;
 
   private static final float CHANGE_THRESHOLD = 0.05f;
-  private static final int PAGE_SIZE = 100;
+  private static final int PAGE_SIZE = 5000;
 
   @Transactional
   public void runScheduledBatch() {
