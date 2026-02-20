@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.quote.repository;
 
 import com.typingpractice.typing_practice_be.member.domain.Member;
+import com.typingpractice.typing_practice_be.quote.config.SimilarityThresholdProperties;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
@@ -10,6 +11,7 @@ import com.typingpractice.typing_practice_be.quote.query.QuotePaginationQuery;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +22,8 @@ import org.springframework.stereotype.Repository;
 @RequiredArgsConstructor
 public class QuoteRepository {
   private final EntityManager em;
+
+  private final SimilarityThresholdProperties thresholdProperties;
 
   public void save(Quote quote) {
     em.persist(quote);
@@ -32,8 +36,6 @@ public class QuoteRepository {
         .setMaxResults(1)
         .getResultStream()
         .findFirst();
-
-    // return Optional.ofNullable(em.find(Quote.class, quoteId));
   }
 
   public List<Quote> findAll(QuotePaginationQuery query) {
@@ -170,8 +172,6 @@ public class QuoteRepository {
     return count > 0;
   }
 
-  private final float SIMILARITY_THRESHOLD = 0.5f;
-
   // 공개 업로드: 내 문장 + 공개 문장
   @SuppressWarnings("unchecked")
   public Optional<Object[]> findMostSimilar(
@@ -186,7 +186,7 @@ public class QuoteRepository {
             .setParameter("sentence", sentence)
             .setParameter("language", language.name())
             .setParameter("memberId", memberId)
-            .setParameter("threshold", SIMILARITY_THRESHOLD)
+            .setParameter("threshold", thresholdProperties.getByLanguage(language))
             .getResultList();
 
     return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
@@ -206,7 +206,7 @@ public class QuoteRepository {
             .setParameter("sentence", sentence)
             .setParameter("language", language.name())
             .setParameter("memberId", memberId)
-            .setParameter("threshold", SIMILARITY_THRESHOLD)
+            .setParameter("threshold", thresholdProperties.getByLanguage(language))
             .getResultList();
 
     return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
@@ -228,7 +228,7 @@ public class QuoteRepository {
             .setParameter("language", language.name())
             .setParameter("memberId", memberId)
             .setParameter("excludeId", excludeId)
-            .setParameter("threshold", SIMILARITY_THRESHOLD)
+            .setParameter("threshold", thresholdProperties.getByLanguage(language))
             .getResultList();
 
     return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
@@ -249,7 +249,7 @@ public class QuoteRepository {
             .setParameter("language", language.name())
             .setParameter("memberId", memberId)
             .setParameter("excludeId", excludeId)
-            .setParameter("threshold", SIMILARITY_THRESHOLD)
+            .setParameter("threshold", thresholdProperties.getByLanguage(language))
             .getResultList();
 
     return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
@@ -306,5 +306,17 @@ public class QuoteRepository {
         .setParameter("maxId", maxId)
         .setMaxResults(size)
         .getResultList();
+  }
+
+  public long countByPeriod(QuoteLanguage language, LocalDateTime from, LocalDateTime to) {
+    return em.createQuery(
+            "select count(q) from Quote q "
+                + "where q.createdAt >= :from and q.createdAt <= :to "
+                + "and q.language = :language",
+            Long.class)
+        .setParameter("from", from)
+        .setParameter("to", to)
+        .setParameter("language", language)
+        .getSingleResult();
   }
 }

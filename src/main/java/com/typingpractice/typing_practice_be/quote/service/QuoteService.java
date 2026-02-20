@@ -12,6 +12,7 @@ import com.typingpractice.typing_practice_be.quote.query.PublicQuoteQuery;
 import com.typingpractice.typing_practice_be.quote.query.QuoteCreateQuery;
 import com.typingpractice.typing_practice_be.quote.query.QuotePaginationQuery;
 import com.typingpractice.typing_practice_be.quote.query.QuoteUpdateQuery;
+import com.typingpractice.typing_practice_be.quote.reject.service.QuoteSimilarityRejectService;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
 import java.util.List;
 
@@ -30,6 +31,8 @@ public class QuoteService {
   private final QuoteProfileCalculator quoteProfileCalculator;
   private final DifficultySeedCalculator difficultySeedCalculator;
   private final GlobalQuoteStatisticsService globalQuoteStatisticsService;
+
+  private final QuoteSimilarityRejectService rejectService;
 
   private final QuoteRepository quoteRepository;
   private final MemberRepository memberRepository;
@@ -77,7 +80,11 @@ public class QuoteService {
           .findMostSimilar(sentence, language, memberId)
           .ifPresent(
               row -> {
-                throw new QuoteSimilarException((String) row[0], ((Number) row[1]).floatValue());
+                String similar = (String) row[0];
+                float sim = ((Number) row[1]).floatValue();
+                rejectService.log(memberId, sentence, similar, sim, language);
+
+                throw new QuoteSimilarException(similar, sim);
               });
 
     } else if (query.getType() == QuoteType.PRIVATE) {
@@ -93,7 +100,11 @@ public class QuoteService {
           .findMostSimilarInMyQuotes(sentence, language, memberId)
           .ifPresent(
               row -> {
-                throw new QuoteSimilarException((String) row[0], ((Number) row[1]).floatValue());
+                String similar = (String) row[0];
+                float sim = ((Number) row[1]).floatValue();
+                rejectService.log(memberId, sentence, similar, sim, language);
+
+                throw new QuoteSimilarException(similar, sim);
               });
     }
 
@@ -144,7 +155,11 @@ public class QuoteService {
               query.getSentence(), quote.getLanguage(), memberId, quoteId)
           .ifPresent(
               row -> {
-                throw new QuoteSimilarException((String) row[0], ((Number) row[1]).floatValue());
+                String similar = (String) row[0];
+                float sim = ((Number) row[1]).floatValue();
+                rejectService.log(memberId, query.getSentence(), similar, sim, quote.getLanguage());
+
+                throw new QuoteSimilarException(similar, sim);
               });
 
       quote.updateSentenceHash(sentenceHash);
@@ -203,7 +218,11 @@ public class QuoteService {
         .findMostSimilarExcluding(quote.getSentence(), quote.getLanguage(), memberId, quoteId)
         .ifPresent(
             row -> {
-              throw new QuoteSimilarException((String) row[0], ((Number) row[1]).floatValue());
+              String similar = (String) row[0];
+              float sim = ((Number) row[1]).floatValue();
+              rejectService.log(memberId, quote.getSentence(), similar, sim, quote.getLanguage());
+
+              throw new QuoteSimilarException(similar, sim);
             });
 
     quote.updateType(QuoteType.PUBLIC);

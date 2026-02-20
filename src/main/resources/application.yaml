@@ -25,3 +25,8 @@ server:
 
 google:
   token-uri: https://oauth2.googleapis.com/token
+
+quote:
+  similarity-threshold:
+    korean: 0.5
+    english: 0.5
