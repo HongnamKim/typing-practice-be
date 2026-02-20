@@ -27,6 +27,7 @@ public enum ErrorCode {
   QUOTE_NOT_PROCESSABLE(HttpStatus.BAD_REQUEST, "처리할 수 없는 문장입니다."),
   QUOTE_LANGUAGE_MISMATCH(HttpStatus.BAD_REQUEST, "선택한 언어와 맞지 않는 문자가 포함되어 있습니다."),
   QUOTE_DUPLICATE(HttpStatus.CONFLICT, "동일한 문장이 이미 존재합니다."),
+  QUOTE_SIMILAR(HttpStatus.CONFLICT, "유사한 문장이 이미 존재합니다."),
 
   EMPTY_UPDATE_REQUEST(HttpStatus.BAD_REQUEST, "수정할 내용이 없습니다."),
 

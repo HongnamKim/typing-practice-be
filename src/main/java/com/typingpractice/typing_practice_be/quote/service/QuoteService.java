@@ -7,10 +7,7 @@ import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
 import com.typingpractice.typing_practice_be.quote.domain.*;
-import com.typingpractice.typing_practice_be.quote.exception.QuoteDuplicateException;
-import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
-import com.typingpractice.typing_practice_be.quote.exception.QuoteNotOwnedException;
-import com.typingpractice.typing_practice_be.quote.exception.QuoteNotProcessableException;
+import com.typingpractice.typing_practice_be.quote.exception.*;
 import com.typingpractice.typing_practice_be.quote.query.PublicQuoteQuery;
 import com.typingpractice.typing_practice_be.quote.query.QuoteCreateQuery;
 import com.typingpractice.typing_practice_be.quote.query.QuotePaginationQuery;
@@ -67,14 +64,37 @@ public class QuoteService {
 
     // 중복 검증
     String sentenceHash = sentenceHashGenerator.generate(sentence);
-    if (query.getType() == QuoteType.PUBLIC
-        && quoteRepository.existsBySentenceHash(sentenceHash, memberId)) {
+    if (query.getType() == QuoteType.PUBLIC) {
       // 공개 문장 업로드
-      throw new QuoteDuplicateException();
-    } else if (query.getType() == QuoteType.PRIVATE
-        && quoteRepository.existsBySentenceHashInMyQuotes(sentenceHash, memberId)) {
+
+      // 동일 문장 검증
+      if (quoteRepository.existsBySentenceHash(sentenceHash, memberId)) {
+        throw new QuoteDuplicateException();
+      }
+
+      // 유사 문장 검증
+      quoteRepository
+          .findMostSimilar(sentence, language, memberId)
+          .ifPresent(
+              row -> {
+                throw new QuoteSimilarException((String) row[0], ((Number) row[1]).floatValue());
+              });
+
+    } else if (query.getType() == QuoteType.PRIVATE) {
       // 비공개 문장 업로드
-      throw new QuoteDuplicateException();
+
+      // 동일 문장 검증
+      if (quoteRepository.existsBySentenceHashInMyQuotes(sentenceHash, memberId)) {
+        throw new QuoteDuplicateException();
+      }
+
+      // 유사 문장 검증
+      quoteRepository
+          .findMostSimilarInMyQuotes(sentence, language, memberId)
+          .ifPresent(
+              row -> {
+                throw new QuoteSimilarException((String) row[0], ((Number) row[1]).floatValue());
+              });
     }
 
     // 입력 변수
@@ -112,10 +132,21 @@ public class QuoteService {
 
     if (query.getSentence() != null) {
       String sentenceHash = sentenceHashGenerator.generate(query.getSentence());
+      // 동일 문장 검증
       if (quoteRepository.existsBySentenceHashInMyQuotesExcluding(
           sentenceHash, memberId, quoteId)) {
         throw new QuoteDuplicateException();
       }
+
+      // 유사도 검증
+      quoteRepository
+          .findMostSimilarInMyQuotesExcluding(
+              query.getSentence(), quote.getLanguage(), memberId, quoteId)
+          .ifPresent(
+              row -> {
+                throw new QuoteSimilarException((String) row[0], ((Number) row[1]).floatValue());
+              });
+
       quote.updateSentenceHash(sentenceHash);
     }
 
@@ -167,6 +198,13 @@ public class QuoteService {
     if (quoteRepository.existsBySentenceHashExcluding(quote.getSentenceHash(), memberId, quoteId)) {
       throw new QuoteDuplicateException();
     }
+
+    quoteRepository
+        .findMostSimilarExcluding(quote.getSentence(), quote.getLanguage(), memberId, quoteId)
+        .ifPresent(
+            row -> {
+              throw new QuoteSimilarException((String) row[0], ((Number) row[1]).floatValue());
+            });
 
     quote.updateType(QuoteType.PUBLIC);
     quote.updateStatus(QuoteStatus.PENDING);
