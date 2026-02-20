@@ -170,6 +170,91 @@ public class QuoteRepository {
     return count > 0;
   }
 
+  private final float SIMILARITY_THRESHOLD = 0.5f;
+
+  // 공개 업로드: 내 문장 + 공개 문장
+  @SuppressWarnings("unchecked")
+  public Optional<Object[]> findMostSimilar(
+      String sentence, QuoteLanguage language, Long memberId) {
+    List<Object[]> results =
+        em.createNativeQuery(
+                "SELECT sentence, similarity(sentence, :sentence) AS sim FROM quote "
+                    + "WHERE deleted = false AND language = :language "
+                    + "AND (member_id = :memberId or type = 'PUBLIC') "
+                    + "AND similarity(sentence, :sentence) > :threshold "
+                    + "ORDER BY sim DESC LIMIT 1")
+            .setParameter("sentence", sentence)
+            .setParameter("language", language.name())
+            .setParameter("memberId", memberId)
+            .setParameter("threshold", SIMILARITY_THRESHOLD)
+            .getResultList();
+
+    return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
+  }
+
+  // 비공개 업로드: 내 문장만
+  @SuppressWarnings("unchecked")
+  public Optional<Object[]> findMostSimilarInMyQuotes(
+      String sentence, QuoteLanguage language, Long memberId) {
+    List<Object[]> results =
+        em.createNativeQuery(
+                "select sentence, similarity(sentence, :sentence) as sim from quote "
+                    + "where deleted = false and language = :language "
+                    + "and member_id = :memberId "
+                    + "and similarity(sentence, :sentence) > :threshold "
+                    + "order by sim desc limit 1")
+            .setParameter("sentence", sentence)
+            .setParameter("language", language.name())
+            .setParameter("memberId", memberId)
+            .setParameter("threshold", SIMILARITY_THRESHOLD)
+            .getResultList();
+
+    return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
+  }
+
+  // 공개 전환: 내 문장 + 공개 문장, 자기 제외
+  @SuppressWarnings("unchecked")
+  public Optional<Object[]> findMostSimilarExcluding(
+      String sentence, QuoteLanguage language, Long memberId, Long excludeId) {
+    List<Object[]> results =
+        em.createNativeQuery(
+                "select sentence, similarity(sentence, :sentence) as sim from quote "
+                    + "where deleted = false and language = :language "
+                    + "and quote_id != :excludeId "
+                    + "and (member_id = :memberId OR type = 'PUBLIC') "
+                    + "and similarity(sentence, :sentence) > :threshold "
+                    + "order by sim desc limit 1")
+            .setParameter("sentence", sentence)
+            .setParameter("language", language.name())
+            .setParameter("memberId", memberId)
+            .setParameter("excludeId", excludeId)
+            .setParameter("threshold", SIMILARITY_THRESHOLD)
+            .getResultList();
+
+    return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
+  }
+
+  // 비공개 수정: 내 문장만, 자기 제외
+  @SuppressWarnings("unchecked")
+  public Optional<Object[]> findMostSimilarInMyQuotesExcluding(
+      String sentence, QuoteLanguage language, Long memberId, Long excludeId) {
+    List<Object[]> results =
+        em.createNativeQuery(
+                "select sentence, similarity(sentence, :sentence) as sim from quote "
+                    + "where deleted = false and language = :language "
+                    + "and member_id = :memberId and quote_id != :excludeId "
+                    + "and similarity(sentence, :sentence) > :threshold "
+                    + "order by sim desc limit 1")
+            .setParameter("sentence", sentence)
+            .setParameter("language", language.name())
+            .setParameter("memberId", memberId)
+            .setParameter("excludeId", excludeId)
+            .setParameter("threshold", SIMILARITY_THRESHOLD)
+            .getResultList();
+
+    return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
+  }
+
   public void deleteQuote(Quote quote) {
     em.remove(quote);
   }
