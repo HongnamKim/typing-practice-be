@@ -5,6 +5,7 @@ import com.typingpractice.typing_practice_be.quote.reject.domain.QuoteSimilarity
 import com.typingpractice.typing_practice_be.quote.reject.repository.QuoteSimilarityRejectLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -13,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class QuoteSimilarityRejectService {
   private final QuoteSimilarityRejectLogRepository rejectLogRepository;
 
-  @Transactional
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void log(
       Long memberId,
       String inputSentence,
