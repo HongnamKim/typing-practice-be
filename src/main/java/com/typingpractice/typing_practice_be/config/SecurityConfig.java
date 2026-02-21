@@ -62,6 +62,8 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/error")
                     .permitAll()
+                    .requestMatchers(HttpMethod.POST, "/typing-records")
+                    .permitAll()
 
                     // 관리자 전용
                     .requestMatchers("/admin/**")
