@@ -1,4 +1,4 @@
-package com.typingpractice.typing_practice_be.statistics.service;
+package com.typingpractice.typing_practice_be.quote.statistics.service;
 
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
@@ -6,8 +6,8 @@ import com.typingpractice.typing_practice_be.quote.domain.QuoteProfile;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
 import com.typingpractice.typing_practice_be.quote.service.DifficultySeedCalculator;
 import com.typingpractice.typing_practice_be.quote.service.QuoteProfileCalculator;
-import com.typingpractice.typing_practice_be.statistics.domain.GlobalQuoteStatistics;
-import com.typingpractice.typing_practice_be.statistics.repository.GlobalQuoteStatisticsRepository;
+import com.typingpractice.typing_practice_be.quote.statistics.domain.GlobalQuoteStatistics;
+import com.typingpractice.typing_practice_be.quote.statistics.repository.GlobalQuoteStatisticsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class StatisticsBatchService {
+public class GlobalQuoteStatisticsBatchService {
   private final GlobalQuoteStatisticsRepository statsRepository;
   private final GlobalQuoteStatisticsService statsService;
   private final QuoteRepository quoteRepository;

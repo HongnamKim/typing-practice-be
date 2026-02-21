@@ -1,7 +1,7 @@
-package com.typingpractice.typing_practice_be.statistics.repository;
+package com.typingpractice.typing_practice_be.quote.statistics.repository;
 
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
-import com.typingpractice.typing_practice_be.statistics.domain.GlobalQuoteStatistics;
+import com.typingpractice.typing_practice_be.quote.statistics.domain.GlobalQuoteStatistics;
 import jakarta.persistence.EntityManager;
 
 import java.util.List;

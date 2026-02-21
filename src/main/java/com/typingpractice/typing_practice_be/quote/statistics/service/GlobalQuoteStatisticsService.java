@@ -1,8 +1,8 @@
-package com.typingpractice.typing_practice_be.statistics.service;
+package com.typingpractice.typing_practice_be.quote.statistics.service;
 
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
-import com.typingpractice.typing_practice_be.statistics.domain.GlobalQuoteStatistics;
-import com.typingpractice.typing_practice_be.statistics.repository.GlobalQuoteStatisticsRepository;
+import com.typingpractice.typing_practice_be.quote.statistics.domain.GlobalQuoteStatistics;
+import com.typingpractice.typing_practice_be.quote.statistics.repository.GlobalQuoteStatisticsRepository;
 import jakarta.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.Map;

@@ -16,8 +16,8 @@ import com.typingpractice.typing_practice_be.quote.reject.service.QuoteSimilarit
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
 import java.util.List;
 
-import com.typingpractice.typing_practice_be.statistics.domain.GlobalQuoteStatistics;
-import com.typingpractice.typing_practice_be.statistics.service.GlobalQuoteStatisticsService;
+import com.typingpractice.typing_practice_be.quote.statistics.domain.GlobalQuoteStatistics;
+import com.typingpractice.typing_practice_be.quote.statistics.service.GlobalQuoteStatisticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

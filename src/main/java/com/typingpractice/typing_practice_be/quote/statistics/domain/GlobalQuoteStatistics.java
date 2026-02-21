@@ -1,4 +1,4 @@
-package com.typingpractice.typing_practice_be.statistics.domain;
+package com.typingpractice.typing_practice_be.quote.statistics.domain;
 
 import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
