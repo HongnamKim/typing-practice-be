@@ -2,7 +2,7 @@ package com.typingpractice.typing_practice_be.quote.service;
 
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteProfile;
-import com.typingpractice.typing_practice_be.statistics.domain.GlobalQuoteStatistics;
+import com.typingpractice.typing_practice_be.quote.statistics.domain.GlobalQuoteStatistics;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
