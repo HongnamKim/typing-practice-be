@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.statistics.scheduler;
 
 import com.typingpractice.typing_practice_be.quote.statistics.service.GlobalQuoteStatisticsBatchService;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.service.QuoteTypingStatsBatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -10,12 +11,14 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class StatisticsScheduler {
-  private final GlobalQuoteStatisticsBatchService batchService;
+  private final GlobalQuoteStatisticsBatchService globalQuoteStatisticsBatchService;
+  private final QuoteTypingStatsBatchService quoteTypingStatsBatchService;
 
   @Scheduled(cron = "0 0 3 * * *")
   public void runDailyBatch() {
     log.info("전역 통계 배치 시작");
-    batchService.runScheduledBatch();
+    quoteTypingStatsBatchService.runScheduledBatch(); // 문장 별 타이핑 통계
+    globalQuoteStatisticsBatchService.runScheduledBatch(); // 전체 문장의 profile 통계
     log.info("전역 통계 배치 완료");
   }
 }
