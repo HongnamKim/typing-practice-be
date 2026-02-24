@@ -71,6 +71,11 @@ public class QuoteTypingStatsBatchService {
                 ? typingRecordRepository.aggregateByQuoteIds(quoteIds)
                 : typingRecordRepository.aggregateByQuoteIdsBetween(quoteIds, from, to);
 
+        Map<Long, Integer> totalAttemptsCount =
+            overwrite
+                ? typingRecordRepository.countAllByQuoteIds(quoteIds)
+                : typingRecordRepository.countAllByQuoteIdsBetween(quoteIds, from, to);
+
         // {quoteId: 타이핑 통계값} map 변환
         Map<Long, QuoteTypingAggregation> aggMap =
             aggregations.stream()
@@ -79,6 +84,7 @@ public class QuoteTypingStatsBatchService {
         // Quote 의 타이핑 통계 반영
         for (Quote quote : quotes) {
           QuoteTypingAggregation agg = aggMap.get(quote.getId());
+          Integer totalAttemptCount = totalAttemptsCount.get(quote.getId());
           if (agg == null) continue; // 통계값이 없는 경우
 
           QuoteTypingStats stats =
@@ -90,7 +96,9 @@ public class QuoteTypingStatsBatchService {
                 QuoteTypingStats.create(
                     quote,
                     language,
-                    agg.getAttemptsCount(),
+                    // agg.getTotalAttemptsCount(),
+                    totalAttemptCount,
+                    agg.getValidAttemptsCount(),
                     (float) agg.getAvgCpm(),
                     (float) agg.getAvgAcc(),
                     (float) agg.getAvgResetCount());
@@ -98,14 +106,18 @@ public class QuoteTypingStatsBatchService {
           } else if (overwrite) {
             // 덮어쓰기
             stats.overwrite(
-                agg.getAttemptsCount(),
+                // agg.getTotalAttemptsCount(),
+                totalAttemptCount,
+                agg.getValidAttemptsCount(),
                 (float) agg.getAvgCpm(),
                 (float) agg.getAvgAcc(),
                 (float) agg.getAvgResetCount());
           } else {
             // 업데이트
             stats.merge(
-                agg.getAttemptsCount(),
+                // agg.getTotalAttemptsCount(),
+                totalAttemptCount,
+                agg.getValidAttemptsCount(),
                 (float) agg.getAvgCpm(),
                 (float) agg.getAvgAcc(),
                 (float) agg.getAvgResetCount());

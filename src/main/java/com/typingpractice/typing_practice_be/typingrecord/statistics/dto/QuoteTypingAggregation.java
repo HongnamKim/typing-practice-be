@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 public class QuoteTypingAggregation {
   private Long quoteId;
   private String language;
-  private int attemptsCount;
+  private int validAttemptsCount;
   private double avgCpm;
   private double avgAcc;
   private double avgResetCount;

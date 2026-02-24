@@ -24,7 +24,8 @@ public class QuoteTypingStats extends BaseEntity {
   @Enumerated(EnumType.STRING)
   private QuoteLanguage language;
 
-  private int attemptsCount;
+  private int totalAttemptsCount;
+  private int validAttemptsCount;
   private float avgCpm;
   private float avgAcc;
   private float avgResetCount;
@@ -32,14 +33,16 @@ public class QuoteTypingStats extends BaseEntity {
   public static QuoteTypingStats create(
       Quote quote,
       QuoteLanguage language,
-      int attemptsCount,
+      int totalAttemptsCount,
+      int validAttemptsCount,
       float avgCpm,
       float avgAcc,
       float avgResetCount) {
     QuoteTypingStats stats = new QuoteTypingStats();
     stats.quote = quote;
     stats.language = language;
-    stats.attemptsCount = attemptsCount;
+    stats.totalAttemptsCount = totalAttemptsCount;
+    stats.validAttemptsCount = validAttemptsCount;
     stats.avgCpm = avgCpm;
     stats.avgAcc = avgAcc;
     stats.avgResetCount = avgResetCount;
@@ -47,17 +50,34 @@ public class QuoteTypingStats extends BaseEntity {
     return stats;
   }
 
-  public void merge(int newCount, float newAvgCpm, float newAvgAcc, float newAvgResetCount) {
-    int totalCount = this.attemptsCount + newCount;
-    this.avgCpm = (this.avgCpm * this.attemptsCount + newAvgCpm * newCount) / totalCount;
-    this.avgAcc = (this.avgAcc * this.attemptsCount + newAvgAcc * newCount) / totalCount;
-    this.avgResetCount =
-        (this.avgResetCount * this.attemptsCount + newAvgResetCount * newCount) / totalCount;
-    this.attemptsCount = totalCount;
+  public void merge(
+      int newTotalCount,
+      int newValidCount,
+      float newAvgCpm,
+      float newAvgAcc,
+      float newAvgResetCount) {
+    int mergedValidCount = this.validAttemptsCount + newValidCount;
+    if (mergedValidCount > 0) {
+      this.avgCpm =
+          (this.avgCpm * this.validAttemptsCount + newAvgCpm * newValidCount) / mergedValidCount;
+      this.avgAcc =
+          (this.avgAcc * this.validAttemptsCount + newAvgAcc * newValidCount) / mergedValidCount;
+      this.avgResetCount =
+          (this.avgResetCount * this.validAttemptsCount + newAvgResetCount * newValidCount)
+              / mergedValidCount;
+    }
+    this.totalAttemptsCount += newTotalCount;
+    this.validAttemptsCount = mergedValidCount;
   }
 
-  public void overwrite(int attemptsCount, float avgCpm, float avgAcc, float avgResetCount) {
-    this.attemptsCount = attemptsCount;
+  public void overwrite(
+      int totalAttemptsCount,
+      int validAttemptsCount,
+      float avgCpm,
+      float avgAcc,
+      float avgResetCount) {
+    this.totalAttemptsCount = totalAttemptsCount;
+    this.validAttemptsCount = validAttemptsCount;
     this.avgCpm = avgCpm;
     this.avgAcc = avgAcc;
     this.avgResetCount = avgResetCount;
