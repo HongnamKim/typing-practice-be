@@ -2,14 +2,16 @@ package com.typingpractice.typing_practice_be.typingrecord.repository;
 
 import com.typingpractice.typing_practice_be.typingrecord.domain.TypingRecord;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.QuoteTypingAggregation;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Repository;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
@@ -20,6 +22,20 @@ public class TypingRecordRepository {
     return mongoTemplate.save(record);
   }
 
+  public Map<Long, Integer> countAllByQuoteIds(List<Long> quoteIds) {
+    Aggregation aggregation =
+        Aggregation.newAggregation(
+            Aggregation.match(Criteria.where("quoteId").in(quoteIds)),
+            Aggregation.group("quoteId").count().as("count"),
+            Aggregation.project().and("_id").as("quoteId").andInclude("count"));
+
+    return mongoTemplate
+        .aggregate(aggregation, "typingRecord", Document.class)
+        .getMappedResults()
+        .stream()
+        .collect(Collectors.toMap(doc -> doc.getLong("quoteId"), doc -> doc.getInteger("count")));
+  }
+
   public List<QuoteTypingAggregation> aggregateByQuoteIds(List<Long> quoteIds) {
     Aggregation aggregation =
         Aggregation.newAggregation(
@@ -28,7 +44,7 @@ public class TypingRecordRepository {
                 .first("language")
                 .as("language")
                 .count()
-                .as("attemptsCount")
+                .as("validAttemptsCount")
                 .avg("cpm")
                 .as("avgCpm")
                 .avg("accuracy")
@@ -38,11 +54,27 @@ public class TypingRecordRepository {
             Aggregation.project()
                 .and("_id")
                 .as("quoteId")
-                .andInclude("language", "attemptsCount", "avgCpm", "avgAcc", "avgResetCount"));
+                .andInclude("language", "validAttemptsCount", "avgCpm", "avgAcc", "avgResetCount"));
 
     return mongoTemplate
         .aggregate(aggregation, "typingRecord", QuoteTypingAggregation.class)
         .getMappedResults();
+  }
+
+  public Map<Long, Integer> countAllByQuoteIdsBetween(
+      List<Long> quoteIds, LocalDateTime from, LocalDateTime to) {
+    Aggregation aggregation =
+        Aggregation.newAggregation(
+            Aggregation.match(
+                Criteria.where("quoteId").in(quoteIds).and("completedAt").gte(from).lt(to)),
+            Aggregation.group("quoteId").count().as("count"),
+            Aggregation.project().and("_id").as("quoteId").andInclude("count"));
+
+    return mongoTemplate
+        .aggregate(aggregation, "typingRecord", Document.class)
+        .getMappedResults()
+        .stream()
+        .collect(Collectors.toMap(doc -> doc.getLong("quoteId"), doc -> doc.getInteger("count")));
   }
 
   public List<QuoteTypingAggregation> aggregateByQuoteIdsBetween(
@@ -61,7 +93,7 @@ public class TypingRecordRepository {
                 .first("language")
                 .as("language")
                 .count()
-                .as("attemptsCount")
+                .as("validAttemptsCount")
                 .avg("cpm")
                 .as("avgCpm")
                 .avg("accuracy")
@@ -71,7 +103,7 @@ public class TypingRecordRepository {
             Aggregation.project()
                 .and("_id")
                 .as("quoteId")
-                .andInclude("language", "attemptsCount", "avgCpm", "avgAcc", "avgResetCount"));
+                .andInclude("language", "validAttemptsCount", "avgCpm", "avgAcc", "avgResetCount"));
 
     return mongoTemplate
         .aggregate(aggregation, "typingRecord", QuoteTypingAggregation.class)
