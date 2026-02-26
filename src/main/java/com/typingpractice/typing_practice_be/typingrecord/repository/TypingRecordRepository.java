@@ -112,10 +112,26 @@ public class TypingRecordRepository {
         .getMappedResults();
   }
 
+  public List<Long> findDistinctMemberIdsBetween(LocalDateTime from, LocalDateTime to) {
+    Aggregation aggregation =
+        Aggregation.newAggregation(
+            Aggregation.match(
+                Criteria.where("memberId").ne(null).and("completedAt").gte(from).lt(to)),
+            Aggregation.group("memberId"),
+            Aggregation.project().and("_id").as("memberId"));
+
+    return mongoTemplate
+        .aggregate(aggregation, "typingRecord", Document.class)
+        .getMappedResults()
+        .stream()
+        .map(doc -> doc.getLong("memberId"))
+        .toList();
+  }
+
   public List<MemberTypingAggregation> aggregateByMemberIds(List<Long> memberIds) {
     Aggregation aggregation =
         Aggregation.newAggregation(
-            Aggregation.match(Criteria.where("memberId").in(memberIds)),
+            Aggregation.match(Criteria.where("memberId").in(memberIds).and("cpm").gt(0)),
             Aggregation.group("memberId")
                 .count()
                 .as("totalAttempts")
@@ -153,7 +169,13 @@ public class TypingRecordRepository {
     Aggregation aggregation =
         Aggregation.newAggregation(
             Aggregation.match(
-                Criteria.where("memberId").in(memberIds).and("completedAt").gte(from).lt(to)),
+                Criteria.where("memberId")
+                    .in(memberIds)
+                    .and("completedAt")
+                    .gte(from)
+                    .lt(to)
+                    .and("cpm")
+                    .gt(0)),
             Aggregation.group("memberId")
                 .count()
                 .as("totalAttempts")
