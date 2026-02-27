@@ -35,7 +35,9 @@ public class TypingRecordRepository {
         .aggregate(aggregation, "typingRecord", Document.class)
         .getMappedResults()
         .stream()
-        .collect(Collectors.toMap(doc -> doc.getLong("quoteId"), doc -> doc.getInteger("count")));
+        .collect(
+            Collectors.toMap(
+                doc -> ((Number) doc.get("quoteId")).longValue(), doc -> doc.getInteger("count")));
   }
 
   public List<QuoteTypingAggregation> aggregateByQuoteIds(List<Long> quoteIds) {
@@ -76,7 +78,9 @@ public class TypingRecordRepository {
         .aggregate(aggregation, "typingRecord", Document.class)
         .getMappedResults()
         .stream()
-        .collect(Collectors.toMap(doc -> doc.getLong("quoteId"), doc -> doc.getInteger("count")));
+        .collect(
+            Collectors.toMap(
+                doc -> ((Number) doc.get("quoteId")).longValue(), doc -> doc.getInteger("count")));
   }
 
   public List<QuoteTypingAggregation> aggregateByQuoteIdsBetween(
@@ -124,7 +128,7 @@ public class TypingRecordRepository {
         .aggregate(aggregation, "typingRecord", Document.class)
         .getMappedResults()
         .stream()
-        .map(doc -> doc.getLong("memberId"))
+        .map(doc -> ((Number) doc.get("memberId")).longValue())
         .toList();
   }
 

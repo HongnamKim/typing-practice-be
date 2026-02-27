@@ -1,8 +1,8 @@
 package com.typingpractice.typing_practice_be.quote.reject.domain;
 
+import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class QuoteSimilarityRejectLog {
+public class QuoteSimilarityRejectLog extends BaseEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -28,8 +28,6 @@ public class QuoteSimilarityRejectLog {
   @Enumerated(EnumType.STRING)
   private QuoteLanguage language;
 
-  private LocalDateTime createdAt;
-
   public static QuoteSimilarityRejectLog create(
       Long memberId,
       String inputSentence,
@@ -42,7 +40,7 @@ public class QuoteSimilarityRejectLog {
     log.similarSentence = similarSentence;
     log.similarity = similarity;
     log.language = language;
-    log.createdAt = LocalDateTime.now();
+
     return log;
   }
 }

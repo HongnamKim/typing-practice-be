@@ -41,7 +41,16 @@ public class MemberTypingStatsBatchService {
 
   @Transactional
   public void refreshForMember(Long memberId) {
-    LocalDateTime from = LocalDate.now().atStartOfDay(); // 오늘 00시
+    MemberTypingStats typingStats =
+        memberTypingStatsRepository.findByMemberId(memberId).orElse(null);
+
+    LocalDateTime from =
+        typingStats == null
+                || typingStats
+                    .getUpdatedAt()
+                    .isBefore(LocalDate.now().atStartOfDay()) // stats 의 업데이트가 배치 처리한 것만 있는 경우
+            ? LocalDate.now().atStartOfDay()
+            : typingStats.getUpdatedAt(); // 오늘 00시 or 마지막 업데이트
     LocalDateTime to = LocalDateTime.now(); // 지금
 
     List<MemberTypingAggregation> aggregations =
