@@ -26,8 +26,10 @@ public class MemberTypingStats extends BaseEntity {
   private float avgCpm;
   private float avgAcc;
   private int bestCpm;
-  private long totalPracticeTimeMin;
+  private float totalPracticeTimeMin;
   private int totalResetCount;
+
+  @Column(columnDefinition = "timestamp with time zone")
   private LocalDateTime lastPracticedAt;
 
   public static MemberTypingStats create(
@@ -36,7 +38,7 @@ public class MemberTypingStats extends BaseEntity {
       float avgCpm,
       float avgAcc,
       int bestCpm,
-      long totalPracticeTimeMin,
+      float totalPracticeTimeMin,
       int totalResetCount,
       LocalDateTime lastPracticedAt) {
     MemberTypingStats stats = new MemberTypingStats();
@@ -56,7 +58,7 @@ public class MemberTypingStats extends BaseEntity {
       float newAvgCpm,
       float newAvgAcc,
       int newBestCpm,
-      long newPracticeTimeMin,
+      float newPracticeTimeMin,
       int newResetCount,
       LocalDateTime newLastPracticedAt) {
     int mergedAttempts = this.totalAttempts + newAttempts;
@@ -78,7 +80,7 @@ public class MemberTypingStats extends BaseEntity {
       float avgCpm,
       float avgAcc,
       int bestCpm,
-      long totalPracticeTimeMin,
+      float totalPracticeTimeMin,
       int totalResetCount,
       LocalDateTime lastPracticedAt) {
     this.totalAttempts = totalAttempts;

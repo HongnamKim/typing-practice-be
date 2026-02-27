@@ -13,7 +13,7 @@ public class MemberTypingAggregation {
   private double avgCpm;
   private double avgAcc;
   private int bestCpm;
-  private long totalPracticeTimeMin;
+  private float totalPracticeTimeMin;
   private int totalResetCount;
   private LocalDateTime lastPracticedAt;
 }
