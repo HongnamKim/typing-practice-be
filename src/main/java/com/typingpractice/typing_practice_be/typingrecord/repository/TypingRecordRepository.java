@@ -211,4 +211,19 @@ public class TypingRecordRepository {
         .aggregate(aggregation, "typingRecord", MemberTypingAggregation.class)
         .getMappedResults();
   }
+
+  public List<Long> findDistinctMemberIds() {
+    Aggregation aggregation =
+        Aggregation.newAggregation(
+            Aggregation.match(Criteria.where("memberId").ne(null)),
+            Aggregation.group("memberId"),
+            Aggregation.project().and("_id").as("memberId"));
+
+    return mongoTemplate
+        .aggregate(aggregation, "typingRecord", Document.class)
+        .getMappedResults()
+        .stream()
+        .map(doc -> ((Number) doc.get("memberId")).longValue())
+        .toList();
+  }
 }
