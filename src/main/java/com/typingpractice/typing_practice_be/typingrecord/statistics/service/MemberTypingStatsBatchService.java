@@ -26,6 +26,7 @@ public class MemberTypingStatsBatchService {
 
   private static final int CHUNK_SIZE = 500;
 
+  // 스케줄 배치: 전날 하루치 증분
   @Transactional
   public void runScheduledBatch() {
     LocalDateTime from = LocalDate.now().minusDays(1).atStartOfDay(); // 어제 00시
@@ -34,48 +35,47 @@ public class MemberTypingStatsBatchService {
     log.info("MemberTypingStats 증분 배치 시작 - 범위: {} ~ {}", from, to);
 
     List<Long> memberIds = typingRecordRepository.findDistinctMemberIdsBetween(from, to);
-    int totalProcessed = processChunks(memberIds, from, to);
+    int totalProcessed = processChunks(memberIds, from, to, false);
 
     log.info("MemberTypingStats 증분 배치 완료 - {}건 처리", totalProcessed);
   }
 
+  // 어드민: 전체 재계산
   @Transactional
-  public void refreshForMember(Long memberId) {
-    MemberTypingStats typingStats =
-        memberTypingStatsRepository.findByMemberId(memberId).orElse(null);
+  public void runManualRecalculation() {
+    log.info("MemberTypingStats 전체 재계산 시작");
 
-    LocalDateTime from =
-        typingStats == null
-                || typingStats
-                    .getUpdatedAt()
-                    .isBefore(LocalDate.now().atStartOfDay()) // stats 의 업데이트가 배치 처리한 것만 있는 경우
-            ? LocalDate.now().atStartOfDay()
-            : typingStats.getUpdatedAt(); // 오늘 00시 or 마지막 업데이트
-    LocalDateTime to = LocalDateTime.now(); // 지금
+    List<Long> memberIds = typingRecordRepository.findDistinctMemberIds();
+    int totalProcessed = processChunks(memberIds, null, null, true);
 
-    List<MemberTypingAggregation> aggregations =
-        typingRecordRepository.aggregateByMemberIdsBetween(List.of(memberId), from, to);
-
-    if (aggregations.isEmpty()) return;
-
-    MemberTypingAggregation agg = aggregations.getFirst();
-    upsert(memberId, agg);
-
-    log.info("MemberTypingStats 유저 새로고침 완료 - memberId: {}", memberId);
+    log.info("MemberTypingStats 전체 재계산 완료 - {}건 처리", totalProcessed);
   }
 
-  private int processChunks(List<Long> memberIds, LocalDateTime from, LocalDateTime to) {
+  // 어드민: 날짜 범위 재실행
+  @Transactional
+  public void runRecalculationForPeriod(LocalDateTime from, LocalDateTime to) {
+    log.info("MemberTypingStats 기간 재계산 시작 - 범위: {} - {}", from, to);
+
+    List<Long> memberIds = typingRecordRepository.findDistinctMemberIdsBetween(from, to);
+    int totalProcessed = processChunks(memberIds, from, to, false);
+
+    log.info("MemberTypingStats 기간 재계산 완료 - {}건 처리", totalProcessed);
+  }
+
+  private int processChunks(
+      List<Long> memberIds, LocalDateTime from, LocalDateTime to, boolean overwrite) {
     int totalProcessed = 0;
 
-    // CHUNK_SIZE 만큼 잘라서 배치 처리
     for (int i = 0; i < memberIds.size(); i += CHUNK_SIZE) {
       List<Long> chunk = memberIds.subList(i, Math.min(i + CHUNK_SIZE, memberIds.size()));
 
       List<MemberTypingAggregation> aggregations =
-          typingRecordRepository.aggregateByMemberIdsBetween(chunk, from, to);
+          overwrite
+              ? typingRecordRepository.aggregateByMemberIds(chunk)
+              : typingRecordRepository.aggregateByMemberIdsBetween(chunk, from, to);
 
       for (MemberTypingAggregation agg : aggregations) {
-        upsert(agg.getMemberId(), agg);
+        upsert(agg.getMemberId(), agg, overwrite);
         totalProcessed++;
       }
     }
@@ -83,12 +83,11 @@ public class MemberTypingStatsBatchService {
     return totalProcessed;
   }
 
-  private void upsert(Long memberId, MemberTypingAggregation agg) {
+  private void upsert(Long memberId, MemberTypingAggregation agg, boolean overwrite) {
     MemberTypingStats stats = memberTypingStatsRepository.findByMemberId(memberId).orElse(null);
 
     if (stats == null) {
       Member member = memberRepository.findById(memberId).orElse(null);
-
       if (member == null) {
         log.warn("Member 미존재, 스킵 - memberId: {}", memberId);
         return;
@@ -105,7 +104,15 @@ public class MemberTypingStatsBatchService {
               agg.getTotalResetCount(),
               agg.getLastPracticedAt());
       memberTypingStatsRepository.save(stats);
-
+    } else if (overwrite) {
+      stats.overwrite(
+          agg.getTotalAttempts(),
+          (float) agg.getAvgCpm(),
+          (float) agg.getAvgAcc(),
+          agg.getBestCpm(),
+          agg.getTotalPracticeTimeMin(),
+          agg.getTotalResetCount(),
+          agg.getLastPracticedAt());
     } else {
       stats.merge(
           agg.getTotalAttempts(),
