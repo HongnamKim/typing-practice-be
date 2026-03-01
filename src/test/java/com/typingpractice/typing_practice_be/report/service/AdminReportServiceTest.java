@@ -61,7 +61,14 @@ class AdminReportServiceTest {
   private Quote createQuote() {
     Quote quote =
         Quote.create(
-            createMember(99L), "테스트 문장", "저자", QuoteType.PUBLIC, QuoteLanguage.KOREAN, null, 0f);
+            createMember(99L),
+            "테스트 문장",
+            "저자",
+            QuoteType.PUBLIC,
+            QuoteLanguage.KOREAN,
+            null,
+            0f,
+            "hash");
     quote.approvePublish();
     return quote;
   }

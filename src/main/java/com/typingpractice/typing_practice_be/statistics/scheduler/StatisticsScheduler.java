@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.statistics.scheduler;
 
+import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.quote.statistics.service.GlobalQuoteStatisticsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.MemberTypingStatsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.QuoteTypingStatsBatchService;
@@ -16,7 +17,7 @@ public class StatisticsScheduler {
   private final QuoteTypingStatsBatchService quoteTypingStatsBatchService;
   private final MemberTypingStatsBatchService memberTypingStatsBatchService;
 
-  @Scheduled(cron = "0 0 3 * * *")
+  @Scheduled(cron = "0 0 3 * * *", zone = TimeUtils.KST_ZONE)
   public void runDailyBatch() {
     log.info("전역 통계 배치 시작");
     quoteTypingStatsBatchService.runScheduledBatch(); // 문장 별 타이핑 통계

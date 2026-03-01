@@ -67,7 +67,8 @@ class QuoteServiceTest {
   }
 
   private Quote createQuote(Member member, QuoteType type, QuoteStatus status) {
-    Quote quote = Quote.create(member, "테스트 문장입니다.", "저자", type, QuoteLanguage.KOREAN, null, 0f);
+    Quote quote =
+        Quote.create(member, "테스트 문장입니다.", "저자", type, QuoteLanguage.KOREAN, null, 0f, "hash");
     if (type == QuoteType.PUBLIC && status == QuoteStatus.ACTIVE) {
       quote.approvePublish();
     }
