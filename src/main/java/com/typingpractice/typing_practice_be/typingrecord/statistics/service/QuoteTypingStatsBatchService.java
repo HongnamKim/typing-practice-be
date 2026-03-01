@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.typingrecord.statistics.service;
 
+import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
@@ -7,17 +8,15 @@ import com.typingpractice.typing_practice_be.typingrecord.repository.TypingRecor
 import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.QuoteTypingStats;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.QuoteTypingAggregation;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.repository.QuoteTypingStatsRepository;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -33,8 +32,10 @@ public class QuoteTypingStatsBatchService {
   // 스케줄 배치: 전날 하루치 증분 집계
   @Transactional
   public void runScheduledBatch() {
-    LocalDateTime from = LocalDate.now().minusDays(1).atStartOfDay();
-    LocalDateTime to = LocalDate.now().minusDays(1).atTime(LocalTime.MAX);
+    // 한국 기준 어제 날짜
+    LocalDate yesterdayKst = LocalDate.now(TimeUtils.KST).minusDays(1);
+    LocalDateTime from = TimeUtils.startOfDayKstToUtc(yesterdayKst);
+    LocalDateTime to = TimeUtils.endOfDayKstToUtc(yesterdayKst);
 
     log.info("QuoteTypingStats 증분 배치 시작 - 범위: {} ~ {}", from, to);
     int totalProcessed = processPages(from, to, false);

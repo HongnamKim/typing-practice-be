@@ -1,11 +1,12 @@
 package com.typingpractice.typing_practice_be.statistics.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
+import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.quote.statistics.service.GlobalQuoteStatisticsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.MemberTypingStatsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.QuoteTypingStatsBatchService;
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.ZoneId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,14 +39,17 @@ public class AdminStatisticsController {
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
           LocalDate startDate,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-          LocalDate endDate) {
+          LocalDate endDate,
+      @RequestParam(defaultValue = TimeUtils.KST_ZONE) String timezone) {
 
     if (startDate != null && endDate != null) {
       if (startDate.isAfter(endDate)) {
         throw new IllegalArgumentException("startDate는 endDate보다 같거나 이전이어야 합니다.");
       }
+      ZoneId zone = TimeUtils.parseZoneId(timezone);
+
       memberTypingStatsBatchService.runRecalculationForPeriod(
-          startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX));
+          TimeUtils.startOfDayToUtc(startDate, zone), TimeUtils.endOfDayToUtc(endDate, zone));
     } else {
       memberTypingStatsBatchService.runManualRecalculation();
     }

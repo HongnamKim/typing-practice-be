@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.typingrecord.statistics.service;
 
+import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
 import com.typingpractice.typing_practice_be.typingrecord.repository.TypingRecordRepository;
@@ -8,7 +9,6 @@ import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.MemberT
 import com.typingpractice.typing_practice_be.typingrecord.statistics.repository.MemberTypingStatsRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +29,10 @@ public class MemberTypingStatsBatchService {
   // 스케줄 배치: 전날 하루치 증분
   @Transactional
   public void runScheduledBatch() {
-    LocalDateTime from = LocalDate.now().minusDays(1).atStartOfDay(); // 어제 00시
-    LocalDateTime to = LocalDate.now().minusDays(1).atTime(LocalTime.MAX); // 어제 23시 59분
+    LocalDate yesterdayKst = LocalDate.now(TimeUtils.KST).minusDays(1);
+
+    LocalDateTime from = TimeUtils.startOfDayKstToUtc(yesterdayKst);
+    LocalDateTime to = TimeUtils.endOfDayKstToUtc(yesterdayKst);
 
     log.info("MemberTypingStats 증분 배치 시작 - 범위: {} ~ {}", from, to);
 

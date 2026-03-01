@@ -67,7 +67,8 @@ class ReportServiceTest {
 
   private Quote createQuote(QuoteType type, QuoteStatus status) {
     Quote quote =
-        Quote.create(createMember(99L), "테스트 문장", "저자", type, QuoteLanguage.KOREAN, null, 0f);
+        Quote.create(
+            createMember(99L), "테스트 문장", "저자", type, QuoteLanguage.KOREAN, null, 0f, "hash");
     if (type == QuoteType.PUBLIC && status == QuoteStatus.ACTIVE) {
       quote.approvePublish();
     }
