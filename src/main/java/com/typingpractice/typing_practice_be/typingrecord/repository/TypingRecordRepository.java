@@ -1,19 +1,15 @@
 package com.typingpractice.typing_practice_be.typingrecord.repository;
 
 import com.typingpractice.typing_practice_be.typingrecord.domain.TypingRecord;
-import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.MemberTypingAggregation;
-import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.QuoteTypingAggregation;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
@@ -24,103 +20,10 @@ public class TypingRecordRepository {
     return mongoTemplate.save(record);
   }
 
-  public Map<Long, Integer> countAllByQuoteIds(List<Long> quoteIds) {
+  public List<Long> findDistinctMemberIds() {
     Aggregation aggregation =
         Aggregation.newAggregation(
-            Aggregation.match(Criteria.where("quoteId").in(quoteIds)),
-            Aggregation.group("quoteId").count().as("count"),
-            Aggregation.project().and("_id").as("quoteId").andInclude("count"));
-
-    return mongoTemplate
-        .aggregate(aggregation, "typingRecord", Document.class)
-        .getMappedResults()
-        .stream()
-        .collect(
-            Collectors.toMap(
-                doc -> ((Number) doc.get("quoteId")).longValue(), doc -> doc.getInteger("count")));
-  }
-
-  public List<QuoteTypingAggregation> aggregateByQuoteIds(List<Long> quoteIds) {
-    Aggregation aggregation =
-        Aggregation.newAggregation(
-            Aggregation.match(Criteria.where("outlier").is(false).and("quoteId").in(quoteIds)),
-            Aggregation.group("quoteId")
-                .first("language")
-                .as("language")
-                .count()
-                .as("validAttemptsCount")
-                .avg("cpm")
-                .as("avgCpm")
-                .avg("accuracy")
-                .as("avgAcc")
-                .avg("resetCount")
-                .as("avgResetCount"),
-            Aggregation.project()
-                .and("_id")
-                .as("quoteId")
-                .andInclude("language", "validAttemptsCount", "avgCpm", "avgAcc", "avgResetCount"));
-
-    return mongoTemplate
-        .aggregate(aggregation, "typingRecord", QuoteTypingAggregation.class)
-        .getMappedResults();
-  }
-
-  public Map<Long, Integer> countAllByQuoteIdsBetween(
-      List<Long> quoteIds, LocalDateTime from, LocalDateTime to) {
-    Aggregation aggregation =
-        Aggregation.newAggregation(
-            Aggregation.match(
-                Criteria.where("quoteId").in(quoteIds).and("completedAt").gte(from).lt(to)),
-            Aggregation.group("quoteId").count().as("count"),
-            Aggregation.project().and("_id").as("quoteId").andInclude("count"));
-
-    return mongoTemplate
-        .aggregate(aggregation, "typingRecord", Document.class)
-        .getMappedResults()
-        .stream()
-        .collect(
-            Collectors.toMap(
-                doc -> ((Number) doc.get("quoteId")).longValue(), doc -> doc.getInteger("count")));
-  }
-
-  public List<QuoteTypingAggregation> aggregateByQuoteIdsBetween(
-      List<Long> quoteIds, LocalDateTime from, LocalDateTime to) {
-    Aggregation aggregation =
-        Aggregation.newAggregation(
-            Aggregation.match(
-                Criteria.where("outlier")
-                    .is(false)
-                    .and("quoteId")
-                    .in(quoteIds)
-                    .and("completedAt")
-                    .gte(from)
-                    .lt(to)),
-            Aggregation.group("quoteId")
-                .first("language")
-                .as("language")
-                .count()
-                .as("validAttemptsCount")
-                .avg("cpm")
-                .as("avgCpm")
-                .avg("accuracy")
-                .as("avgAcc")
-                .avg("resetCount")
-                .as("avgResetCount"),
-            Aggregation.project()
-                .and("_id")
-                .as("quoteId")
-                .andInclude("language", "validAttemptsCount", "avgCpm", "avgAcc", "avgResetCount"));
-
-    return mongoTemplate
-        .aggregate(aggregation, "typingRecord", QuoteTypingAggregation.class)
-        .getMappedResults();
-  }
-
-  public List<Long> findDistinctMemberIdsBetween(LocalDateTime from, LocalDateTime to) {
-    Aggregation aggregation =
-        Aggregation.newAggregation(
-            Aggregation.match(
-                Criteria.where("memberId").ne(null).and("completedAt").gte(from).lt(to)),
+            Aggregation.match(Criteria.where("memberId").ne(null)),
             Aggregation.group("memberId"),
             Aggregation.project().and("_id").as("memberId"));
 
@@ -132,90 +35,11 @@ public class TypingRecordRepository {
         .toList();
   }
 
-  public List<MemberTypingAggregation> aggregateByMemberIds(List<Long> memberIds) {
-    Aggregation aggregation =
-        Aggregation.newAggregation(
-            Aggregation.match(Criteria.where("memberId").in(memberIds).and("cpm").gt(0)),
-            Aggregation.group("memberId")
-                .count()
-                .as("totalAttempts")
-                .avg("cpm")
-                .as("avgCpm")
-                .avg("accuracy")
-                .as("avgAcc")
-                .max("cpm")
-                .as("bestCpm")
-                .sum(ArithmeticOperators.valueOf("charLength").divideBy("cpm"))
-                .as("totalPracticeTimeMin")
-                .sum("resetCount")
-                .as("totalResetCount")
-                .max("completedAt")
-                .as("lastPracticedAt"),
-            Aggregation.project()
-                .and("_id")
-                .as("memberId")
-                .andInclude(
-                    "totalAttempts",
-                    "avgCpm",
-                    "avgAcc",
-                    "bestCpm",
-                    "totalPracticeTimeMin",
-                    "totalResetCount",
-                    "lastPracticedAt"));
-
-    return mongoTemplate
-        .aggregate(aggregation, "typingRecord", MemberTypingAggregation.class)
-        .getMappedResults();
-  }
-
-  public List<MemberTypingAggregation> aggregateByMemberIdsBetween(
-      List<Long> memberIds, LocalDateTime from, LocalDateTime to) {
+  public List<Long> findDistinctMemberIdsBetween(LocalDateTime from, LocalDateTime to) {
     Aggregation aggregation =
         Aggregation.newAggregation(
             Aggregation.match(
-                Criteria.where("memberId")
-                    .in(memberIds)
-                    .and("completedAt")
-                    .gte(from)
-                    .lt(to)
-                    .and("cpm")
-                    .gt(0)),
-            Aggregation.group("memberId")
-                .count()
-                .as("totalAttempts")
-                .avg("cpm")
-                .as("avgCpm")
-                .avg("accuracy")
-                .as("avgAcc")
-                .max("cpm")
-                .as("bestCpm")
-                .sum(ArithmeticOperators.valueOf("charLength").divideBy("cpm"))
-                .as("totalPracticeTimeMin")
-                .sum("resetCount")
-                .as("totalResetCount")
-                .max("completedAt")
-                .as("lastPracticedAt"),
-            Aggregation.project()
-                .and("_id")
-                .as("memberId")
-                .andInclude(
-                    "totalAttempts",
-                    "avgCpm",
-                    "avgAcc",
-                    "bestCpm",
-                    "totalPracticeTimeMin",
-                    "totalResetCount",
-                    "lastPracticedAt"));
-
-    return mongoTemplate
-        .aggregate(aggregation, "typingRecord", MemberTypingAggregation.class)
-        .getMappedResults();
-  }
-
-  public List<Long> findDistinctMemberIds() {
-    Aggregation aggregation =
-        Aggregation.newAggregation(
-            Aggregation.match(Criteria.where("memberId").ne(null)),
+                Criteria.where("memberId").ne(null).and("completedAt").gte(from).lt(to)),
             Aggregation.group("memberId"),
             Aggregation.project().and("_id").as("memberId"));
 

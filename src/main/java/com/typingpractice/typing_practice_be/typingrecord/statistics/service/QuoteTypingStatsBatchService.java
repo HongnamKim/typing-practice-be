@@ -4,7 +4,7 @@ import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
-import com.typingpractice.typing_practice_be.typingrecord.repository.TypingRecordRepository;
+import com.typingpractice.typing_practice_be.typingrecord.repository.QuoteTypingAggregationRepository;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.QuoteTypingStats;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.QuoteTypingAggregation;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.repository.QuoteTypingStatsRepository;
@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class QuoteTypingStatsBatchService {
   private final QuoteRepository quoteRepository;
-  private final TypingRecordRepository typingRecordRepository;
+  private final QuoteTypingAggregationRepository typingAggregationRepository;
   private final QuoteTypingStatsRepository quoteTypingStatsRepository;
 
   private static final int PAGE_SIZE = 1000;
@@ -69,13 +69,13 @@ public class QuoteTypingStatsBatchService {
         // 타이핑 기록 통계값
         List<QuoteTypingAggregation> aggregations =
             overwrite
-                ? typingRecordRepository.aggregateByQuoteIds(quoteIds)
-                : typingRecordRepository.aggregateByQuoteIdsBetween(quoteIds, from, to);
+                ? typingAggregationRepository.aggregateByQuoteIds(quoteIds)
+                : typingAggregationRepository.aggregateByQuoteIdsBetween(quoteIds, from, to);
 
         Map<Long, Integer> totalAttemptsCount =
             overwrite
-                ? typingRecordRepository.countAllByQuoteIds(quoteIds)
-                : typingRecordRepository.countAllByQuoteIdsBetween(quoteIds, from, to);
+                ? typingAggregationRepository.countAllByQuoteIds(quoteIds)
+                : typingAggregationRepository.countAllByQuoteIdsBetween(quoteIds, from, to);
 
         // {quoteId: 타이핑 통계값} map 변환
         Map<Long, QuoteTypingAggregation> aggMap =
