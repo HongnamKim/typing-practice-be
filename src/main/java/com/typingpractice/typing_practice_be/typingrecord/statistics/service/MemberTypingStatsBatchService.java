@@ -3,6 +3,7 @@ package com.typingpractice.typing_practice_be.typingrecord.statistics.service;
 import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
+import com.typingpractice.typing_practice_be.typingrecord.repository.MemberTypingAggregationRepository;
 import com.typingpractice.typing_practice_be.typingrecord.repository.TypingRecordRepository;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.MemberTypingStats;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.MemberTypingAggregation;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberTypingStatsBatchService {
   private final MemberRepository memberRepository;
   private final TypingRecordRepository typingRecordRepository;
+  private final MemberTypingAggregationRepository typingAggregationRepository;
   private final MemberTypingStatsRepository memberTypingStatsRepository;
 
   private static final int CHUNK_SIZE = 500;
@@ -73,8 +75,8 @@ public class MemberTypingStatsBatchService {
 
       List<MemberTypingAggregation> aggregations =
           overwrite
-              ? typingRecordRepository.aggregateByMemberIds(chunk)
-              : typingRecordRepository.aggregateByMemberIdsBetween(chunk, from, to);
+              ? typingAggregationRepository.aggregateByMemberIds(chunk)
+              : typingAggregationRepository.aggregateByMemberIdsBetween(chunk, from, to);
 
       for (MemberTypingAggregation agg : aggregations) {
         upsert(agg.getMemberId(), agg, overwrite);
