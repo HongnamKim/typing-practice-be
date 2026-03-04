@@ -36,8 +36,8 @@ public class DataInitService implements CommandLineRunner {
   @Override
   @Transactional
   public void run(String... args) {
-    //    initGlobalQuoteStatistics();
-    //    initAdmin();
+    initGlobalQuoteStatistics();
+    initAdmin();
     //    List<Member> members = initMembers();
     //    List<Quote> quotes = initQuotes(members);
     //    initReports(members, quotes);
