@@ -3,16 +3,16 @@ package com.typingpractice.typing_practice_be.statistics.controller;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.quote.statistics.service.GlobalQuoteStatisticsBatchService;
+import com.typingpractice.typing_practice_be.statistics.dto.MemberStatsDayRequest;
+import com.typingpractice.typing_practice_be.statistics.dto.MemberStatsPeriodRequest;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.service.MemberDailyStatsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.MemberTypingStatsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.QuoteTypingStatsBatchService;
+import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,6 +21,7 @@ public class AdminStatisticsController {
   private final GlobalQuoteStatisticsBatchService globalQuoteStatisticsBatchService;
   private final QuoteTypingStatsBatchService quoteTypingStatsBatchService;
   private final MemberTypingStatsBatchService memberTypingStatsBatchService;
+  private final MemberDailyStatsBatchService memberDailyStatsBatchService;
 
   @PostMapping("/global-quote/recalculate")
   public ApiResponse<Void> recalculate() {
@@ -36,16 +37,13 @@ public class AdminStatisticsController {
 
   @PostMapping("/member-typing/recalculate")
   public ApiResponse<Void> recalculateMemberTypingStats(
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-          LocalDate startDate,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-          LocalDate endDate,
-      @RequestParam(defaultValue = TimeUtils.KST_ZONE) String timezone) {
+      @ModelAttribute @Valid MemberStatsPeriodRequest request) {
+
+    LocalDate startDate = request.getStartDate();
+    LocalDate endDate = request.getEndDate();
+    String timezone = request.getTimezone();
 
     if (startDate != null && endDate != null) {
-      if (startDate.isAfter(endDate)) {
-        throw new IllegalArgumentException("startDate는 endDate보다 같거나 이전이어야 합니다.");
-      }
       ZoneId zone = TimeUtils.parseZoneId(timezone);
 
       memberTypingStatsBatchService.runRecalculationForPeriod(
@@ -53,6 +51,16 @@ public class AdminStatisticsController {
     } else {
       memberTypingStatsBatchService.runManualRecalculation();
     }
+
+    return ApiResponse.ok(null);
+  }
+
+  @PostMapping("/member-daily/recalculate")
+  public ApiResponse<Void> recalculateMemberDailyStats(
+      @ModelAttribute @Valid MemberStatsDayRequest request) {
+
+    ZoneId zone = TimeUtils.parseZoneId(request.getTimezone());
+    memberDailyStatsBatchService.runRecalculationForDate(request.getDate(), zone);
 
     return ApiResponse.ok(null);
   }

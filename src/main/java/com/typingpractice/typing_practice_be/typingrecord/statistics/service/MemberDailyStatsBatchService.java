@@ -10,6 +10,7 @@ import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.MemberD
 import com.typingpractice.typing_practice_be.typingrecord.statistics.repository.MemberDailyStatsRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,9 +45,9 @@ public class MemberDailyStatsBatchService {
   }
 
   @Transactional
-  public void runRecalculationForDate(LocalDate date) {
-    LocalDateTime from = TimeUtils.startOfDayKstToUtc(date);
-    LocalDateTime to = TimeUtils.endOfDayKstToUtc(date);
+  public void runRecalculationForDate(LocalDate date, ZoneId zone) {
+    LocalDateTime from = TimeUtils.startOfDayToUtc(date, zone);
+    LocalDateTime to = TimeUtils.endOfDayToUtc(date, zone);
 
     log.info("MemberDailyStats 날짜 재계산 시작 - 날짜: {} (범위: {} ~ {})", date, from, to);
 
