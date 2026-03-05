@@ -1,16 +1,12 @@
 package com.typingpractice.typing_practice_be.statistics.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
-import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.quote.statistics.service.GlobalQuoteStatisticsBatchService;
 import com.typingpractice.typing_practice_be.statistics.dto.MemberStatsDayRequest;
-import com.typingpractice.typing_practice_be.statistics.dto.MemberStatsPeriodRequest;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.MemberDailyStatsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.MemberTypingStatsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.QuoteTypingStatsBatchService;
 import jakarta.validation.Valid;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,21 +32,9 @@ public class AdminStatisticsController {
   }
 
   @PostMapping("/member-typing/recalculate")
-  public ApiResponse<Void> recalculateMemberTypingStats(
-      @ModelAttribute @Valid MemberStatsPeriodRequest request) {
+  public ApiResponse<Void> recalculateMemberTypingStats() {
 
-    LocalDate startDate = request.getStartDate();
-    LocalDate endDate = request.getEndDate();
-    String timezone = request.getTimezone();
-
-    if (startDate != null && endDate != null) {
-      ZoneId zone = TimeUtils.parseZoneId(timezone);
-
-      memberTypingStatsBatchService.runRecalculationForPeriod(
-          TimeUtils.startOfDayToUtc(startDate, zone), TimeUtils.endOfDayToUtc(endDate, zone));
-    } else {
-      memberTypingStatsBatchService.runManualRecalculation();
-    }
+    memberTypingStatsBatchService.runManualRecalculation();
 
     return ApiResponse.ok(null);
   }
@@ -59,8 +43,7 @@ public class AdminStatisticsController {
   public ApiResponse<Void> recalculateMemberDailyStats(
       @ModelAttribute @Valid MemberStatsDayRequest request) {
 
-    ZoneId zone = TimeUtils.parseZoneId(request.getTimezone());
-    memberDailyStatsBatchService.runRecalculationForDate(request.getDate(), zone);
+    memberDailyStatsBatchService.runRecalculationForDate(request.getDate());
 
     return ApiResponse.ok(null);
   }

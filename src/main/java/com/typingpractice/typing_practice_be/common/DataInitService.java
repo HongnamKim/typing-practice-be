@@ -38,7 +38,7 @@ public class DataInitService implements CommandLineRunner {
   public void run(String... args) {
     initGlobalQuoteStatistics();
     initAdmin();
-    //    List<Member> members = initMembers();
+    List<Member> members = initMembers();
     //    List<Quote> quotes = initQuotes(members);
     //    initReports(members, quotes);
     //
