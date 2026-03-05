@@ -56,15 +56,15 @@ public class MemberTypingStatsBatchService {
   }
 
   // 어드민: 날짜 범위 재실행
-  @Transactional
-  public void runRecalculationForPeriod(LocalDateTime from, LocalDateTime to) {
-    log.info("MemberTypingStats 기간 재계산 시작 - 범위: {} - {}", from, to);
-
-    List<Long> memberIds = typingRecordRepository.findDistinctMemberIdsBetween(from, to);
-    int totalProcessed = processChunks(memberIds, from, to, false);
-
-    log.info("MemberTypingStats 기간 재계산 완료 - {}건 처리", totalProcessed);
-  }
+  //  @Transactional
+  //  public void runRecalculationForPeriod(LocalDateTime from, LocalDateTime to) {
+  //    log.info("MemberTypingStats 기간 재계산 시작 - 범위: {} - {}", from, to);
+  //
+  //    List<Long> memberIds = typingRecordRepository.findDistinctMemberIdsBetween(from, to);
+  //    int totalProcessed = processChunks(memberIds, from, to, false);
+  //
+  //    log.info("MemberTypingStats 기간 재계산 완료 - {}건 처리", totalProcessed);
+  //  }
 
   private int processChunks(
       List<Long> memberIds, LocalDateTime from, LocalDateTime to, boolean overwrite) {

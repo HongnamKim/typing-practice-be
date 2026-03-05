@@ -15,11 +15,8 @@ public class MemberStatsDayRequest {
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private final LocalDate date;
 
-  private final String timezone;
-
-  public MemberStatsDayRequest(LocalDate date, String timezone) {
+  public MemberStatsDayRequest(LocalDate date) {
     this.date = date;
-    this.timezone = timezone != null ? timezone : TimeUtils.KST_ZONE;
   }
 
   @AssertTrue(message = "date는 KST 기준 어제 이하여야 합니다.")
