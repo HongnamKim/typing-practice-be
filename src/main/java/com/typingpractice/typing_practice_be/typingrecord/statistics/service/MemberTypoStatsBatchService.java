@@ -52,7 +52,7 @@ public class MemberTypoStatsBatchService {
   // 어드민: 전체 재계산
   @Transactional
   public void runManualRecalculation() {
-    log.info("MemberTypoSTats 전체 재계산 시작");
+    log.info("MemberTypoStats 전체 재계산 시작");
 
     memberTypoDetailStatsRepository.deleteAllInBatch();
     memberTypoStatsRepository.deleteAllInBatch();

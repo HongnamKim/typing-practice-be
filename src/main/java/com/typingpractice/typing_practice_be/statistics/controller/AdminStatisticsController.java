@@ -5,6 +5,7 @@ import com.typingpractice.typing_practice_be.quote.statistics.service.GlobalQuot
 import com.typingpractice.typing_practice_be.statistics.dto.MemberStatsDayRequest;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.MemberDailyStatsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.MemberTypingStatsBatchService;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.service.MemberTypoStatsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.QuoteTypingStatsBatchService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ public class AdminStatisticsController {
   private final QuoteTypingStatsBatchService quoteTypingStatsBatchService;
   private final MemberTypingStatsBatchService memberTypingStatsBatchService;
   private final MemberDailyStatsBatchService memberDailyStatsBatchService;
+  private final MemberTypoStatsBatchService memberTypoStatsBatchService;
 
   @PostMapping("/global-quote/recalculate")
   public ApiResponse<Void> recalculate() {
@@ -45,6 +47,12 @@ public class AdminStatisticsController {
 
     memberDailyStatsBatchService.runRecalculationForDate(request.getDate());
 
+    return ApiResponse.ok(null);
+  }
+
+  @PostMapping("/member-typo/recalculate")
+  public ApiResponse<Void> recalculateMemberTypoStats() {
+    memberTypoStatsBatchService.runManualRecalculation();
     return ApiResponse.ok(null);
   }
 }
