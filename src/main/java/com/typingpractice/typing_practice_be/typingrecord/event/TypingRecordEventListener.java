@@ -16,6 +16,7 @@ public class TypingRecordEventListener {
   public void handleTypingRecordSaved(TypingRecordSavedEvent event) {
     try {
       todayTypingStatsRedisService.incrementTyping(event);
+      todayTypingStatsRedisService.incrementTypo(event);
     } catch (Exception e) {
       log.error("Redis 오늘 통계 증분 실패 - memberId: {}", event.getMemberId());
     }
