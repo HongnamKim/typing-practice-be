@@ -7,10 +7,7 @@ import com.typingpractice.typing_practice_be.typingrecord.domain.Typo;
 import com.typingpractice.typing_practice_be.typingrecord.event.TypingRecordSavedEvent;
 import com.typingpractice.typing_practice_be.typingrecord.repository.MemberTypingAggregationRepository;
 import com.typingpractice.typing_practice_be.typingrecord.repository.MemberTypoAggregationRepository;
-import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.MemberTypingAggregation;
-import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.MemberTypoAggregation;
-import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.TodayTypingSnapshot;
-import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.TodayTypoSnapshot;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -35,6 +32,7 @@ public class TodayTypingStatsRedisService {
 
   private static final String TYPING_KEY_PREFIX = "today:typing:";
   private static final String TYPO_KEY_PREFIX = "today:typo:";
+  private static final String TYPO_DETAIL_KEY_PREFIX = "today:typo-detail:";
 
   private String typingKey(Long memberId) {
     // today:typing:1234
@@ -44,6 +42,11 @@ public class TodayTypingStatsRedisService {
   private String typoKey(Long memberId) {
     // today:typo:1234
     return TYPO_KEY_PREFIX + memberId;
+  }
+
+  private String typoDetailKey(Long memberId) {
+    // today:typo-detail:1234
+    return TYPO_DETAIL_KEY_PREFIX + memberId;
   }
 
   private Duration ttlUntilMidnightKst() {
@@ -63,18 +66,29 @@ public class TodayTypingStatsRedisService {
     setSnapshot(key, snapshot);
   }
 
-  public void incrementTypo(TypingRecordSavedEvent event) {
+  public void incrementTypoAndDetail(TypingRecordSavedEvent event) {
     if (event.isOutlier()) return;
     if (event.getTypos() == null || event.getTypos().isEmpty()) return;
 
-    String key = typoKey(event.getMemberId());
+    String typoKey = typoKey(event.getMemberId());
+    String detailKey = typoDetailKey(event.getMemberId());
 
-    TodayTypoSnapshot snapshot = getTypoSnapshotOrEmpty(key);
+    TodayTypoSnapshot typoSnapshot = getTypoSnapshotOrEmpty(typoKey);
+
     for (Typo typo : event.getTypos()) {
-      snapshot.increment(event.getLanguage(), typo.getExpected());
+      // Typo: language:expected 단위 카운트
+      typoSnapshot.increment(event.getLanguage(), typo.getExpected());
+
+      // TypoDetail: language:expected:actual 단위 카운트 (Hash)
+      String field =
+          TodayTypoDetailSnapshot.toKey(event.getLanguage(), typo.getExpected(), typo.getActual());
+      TodayTypoDetailEntry entry = getTypoDetailEntry(detailKey, field);
+      entry.increment(typo.getType());
+      setTypoDetailEntry(detailKey, field, entry);
     }
 
-    setTypoSnapshot(key, snapshot);
+    setTypoSnapshot(typoKey, typoSnapshot);
+    ensureTtl(detailKey);
   }
 
   // 오늘 통계 조회
@@ -100,12 +114,33 @@ public class TodayTypingStatsRedisService {
     return fallbackTypo(memberId);
   }
 
+  public TodayTypoDetailSnapshot getTypoDetail(Long memberId) {
+    String key = typoDetailKey(memberId); // today:typo-detail:{memberId}
+    Map<Object, Object> entries = redisTemplate.opsForHash().entries(key);
+
+    if (!entries.isEmpty()) {
+      Map<String, TodayTypoDetailEntry> map = new HashMap<>();
+      for (Map.Entry<Object, Object> e : entries.entrySet()) {
+        map.put(
+            (String) e.getKey(), deserialize((String) e.getValue(), TodayTypoDetailEntry.class));
+      }
+
+      return TodayTypoDetailSnapshot.create(map);
+    }
+
+    return fallbackTypoDetail(memberId);
+  }
+
   public void invalidateTyping(Long memberId) {
     redisTemplate.delete(typingKey(memberId));
   }
 
   public void invalidateTypo(Long memberId) {
     redisTemplate.delete(typoKey(memberId));
+  }
+
+  public void invalidateTypoDetail(Long memberId) {
+    redisTemplate.delete(typoDetailKey(memberId));
   }
 
   private TodayTypingSnapshot getSnapshotOrEmpty(String key) {
@@ -125,6 +160,15 @@ public class TodayTypingStatsRedisService {
     return TodayTypoSnapshot.empty();
   }
 
+  private TodayTypoDetailEntry getTypoDetailEntry(String hashKey, String field) {
+    Object value = redisTemplate.opsForHash().get(hashKey, field);
+    if (value != null) {
+      return deserialize((String) value, TodayTypoDetailEntry.class);
+    }
+
+    return TodayTypoDetailEntry.empty();
+  }
+
   private void setSnapshot(String key, TodayTypingSnapshot snapshot) {
     String json = serialize(snapshot);
     redisTemplate.opsForValue().set(key, json, ttlUntilMidnightKst());
@@ -133,6 +177,17 @@ public class TodayTypingStatsRedisService {
   private void setTypoSnapshot(String key, TodayTypoSnapshot snapshot) {
     String json = serialize(snapshot);
     redisTemplate.opsForValue().set(key, json, ttlUntilMidnightKst());
+  }
+
+  private void setTypoDetailEntry(String hashKey, String field, TodayTypoDetailEntry entry) {
+    redisTemplate.opsForHash().put(hashKey, field, serialize(entry));
+  }
+
+  private void ensureTtl(String key) {
+    Long ttl = redisTemplate.getExpire(key);
+    if (ttl == null || ttl < 0) {
+      redisTemplate.expire(key, ttlUntilMidnightKst());
+    }
   }
 
   private TodayTypingSnapshot fallbackTyping(Long memberId) {
@@ -173,16 +228,51 @@ public class TodayTypingStatsRedisService {
       return TodayTypoSnapshot.empty();
     }
 
-    Map<String, Integer> map = new HashMap<>();
+    Map<String, Integer> typoMap = new HashMap<>();
+
     for (MemberTypoAggregation agg : results) {
-      String key = TodayTypoSnapshot.toKey(agg.getLanguage(), agg.getExpected());
-      map.merge(key, agg.getCount(), Integer::sum);
+      // Typo
+      String typoKey = TodayTypoSnapshot.toKey(agg.getLanguage(), agg.getExpected());
+      typoMap.merge(typoKey, agg.getCount(), Integer::sum);
     }
 
-    TodayTypoSnapshot snapshot = TodayTypoSnapshot.create(map);
+    TodayTypoSnapshot snapshot = TodayTypoSnapshot.create(typoMap);
     setTypoSnapshot(typoKey(memberId), snapshot);
 
     return snapshot;
+  }
+
+  private TodayTypoDetailSnapshot fallbackTypoDetail(Long memberId) {
+    LocalDate todayKst = LocalDate.now(TimeUtils.KST);
+    LocalDateTime from = TimeUtils.startOfDayKstToUtc(todayKst);
+    LocalDateTime to = TimeUtils.endOfDayKstToUtc(todayKst);
+
+    List<MemberTypoAggregation> results =
+        memberTypoAggregationRepository.aggregateByMemberIdsBetween(List.of(memberId), from, to);
+
+    if (results.isEmpty()) {
+      return TodayTypoDetailSnapshot.empty();
+    }
+
+    String hashKey = typoDetailKey(memberId);
+    Map<String, TodayTypoDetailEntry> map = new HashMap<>();
+
+    for (MemberTypoAggregation agg : results) {
+      String field =
+          TodayTypoDetailSnapshot.toKey(agg.getLanguage(), agg.getExpected(), agg.getActual());
+      TodayTypoDetailEntry entry =
+          TodayTypoDetailEntry.create(
+              agg.getCount(),
+              agg.getInitialCount(),
+              agg.getMedialCount(),
+              agg.getFinalCount(),
+              agg.getLetterCount());
+      setTypoDetailEntry(hashKey, field, entry);
+      map.put(field, entry);
+    }
+
+    ensureTtl(hashKey);
+    return TodayTypoDetailSnapshot.create(map);
   }
 
   private String serialize(Object obj) {
