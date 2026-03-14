@@ -16,6 +16,8 @@ public enum ErrorCode {
 
   AUTH_INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
 
+  REFRESH_COOLDOWN(HttpStatus.TOO_MANY_REQUESTS, "잠시 후 다시 시도해주세요."),
+
   MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없습니다."),
   MEMBER_NOT_PROCESSABLE(HttpStatus.BAD_REQUEST, "처리할 수 없는 회원입니다."),
   MEMBER_DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "중복된 닉네임입니다."),
