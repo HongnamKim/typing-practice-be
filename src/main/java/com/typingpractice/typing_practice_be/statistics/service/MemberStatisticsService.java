@@ -1,9 +1,13 @@
 package com.typingpractice.typing_practice_be.statistics.service;
 
+import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.statistics.exception.RefreshCooldownException;
+import com.typingpractice.typing_practice_be.typingrecord.dto.MemberDailyStatsResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.MemberTypingStatsResponse;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.MemberDailyStats;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.MemberTypingStats;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.TodayTypingSnapshot;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.repository.MemberDailyStatsRepository;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.repository.MemberTypingStatsRepository;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.TodayTypingStatsRedisService;
 import lombok.RequiredArgsConstructor;
@@ -12,12 +16,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class MemberStatisticsService {
   private final MemberTypingStatsRepository memberTypingStatsRepository;
+  private final MemberDailyStatsRepository memberDailyStatsRepository;
   private final TodayTypingStatsRedisService todayTypingStatsRedisService;
   private final StringRedisTemplate redisTemplate;
 
@@ -39,6 +46,19 @@ public class MemberStatisticsService {
     }
 
     return MemberTypingStatsResponse.merge(pg, today);
+  }
+
+  public MemberDailyStatsResponse getDailyStats(Long memberId, int days) {
+    LocalDate todayKst = LocalDate.now(TimeUtils.KST);
+    LocalDate from = todayKst.minusDays(days - 1);
+    LocalDate yesterday = todayKst.minusDays(1);
+
+    List<MemberDailyStats> pgList =
+        memberDailyStatsRepository.findByMemberIdAndDateBetween(memberId, from, yesterday);
+
+    TodayTypingSnapshot today = todayTypingStatsRedisService.getTyping(memberId);
+
+    return MemberDailyStatsResponse.of(days, pgList, today, todayKst);
   }
 
   public MemberTypingStatsResponse refreshStats(Long memberId) {

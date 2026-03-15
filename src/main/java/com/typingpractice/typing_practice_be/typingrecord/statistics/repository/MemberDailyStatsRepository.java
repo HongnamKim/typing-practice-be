@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -25,5 +26,18 @@ public class MemberDailyStatsRepository {
         .setParameter("date", date)
         .getResultStream()
         .findFirst();
+  }
+
+  public List<MemberDailyStats> findByMemberIdAndDateBetween(
+      Long memberId, LocalDate from, LocalDate to) {
+    return em.createQuery(
+            "select s from MemberDailyStats s where s.member.id = :memberId "
+                + "and s.date between :from and :to "
+                + "order by s.date asc",
+            MemberDailyStats.class)
+        .setParameter("memberId", memberId)
+        .setParameter("from", from)
+        .setParameter("to", to)
+        .getResultList();
   }
 }

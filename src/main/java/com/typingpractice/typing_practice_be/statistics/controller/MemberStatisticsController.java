@@ -1,14 +1,14 @@
 package com.typingpractice.typing_practice_be.statistics.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
+import com.typingpractice.typing_practice_be.statistics.dto.MemberDailyStatsRequest;
 import com.typingpractice.typing_practice_be.statistics.service.MemberStatisticsService;
+import com.typingpractice.typing_practice_be.typingrecord.dto.MemberDailyStatsResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.MemberTypingStatsResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/members/me/stats")
@@ -20,6 +20,13 @@ public class MemberStatisticsController {
   public ApiResponse<MemberTypingStatsResponse> getTypingStats() {
     Long memberId = getAuthenticatedMemberId();
     return ApiResponse.ok(memberStatisticsService.getTypingStats(memberId));
+  }
+
+  @GetMapping("/daily")
+  public ApiResponse<MemberDailyStatsResponse> getDailyStats(
+      @ModelAttribute @Valid MemberDailyStatsRequest request) {
+    Long memberId = getAuthenticatedMemberId();
+    return ApiResponse.ok(memberStatisticsService.getDailyStats(memberId, request.getDays()));
   }
 
   @PostMapping("/refresh")
