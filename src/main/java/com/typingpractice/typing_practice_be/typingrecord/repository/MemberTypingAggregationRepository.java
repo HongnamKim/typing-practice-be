@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.typingrecord.repository;
 
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.MemberTypingAggregation;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,7 +20,7 @@ public class MemberTypingAggregationRepository {
     Aggregation aggregation =
         Aggregation.newAggregation(
             Aggregation.match(Criteria.where("memberId").in(memberIds).and("cpm").gt(0)),
-            Aggregation.group("memberId")
+            Aggregation.group("memberId", "language")
                 .count()
                 .as("totalAttempts")
                 .avg("cpm")
@@ -35,8 +36,10 @@ public class MemberTypingAggregationRepository {
                 .max("completedAt")
                 .as("lastPracticedAt"),
             Aggregation.project()
-                .and("_id")
+                .and("_id.memberId")
                 .as("memberId")
+                .and("_id.language")
+                .as("language")
                 .andInclude(
                     "totalAttempts",
                     "avgCpm",
@@ -63,7 +66,7 @@ public class MemberTypingAggregationRepository {
                     .lt(to)
                     .and("cpm")
                     .gt(0)),
-            Aggregation.group("memberId")
+            Aggregation.group("memberId", "language")
                 .count()
                 .as("totalAttempts")
                 .avg("cpm")
@@ -79,8 +82,103 @@ public class MemberTypingAggregationRepository {
                 .max("completedAt")
                 .as("lastPracticedAt"),
             Aggregation.project()
-                .and("_id")
+                .and("_id.memberId")
                 .as("memberId")
+                .and("_id.language")
+                .as("language")
+                .andInclude(
+                    "totalAttempts",
+                    "avgCpm",
+                    "avgAcc",
+                    "bestCpm",
+                    "totalPracticeTimeMin",
+                    "totalResetCount",
+                    "lastPracticedAt"));
+
+    return mongoTemplate
+        .aggregate(aggregation, "typingRecord", MemberTypingAggregation.class)
+        .getMappedResults();
+  }
+
+  public List<MemberTypingAggregation> aggregateByMemberIdsAndLanguage(
+      List<Long> memberIds, QuoteLanguage language) {
+    Aggregation aggregation =
+        Aggregation.newAggregation(
+            Aggregation.match(
+                Criteria.where("memberId")
+                    .in(memberIds)
+                    .and("language")
+                    .is(language.name())
+                    .and("cpm")
+                    .gt(0)),
+            Aggregation.group("memberId", "language")
+                .count()
+                .as("totalAttempts")
+                .avg("cpm")
+                .as("avgCpm")
+                .avg("accuracy")
+                .as("avgAcc")
+                .max("cpm")
+                .as("bestCpm")
+                .sum(ArithmeticOperators.valueOf("charLength").divideBy("cpm"))
+                .as("totalPracticeTimeMin")
+                .sum("resetCount")
+                .as("totalResetCount")
+                .max("completedAt")
+                .as("lastPracticedAt"),
+            Aggregation.project()
+                .and("_id.memberId")
+                .as("memberId")
+                .and("_id.language")
+                .as("language")
+                .andInclude(
+                    "totalAttempts",
+                    "avgCpm",
+                    "avgAcc",
+                    "bestCpm",
+                    "totalPracticeTimeMin",
+                    "totalResetCount",
+                    "lastPracticedAt"));
+
+    return mongoTemplate
+        .aggregate(aggregation, "typingRecord", MemberTypingAggregation.class)
+        .getMappedResults();
+  }
+
+  public List<MemberTypingAggregation> aggregateByMemberIdsAndLanguageBetween(
+      List<Long> memberId, QuoteLanguage language, LocalDateTime from, LocalDateTime to) {
+    Aggregation aggregation =
+        Aggregation.newAggregation(
+            Aggregation.match(
+                Criteria.where("memberId")
+                    .in(memberId)
+                    .and("language")
+                    .is(language.name())
+                    .and("completedAt")
+                    .gte(from)
+                    .lt(to)
+                    .and("cpm")
+                    .gt(0)),
+            Aggregation.group("memberId", "language")
+                .count()
+                .as("totalAttempts")
+                .avg("cpm")
+                .as("avgCpm")
+                .avg("accuracy")
+                .as("avgAcc")
+                .max("cpm")
+                .as("bestCpm")
+                .sum(ArithmeticOperators.valueOf("charLength").divideBy("cpm"))
+                .as("totalPracticeTimeMin")
+                .sum("resetCount")
+                .as("totalResetCount")
+                .max("completedAt")
+                .as("lastPracticedAt"),
+            Aggregation.project()
+                .and("_id.memberId")
+                .as("memberId")
+                .and("_id.language")
+                .as("language")
                 .andInclude(
                     "totalAttempts",
                     "avgCpm",

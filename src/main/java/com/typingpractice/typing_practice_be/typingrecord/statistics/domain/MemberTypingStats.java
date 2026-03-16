@@ -2,6 +2,7 @@ package com.typingpractice.typing_practice_be.typingrecord.statistics.domain;
 
 import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
 import com.typingpractice.typing_practice_be.member.domain.Member;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -12,15 +13,23 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(
+    uniqueConstraints =
+        @UniqueConstraint(
+            name = "uq_member_typing_stats",
+            columnNames = {"member_id", "language"}))
 public class MemberTypingStats extends BaseEntity {
   @Id
   @GeneratedValue
   @Column(name = "member_typing_stats_id")
   private Long id;
 
-  @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "member_id", unique = true)
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "member_id")
   private Member member;
+
+  @Enumerated(value = EnumType.STRING)
+  private QuoteLanguage language;
 
   private int totalAttempts;
   private float avgCpm;
@@ -34,6 +43,7 @@ public class MemberTypingStats extends BaseEntity {
 
   public static MemberTypingStats create(
       Member member,
+      QuoteLanguage language,
       int totalAttempts,
       float avgCpm,
       float avgAcc,
@@ -43,6 +53,7 @@ public class MemberTypingStats extends BaseEntity {
       LocalDateTime lastPracticedAt) {
     MemberTypingStats stats = new MemberTypingStats();
     stats.member = member;
+    stats.language = language;
     stats.totalAttempts = totalAttempts;
     stats.avgCpm = avgCpm;
     stats.avgAcc = avgAcc;

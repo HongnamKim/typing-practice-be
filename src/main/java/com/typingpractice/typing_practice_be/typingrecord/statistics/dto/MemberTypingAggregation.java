@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.typingrecord.statistics.dto;
 
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class MemberTypingAggregation {
   private Long memberId;
+  private QuoteLanguage language;
   private int totalAttempts;
   private float avgCpm;
   private float avgAcc;
@@ -19,6 +21,7 @@ public class MemberTypingAggregation {
 
   public static MemberTypingAggregation create(
       Long memberId,
+      QuoteLanguage language,
       int attempts,
       float avgCpm,
       float avgAcc,
@@ -28,6 +31,7 @@ public class MemberTypingAggregation {
       LocalDateTime lastPracticedAt) {
     MemberTypingAggregation agg = new MemberTypingAggregation();
     agg.memberId = memberId;
+    agg.language = language;
     agg.totalAttempts = attempts;
     agg.avgCpm = avgCpm;
     agg.avgAcc = avgAcc;

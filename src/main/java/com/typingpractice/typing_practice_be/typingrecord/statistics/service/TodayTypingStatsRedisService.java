@@ -35,9 +35,9 @@ public class TodayTypingStatsRedisService {
   private static final String TYPO_KEY_PREFIX = "today:typo:";
   private static final String TYPO_DETAIL_KEY_PREFIX = "today:typo-detail:";
 
-  private String typingKey(Long memberId) {
-    // today:typing:1234
-    return TYPING_KEY_PREFIX + memberId;
+  private String typingKey(Long memberId, QuoteLanguage language) {
+    // today:typing:1234:KOREAN
+    return TYPING_KEY_PREFIX + memberId + ":" + language;
   }
 
   private String typoKey(Long memberId) {
@@ -58,7 +58,7 @@ public class TodayTypingStatsRedisService {
 
   // 이벤트 수신 후 오늘 통계 업데이트
   public void incrementTyping(TypingRecordSavedEvent event) {
-    String key = typingKey(event.getMemberId());
+    String key = typingKey(event.getMemberId(), event.getLanguage());
 
     TodayTypingSnapshot snapshot = getSnapshotOrEmpty(key);
     snapshot.increment(
@@ -93,15 +93,15 @@ public class TodayTypingStatsRedisService {
   }
 
   // 오늘 통계 조회
-  public TodayTypingSnapshot getTyping(Long memberId) {
-    String key = typingKey(memberId);
+  public TodayTypingSnapshot getTyping(Long memberId, QuoteLanguage language) {
+    String key = typingKey(memberId, language);
     String json = redisTemplate.opsForValue().get(key);
 
     if (json != null) {
       return deserialize(json, TodayTypingSnapshot.class);
     }
 
-    return fallbackTyping(memberId);
+    return fallbackTyping(memberId, language);
   }
 
   public TodayTypoSnapshot getTypo(Long memberId) {
@@ -146,8 +146,8 @@ public class TodayTypingStatsRedisService {
     return fallbackTypoDetail(memberId);
   }
 
-  public void invalidateTyping(Long memberId) {
-    redisTemplate.delete(typingKey(memberId));
+  public void invalidateTyping(Long memberId, QuoteLanguage language) {
+    redisTemplate.delete(typingKey(memberId, language));
   }
 
   public void invalidateTypo(Long memberId) {
@@ -205,13 +205,14 @@ public class TodayTypingStatsRedisService {
     }
   }
 
-  private TodayTypingSnapshot fallbackTyping(Long memberId) {
+  private TodayTypingSnapshot fallbackTyping(Long memberId, QuoteLanguage language) {
     LocalDate todayKst = LocalDate.now(TimeUtils.KST);
     LocalDateTime from = TimeUtils.startOfDayKstToUtc(todayKst);
     LocalDateTime to = TimeUtils.endOfDayKstToUtc(todayKst);
 
     List<MemberTypingAggregation> results =
-        memberTypingAggregationRepository.aggregateByMemberIdsBetween(List.of(memberId), from, to);
+        memberTypingAggregationRepository.aggregateByMemberIdsAndLanguageBetween(
+            List.of(memberId), language, from, to);
 
     if (results.isEmpty()) {
       return TodayTypingSnapshot.empty();
@@ -227,7 +228,7 @@ public class TodayTypingStatsRedisService {
             agg.getTotalPracticeTimeMin(),
             agg.getTotalResetCount());
 
-    setSnapshot(typingKey(memberId), snapshot);
+    setSnapshot(typingKey(memberId, language), snapshot);
     return snapshot;
   }
 

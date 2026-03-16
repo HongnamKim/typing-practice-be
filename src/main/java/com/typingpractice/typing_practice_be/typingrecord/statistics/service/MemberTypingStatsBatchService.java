@@ -88,7 +88,10 @@ public class MemberTypingStatsBatchService {
   }
 
   private void upsert(Long memberId, MemberTypingAggregation agg, boolean overwrite) {
-    MemberTypingStats stats = memberTypingStatsRepository.findByMemberId(memberId).orElse(null);
+    MemberTypingStats stats =
+        memberTypingStatsRepository
+            .findByMemberIdAndLanguage(memberId, agg.getLanguage())
+            .orElse(null);
 
     if (stats == null) {
       Member member = memberRepository.findById(memberId).orElse(null);
@@ -100,9 +103,10 @@ public class MemberTypingStatsBatchService {
       stats =
           MemberTypingStats.create(
               member,
+              agg.getLanguage(),
               agg.getTotalAttempts(),
-              (float) agg.getAvgCpm(),
-              (float) agg.getAvgAcc(),
+              agg.getAvgCpm(),
+              agg.getAvgAcc(),
               agg.getBestCpm(),
               agg.getTotalPracticeTimeMin(),
               agg.getTotalResetCount(),
@@ -111,8 +115,8 @@ public class MemberTypingStatsBatchService {
     } else if (overwrite) {
       stats.overwrite(
           agg.getTotalAttempts(),
-          (float) agg.getAvgCpm(),
-          (float) agg.getAvgAcc(),
+          agg.getAvgCpm(),
+          agg.getAvgAcc(),
           agg.getBestCpm(),
           agg.getTotalPracticeTimeMin(),
           agg.getTotalResetCount(),
@@ -120,8 +124,8 @@ public class MemberTypingStatsBatchService {
     } else {
       stats.merge(
           agg.getTotalAttempts(),
-          (float) agg.getAvgCpm(),
-          (float) agg.getAvgAcc(),
+          agg.getAvgCpm(),
+          agg.getAvgAcc(),
           agg.getBestCpm(),
           agg.getTotalPracticeTimeMin(),
           agg.getTotalResetCount(),
