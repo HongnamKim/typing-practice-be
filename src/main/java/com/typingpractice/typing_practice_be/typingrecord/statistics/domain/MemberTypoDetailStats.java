@@ -31,7 +31,7 @@ public class MemberTypoDetailStats extends BaseEntity {
 
   private String expected;
   private String actual;
-  private int count;
+  private int typoCount;
   private int initialCount;
   private int medialCount;
   private int finalCount;
@@ -52,7 +52,7 @@ public class MemberTypoDetailStats extends BaseEntity {
     stats.language = language;
     stats.expected = expected;
     stats.actual = actual;
-    stats.count = count;
+    stats.typoCount = count;
     stats.initialCount = initialCount;
     stats.medialCount = medialCount;
     stats.finalCount = finalCount;
@@ -61,7 +61,7 @@ public class MemberTypoDetailStats extends BaseEntity {
   }
 
   public void merge(int count, int initialCount, int medialCount, int finalCount, int letterCount) {
-    this.count += count;
+    this.typoCount += count;
     this.initialCount += initialCount;
     this.medialCount += medialCount;
     this.finalCount += finalCount;
@@ -70,7 +70,7 @@ public class MemberTypoDetailStats extends BaseEntity {
 
   public void overwrite(
       int count, int initialCount, int medialCount, int finalCount, int letterCount) {
-    this.count = count;
+    this.typoCount = count;
     this.initialCount = initialCount;
     this.medialCount = medialCount;
     this.finalCount = finalCount;

@@ -30,7 +30,7 @@ public class MemberTypoStats extends BaseEntity {
   private QuoteLanguage language;
 
   private String expected;
-  private int count;
+  private int typoCount;
 
   public static MemberTypoStats create(
       Member member, QuoteLanguage language, String expected, int count) {
@@ -38,15 +38,15 @@ public class MemberTypoStats extends BaseEntity {
     stats.member = member;
     stats.language = language;
     stats.expected = expected;
-    stats.count = count;
+    stats.typoCount = count;
     return stats;
   }
 
   public void merge(int count) {
-    this.count += count;
+    this.typoCount += count;
   }
 
   public void overwrite(int count) {
-    this.count = count;
+    this.typoCount = count;
   }
 }

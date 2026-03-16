@@ -3,6 +3,7 @@ package com.typingpractice.typing_practice_be.typingrecord.statistics.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.typingrecord.domain.Typo;
 import com.typingpractice.typing_practice_be.typingrecord.event.TypingRecordSavedEvent;
 import com.typingpractice.typing_practice_be.typingrecord.repository.MemberTypingAggregationRepository;
@@ -112,6 +113,20 @@ public class TodayTypingStatsRedisService {
     }
 
     return fallbackTypo(memberId);
+  }
+
+  public TodayTypoSnapshot getTypoByLanguage(Long memberId, QuoteLanguage language) {
+    TodayTypoSnapshot snapshot = getTypo(memberId);
+    String prefix = language + ":";
+    Map<String, Integer> filtered = new HashMap<>();
+
+    for (Map.Entry<String, Integer> entry : snapshot.getTypoCountMap().entrySet()) {
+      if (entry.getKey().startsWith(prefix)) {
+        filtered.put(entry.getKey(), entry.getValue());
+      }
+    }
+
+    return TodayTypoSnapshot.create(filtered);
   }
 
   public TodayTypoDetailSnapshot getTypoDetail(Long memberId) {
