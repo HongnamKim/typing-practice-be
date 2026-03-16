@@ -1,10 +1,12 @@
 package com.typingpractice.typing_practice_be.statistics.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.statistics.dto.MemberDailyStatsRequest;
 import com.typingpractice.typing_practice_be.statistics.service.MemberStatisticsService;
 import com.typingpractice.typing_practice_be.typingrecord.dto.MemberDailyStatsResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.MemberTypingStatsResponse;
+import com.typingpractice.typing_practice_be.typingrecord.dto.MemberTypoStatsResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,6 +29,12 @@ public class MemberStatisticsController {
       @ModelAttribute @Valid MemberDailyStatsRequest request) {
     Long memberId = getAuthenticatedMemberId();
     return ApiResponse.ok(memberStatisticsService.getDailyStats(memberId, request.getDays()));
+  }
+
+  @GetMapping("/typos")
+  public ApiResponse<MemberTypoStatsResponse> getTypoStats(@RequestParam QuoteLanguage language) {
+    Long memberId = getAuthenticatedMemberId();
+    return ApiResponse.ok(memberStatisticsService.getTypoStats(memberId, language));
   }
 
   @PostMapping("/refresh")
