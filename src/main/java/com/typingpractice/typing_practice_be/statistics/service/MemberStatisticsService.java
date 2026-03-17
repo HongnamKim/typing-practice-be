@@ -62,7 +62,8 @@ public class MemberStatisticsService {
     LocalDate yesterday = todayKst.minusDays(1);
 
     List<MemberDailyStats> pgList =
-        memberDailyStatsRepository.findByMemberIdAndDateBetween(memberId, from, yesterday);
+        memberDailyStatsRepository.findByMemberIdAndLanguageAndDateBetween(
+            memberId, language, from, yesterday);
 
     TodayTypingSnapshot today = todayTypingStatsRedisService.getTyping(memberId, language);
 
