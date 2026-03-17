@@ -77,7 +77,9 @@ public class MemberDailyStatsBatchService {
   private void upsert(MemberDailyAggregation agg) {
     LocalDate date = agg.getDateAsLocalDate();
     MemberDailyStats stats =
-        memberDailyStatsRepository.findByMemberIdAndDate(agg.getMemberId(), date).orElse(null);
+        memberDailyStatsRepository
+            .findByMemberIdAndDateAndLanguage(agg.getMemberId(), date, agg.getLanguage())
+            .orElse(null);
 
     if (stats == null) {
       Member member = memberRepository.findById(agg.getMemberId()).orElse(null);
@@ -89,9 +91,10 @@ public class MemberDailyStatsBatchService {
           MemberDailyStats.create(
               member,
               date,
+              agg.getLanguage(),
               agg.getAttempts(),
-              (float) agg.getAvgCpm(),
-              (float) agg.getAvgAcc(),
+              agg.getAvgCpm(),
+              agg.getAvgAcc(),
               agg.getBestCpm(),
               agg.getResetCount(),
               agg.getPracticeTimeMin());
@@ -99,8 +102,8 @@ public class MemberDailyStatsBatchService {
     } else {
       stats.overwrite(
           agg.getAttempts(),
-          (float) agg.getAvgCpm(),
-          (float) agg.getAvgAcc(),
+          agg.getAvgCpm(),
+          agg.getAvgAcc(),
           agg.getBestCpm(),
           agg.getResetCount(),
           agg.getPracticeTimeMin());

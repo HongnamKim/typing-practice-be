@@ -2,6 +2,7 @@ package com.typingpractice.typing_practice_be.typingrecord.statistics.domain;
 
 import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
 import com.typingpractice.typing_practice_be.member.domain.Member;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -16,7 +17,7 @@ import java.time.LocalDate;
     uniqueConstraints =
         @UniqueConstraint(
             name = "uq_member_daily_stats_member_date",
-            columnNames = {"member_id", "date"}))
+            columnNames = {"member_id", "date", "language"}))
 public class MemberDailyStats extends BaseEntity {
   @Id
   @GeneratedValue
@@ -26,6 +27,9 @@ public class MemberDailyStats extends BaseEntity {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "member_id")
   private Member member;
+
+  @Enumerated(EnumType.STRING)
+  private QuoteLanguage language;
 
   private LocalDate date; // KST 날짜
 
@@ -39,6 +43,7 @@ public class MemberDailyStats extends BaseEntity {
   public static MemberDailyStats create(
       Member member,
       LocalDate date,
+      QuoteLanguage language,
       int attempts,
       float avgCpm,
       float avgAcc,
@@ -49,6 +54,7 @@ public class MemberDailyStats extends BaseEntity {
 
     stats.member = member;
     stats.date = date;
+    stats.language = language;
 
     stats.attempts = attempts;
     stats.avgCpm = avgCpm;

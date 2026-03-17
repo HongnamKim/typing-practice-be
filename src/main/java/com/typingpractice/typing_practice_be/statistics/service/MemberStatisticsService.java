@@ -38,9 +38,10 @@ public class MemberStatisticsService {
   private static final String COOLDOWN_KEY_PREFIX = "cooldown:refresh:";
   private static final Duration COOLDOWN_DURATION = Duration.ofMinutes(1);
 
-  public MemberTypingStatsResponse getTypingStats(Long memberId) {
-    MemberTypingStats pg = memberTypingStatsRepository.findByMemberId(memberId).orElse(null);
-    TodayTypingSnapshot today = todayTypingStatsRedisService.getTyping(memberId);
+  public MemberTypingStatsResponse getTypingStats(Long memberId, QuoteLanguage language) {
+    MemberTypingStats pg =
+        memberTypingStatsRepository.findByMemberIdAndLanguage(memberId, language).orElse(null);
+    TodayTypingSnapshot today = todayTypingStatsRedisService.getTyping(memberId, language);
 
     if (pg == null && today.getTotalAttempts() == 0) {
       return MemberTypingStatsResponse.empty();
@@ -55,15 +56,16 @@ public class MemberStatisticsService {
     return MemberTypingStatsResponse.merge(pg, today);
   }
 
-  public MemberDailyStatsResponse getDailyStats(Long memberId, int days) {
+  public MemberDailyStatsResponse getDailyStats(Long memberId, QuoteLanguage language, int days) {
     LocalDate todayKst = LocalDate.now(TimeUtils.KST);
     LocalDate from = todayKst.minusDays(days - 1);
     LocalDate yesterday = todayKst.minusDays(1);
 
     List<MemberDailyStats> pgList =
-        memberDailyStatsRepository.findByMemberIdAndDateBetween(memberId, from, yesterday);
+        memberDailyStatsRepository.findByMemberIdAndLanguageAndDateBetween(
+            memberId, language, from, yesterday);
 
-    TodayTypingSnapshot today = todayTypingStatsRedisService.getTyping(memberId);
+    TodayTypingSnapshot today = todayTypingStatsRedisService.getTyping(memberId, language);
 
     return MemberDailyStatsResponse.of(days, pgList, today, todayKst);
   }
@@ -77,16 +79,19 @@ public class MemberStatisticsService {
     return MemberTypoStatsResponse.of(language, pgList, today);
   }
 
-  public MemberTypingStatsResponse refreshStats(Long memberId) {
+  public MemberTypingStatsResponse refreshStats(Long memberId, QuoteLanguage language) {
     checkCooldown(memberId);
 
-    todayTypingStatsRedisService.invalidateTyping(memberId);
+    for (QuoteLanguage lang : QuoteLanguage.values()) {
+      todayTypingStatsRedisService.invalidateTyping(memberId, lang);
+    }
+
     todayTypingStatsRedisService.invalidateTypo(memberId);
     todayTypingStatsRedisService.invalidateTypoDetail(memberId);
 
     setCooldown(memberId);
 
-    return getTypingStats(memberId);
+    return getTypingStats(memberId, language);
   }
 
   private void checkCooldown(Long memberId) {

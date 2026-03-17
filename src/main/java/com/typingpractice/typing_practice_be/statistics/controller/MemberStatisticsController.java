@@ -19,16 +19,18 @@ public class MemberStatisticsController {
   private final MemberStatisticsService memberStatisticsService;
 
   @GetMapping("/typing")
-  public ApiResponse<MemberTypingStatsResponse> getTypingStats() {
+  public ApiResponse<MemberTypingStatsResponse> getTypingStats(
+      @RequestParam QuoteLanguage language) {
     Long memberId = getAuthenticatedMemberId();
-    return ApiResponse.ok(memberStatisticsService.getTypingStats(memberId));
+    return ApiResponse.ok(memberStatisticsService.getTypingStats(memberId, language));
   }
 
   @GetMapping("/daily")
   public ApiResponse<MemberDailyStatsResponse> getDailyStats(
       @ModelAttribute @Valid MemberDailyStatsRequest request) {
     Long memberId = getAuthenticatedMemberId();
-    return ApiResponse.ok(memberStatisticsService.getDailyStats(memberId, request.getDays()));
+    return ApiResponse.ok(
+        memberStatisticsService.getDailyStats(memberId, request.getLanguage(), request.getDays()));
   }
 
   @GetMapping("/typos")
@@ -38,9 +40,9 @@ public class MemberStatisticsController {
   }
 
   @PostMapping("/refresh")
-  public ApiResponse<MemberTypingStatsResponse> refreshStats() {
+  public ApiResponse<MemberTypingStatsResponse> refreshStats(@RequestParam QuoteLanguage language) {
     Long memberId = getAuthenticatedMemberId();
-    return ApiResponse.ok(memberStatisticsService.refreshStats(memberId));
+    return ApiResponse.ok(memberStatisticsService.refreshStats(memberId, language));
   }
 
   private Long getAuthenticatedMemberId() {
