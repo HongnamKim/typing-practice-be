@@ -5,14 +5,18 @@ import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.statistics.exception.RefreshCooldownException;
 import com.typingpractice.typing_practice_be.typingrecord.dto.MemberDailyStatsResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.MemberTypingStatsResponse;
+import com.typingpractice.typing_practice_be.typingrecord.dto.MemberTypoDetailStatsResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.MemberTypoStatsResponse;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.MemberDailyStats;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.MemberTypingStats;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.MemberTypoDetailStats;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.MemberTypoStats;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.TodayTypingSnapshot;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.TodayTypoDetailSnapshot;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.TodayTypoSnapshot;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.repository.MemberDailyStatsRepository;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.repository.MemberTypingStatsRepository;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.repository.MemberTypoDetailStatsRepository;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.repository.MemberTypoStatsRepository;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.TodayTypingStatsRedisService;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +35,7 @@ public class MemberStatisticsService {
   private final MemberTypingStatsRepository memberTypingStatsRepository;
   private final MemberDailyStatsRepository memberDailyStatsRepository;
   private final MemberTypoStatsRepository memberTypoStatsRepository;
+  private final MemberTypoDetailStatsRepository memberTypoDetailStatsRepository;
 
   private final TodayTypingStatsRedisService todayTypingStatsRedisService;
   private final StringRedisTemplate redisTemplate;
@@ -77,6 +82,19 @@ public class MemberStatisticsService {
     TodayTypoSnapshot today = todayTypingStatsRedisService.getTypoByLanguage(memberId, language);
 
     return MemberTypoStatsResponse.of(language, pgList, today);
+  }
+
+  public MemberTypoDetailStatsResponse getTypoDetailStats(
+      Long memberId, QuoteLanguage language, String expected) {
+    List<MemberTypoDetailStats> pgList =
+        memberTypoDetailStatsRepository.findByMemberIdAndLanguageAndExpected(
+            memberId, language, expected);
+
+    TodayTypoDetailSnapshot todayFiltered =
+        todayTypingStatsRedisService.getTypoDetailByLanguageAndExpected(
+            memberId, language, expected);
+
+    return MemberTypoDetailStatsResponse.of(language, expected, pgList, todayFiltered);
   }
 
   public MemberTypingStatsResponse refreshStats(Long memberId, QuoteLanguage language) {
