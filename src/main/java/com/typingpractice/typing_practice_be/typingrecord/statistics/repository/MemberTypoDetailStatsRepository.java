@@ -6,6 +6,7 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -32,6 +33,21 @@ public class MemberTypoDetailStatsRepository {
         .setParameter("actual", actual)
         .getResultStream()
         .findFirst();
+  }
+
+  public List<MemberTypoDetailStats> findByMemberIdAndLanguageAndExpected(
+      Long memberId, QuoteLanguage language, String expected) {
+    return em.createQuery(
+            "select s from MemberTypoDetailStats s "
+                + "where s.member.id = :memberId "
+                + "and s.language = :language "
+                + "and s.expected = :expected "
+                + "order by s.typoCount desc",
+            MemberTypoDetailStats.class)
+        .setParameter("memberId", memberId)
+        .setParameter("language", language)
+        .setParameter("expected", expected)
+        .getResultList();
   }
 
   public void deleteAllInBatch() {

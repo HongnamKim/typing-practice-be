@@ -146,6 +146,22 @@ public class TodayTypingStatsRedisService {
     return fallbackTypoDetail(memberId);
   }
 
+  public TodayTypoDetailSnapshot getTypoDetailByLanguageAndExpected(
+      Long memberId, QuoteLanguage language, String expected) {
+    TodayTypoDetailSnapshot snapshot = getTypoDetail(memberId);
+    String prefix = language + ":" + expected + ":";
+
+    Map<String, TodayTypoDetailEntry> filtered = new HashMap<>();
+
+    for (Map.Entry<String, TodayTypoDetailEntry> entry : snapshot.getDetailMap().entrySet()) {
+      if (entry.getKey().startsWith(prefix)) {
+        filtered.put(entry.getKey(), entry.getValue());
+      }
+    }
+
+    return TodayTypoDetailSnapshot.create(filtered);
+  }
+
   public void invalidateTyping(Long memberId, QuoteLanguage language) {
     redisTemplate.delete(typingKey(memberId, language));
   }
