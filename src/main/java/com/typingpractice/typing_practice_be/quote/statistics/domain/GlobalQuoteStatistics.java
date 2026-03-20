@@ -69,8 +69,8 @@ public class GlobalQuoteStatistics extends BaseEntity {
     stats.puncStd = 0.03f;
     stats.spaceMean = 0.18f;
     stats.spaceStd = 0.05f;
-    stats.digitMean = 0.01f;
-    stats.digitStd = 0.02f;
+    stats.digitMean = 0.0005f;
+    stats.digitStd = 0.006f;
 
     // 한국어 전용
     stats.jamoMean = 0.5f;

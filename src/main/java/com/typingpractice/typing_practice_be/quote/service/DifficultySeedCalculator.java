@@ -67,6 +67,6 @@ public class DifficultySeedCalculator {
   }
 
   private float clip(float value) {
-    return Math.max(0f, Math.min(1f, value));
+    return Math.max(0f, Math.min(1f, (value + 2f) / 4f));
   }
 }
