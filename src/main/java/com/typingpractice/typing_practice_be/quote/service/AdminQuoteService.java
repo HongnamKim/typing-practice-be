@@ -100,6 +100,12 @@ public class AdminQuoteService {
     return new PageResult<>(content, query.getPage(), query.getSize(), hasNext);
   }
 
+  public Quote findQuoteByIdWithTypingStats(Long quoteId) {
+    return quoteRepository
+        .findByIdWithTypingStats(quoteId)
+        .orElseThrow(QuoteNotFoundException::new);
+  }
+
   @Transactional
   public Quote hideQuote(Long quoteId) {
     Quote quote = quoteRepository.findById(quoteId).orElseThrow(QuoteNotFoundException::new);
