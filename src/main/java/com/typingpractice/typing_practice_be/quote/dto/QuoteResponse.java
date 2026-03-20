@@ -22,19 +22,23 @@ public class QuoteResponse {
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
+  protected void fillFrom(Quote quote) {
+    this.quoteId = quote.getId();
+    this.sentence = quote.getSentence();
+    this.language = quote.getLanguage();
+    this.difficulty = quote.getDifficulty();
+    this.author = quote.getAuthor();
+    this.type = quote.getType();
+    this.status = quote.getStatus();
+    this.reportCount = quote.getReportCount();
+    this.createdAt = quote.getCreatedAt();
+    this.updatedAt = quote.getUpdatedAt();
+  }
+
   public static QuoteResponse from(Quote quote) {
     QuoteResponse response = new QuoteResponse();
 
-    response.quoteId = quote.getId();
-    response.sentence = quote.getSentence();
-    response.language = quote.getLanguage();
-    response.difficulty = quote.getDifficulty();
-    response.author = quote.getAuthor();
-    response.type = quote.getType();
-    response.status = quote.getStatus();
-    response.reportCount = quote.getReportCount();
-    response.createdAt = quote.getCreatedAt();
-    response.updatedAt = quote.getUpdatedAt();
+    response.fillFrom(quote);
 
     return response;
   }

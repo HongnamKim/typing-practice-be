@@ -2,6 +2,7 @@ package com.typingpractice.typing_practice_be.quote.domain;
 
 import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
 import com.typingpractice.typing_practice_be.member.domain.Member;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.QuoteTypingStats;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -33,6 +34,9 @@ public class Quote extends BaseEntity {
   private Float difficulty;
 
   @Embedded private QuoteProfile profile;
+
+  @OneToOne(mappedBy = "quote", fetch = FetchType.LAZY)
+  private QuoteTypingStats typingStats;
 
   private String sentence;
   private String author;

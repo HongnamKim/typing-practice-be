@@ -3,10 +3,7 @@ package com.typingpractice.typing_practice_be.quote.controller;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
-import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationRequest;
-import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationResponse;
-import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
-import com.typingpractice.typing_practice_be.quote.dto.QuoteUpdateRequest;
+import com.typingpractice.typing_practice_be.quote.dto.*;
 import com.typingpractice.typing_practice_be.quote.query.QuotePaginationQuery;
 import com.typingpractice.typing_practice_be.quote.query.QuoteUpdateQuery;
 import com.typingpractice.typing_practice_be.quote.service.AdminQuoteService;
@@ -21,14 +18,21 @@ public class AdminQuoteController {
   private final AdminQuoteService adminQuoteService;
 
   @GetMapping("/admin/quotes")
-  public ApiResponse<QuotePaginationResponse> getQuotes(
+  public ApiResponse<AdminQuotePaginationResponse> getQuotes(
       @ModelAttribute @Valid QuotePaginationRequest request) {
 
     QuotePaginationQuery query = QuotePaginationQuery.from(request);
 
     PageResult<Quote> result = adminQuoteService.findQuotes(query);
 
-    return ApiResponse.ok(QuotePaginationResponse.from(result));
+    return ApiResponse.ok(AdminQuotePaginationResponse.from(result));
+  }
+
+  @GetMapping("/admin/quotes/{quoteId}")
+  public ApiResponse<AdminQuoteResponse> getQuoteById(@PathVariable Long quoteId) {
+    Quote quote = adminQuoteService.findQuoteByIdWithTypingStats(quoteId);
+
+    return ApiResponse.ok(AdminQuoteResponse.from(quote));
   }
 
   // 승인
