@@ -27,6 +27,10 @@ public class GlobalQuoteStatistics extends BaseEntity {
   @Enumerated(EnumType.STRING)
   private QuoteLanguage language; // KOREAN, ENGLISH
 
+  // 타이핑 결과 전역 평균 (동적 보정용)
+  private Float globalAvgCpm;
+  private Float globalAvgAcc;
+
   // 공통
   private float lenMean;
   private float lenStd;
@@ -60,7 +64,9 @@ public class GlobalQuoteStatistics extends BaseEntity {
   public static GlobalQuoteStatistics createKoreanDefault() {
     GlobalQuoteStatistics stats = new GlobalQuoteStatistics();
     stats.language = QuoteLanguage.KOREAN;
-    // stats.updatedAt = LocalDateTime.now();
+
+    stats.globalAvgCpm = 300f;
+    stats.globalAvgAcc = 0.95f;
 
     // 공통 초기값
     stats.lenMean = 30f;
@@ -86,7 +92,9 @@ public class GlobalQuoteStatistics extends BaseEntity {
   public static GlobalQuoteStatistics createEnglishDefault() {
     GlobalQuoteStatistics stats = new GlobalQuoteStatistics();
     stats.language = QuoteLanguage.ENGLISH;
-    // stats.updatedAt = LocalDateTime.now();
+
+    stats.globalAvgCpm = 300f;
+    stats.globalAvgAcc = 0.95f;
 
     // 공통 초기값
     stats.lenMean = 40f;
@@ -135,6 +143,11 @@ public class GlobalQuoteStatistics extends BaseEntity {
     }
 
     return stats;
+  }
+
+  public void updateGlobalTypingPerformance(float globalAvgCpm, float globalAvgAcc) {
+    this.globalAvgCpm = globalAvgCpm;
+    this.globalAvgAcc = globalAvgAcc;
   }
 
   private static float toFloat(Object value) {
