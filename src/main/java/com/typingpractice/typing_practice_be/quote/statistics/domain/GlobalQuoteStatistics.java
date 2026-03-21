@@ -2,6 +2,7 @@ package com.typingpractice.typing_practice_be.quote.statistics.domain;
 
 import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
+import com.typingpractice.typing_practice_be.quote.statistics.dto.QuoteProfileAggregation;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -115,31 +116,32 @@ public class GlobalQuoteStatistics extends BaseEntity {
     return stats;
   }
 
-  public static GlobalQuoteStatistics createFromAggregation(QuoteLanguage language, Object[] row) {
+  public static GlobalQuoteStatistics createFromAggregation(
+      QuoteLanguage language, QuoteProfileAggregation agg) {
     GlobalQuoteStatistics stats = new GlobalQuoteStatistics();
     stats.language = language;
 
-    stats.lenMean = toFloat(row[0]);
-    stats.lenStd = toFloat(row[1]);
-    stats.puncMean = toFloat(row[2]);
-    stats.puncStd = toFloat(row[3]);
-    stats.spaceMean = toFloat(row[4]);
-    stats.spaceStd = toFloat(row[5]);
-    stats.digitMean = toFloat(row[6]);
-    stats.digitStd = toFloat(row[7]);
+    stats.lenMean = agg.getLenMean(); // toFloat(row[0]);
+    stats.lenStd = agg.getLenStd(); // toFloat(row[1]);
+    stats.puncMean = agg.getPuncMean(); // toFloat(row[2]);
+    stats.puncStd = agg.getPuncStd(); // toFloat(row[3]);
+    stats.spaceMean = agg.getSpaceMean(); // toFloat(row[4]);
+    stats.spaceStd = agg.getSpaceStd(); // toFloat(row[5]);
+    stats.digitMean = agg.getDigitMean(); // toFloat(row[6]);
+    stats.digitStd = agg.getDigitStd(); // toFloat(row[7]);
 
     if (language == QuoteLanguage.KOREAN) {
-      stats.jamoMean = toFloat(row[8]);
-      stats.jamoStd = toFloat(row[9]);
-      stats.diphthongMean = toFloat(row[10]);
-      stats.diphthongStd = toFloat(row[11]);
-      stats.shiftJamoMean = toFloat(row[12]);
-      stats.shiftJamoStd = toFloat(row[13]);
+      stats.jamoMean = agg.getJamoMean(); // toFloat(row[8]);
+      stats.jamoStd = agg.getJamoStd(); // toFloat(row[9]);
+      stats.diphthongMean = agg.getDiphthongMean(); // toFloat(row[10]);
+      stats.diphthongStd = agg.getDiphthongStd(); // toFloat(row[11]);
+      stats.shiftJamoMean = agg.getShiftJamoMean(); // toFloat(row[12]);
+      stats.shiftJamoStd = agg.getShiftJamoStd(); // toFloat(row[13]);
     } else {
-      stats.caseMean = toFloat(row[14]);
-      stats.caseStd = toFloat(row[15]);
-      stats.wordLenMean = toFloat(row[16]);
-      stats.wordLenStd = toFloat(row[17]);
+      stats.caseMean = agg.getCaseMean(); // toFloat(row[14]);
+      stats.caseStd = agg.getCaseStd(); // toFloat(row[15]);
+      stats.wordLenMean = agg.getWordLenMean(); // toFloat(row[16]);
+      stats.wordLenStd = agg.getWordLenStd(); // toFloat(row[17]);
     }
 
     return stats;

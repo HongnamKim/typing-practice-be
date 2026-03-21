@@ -2,6 +2,7 @@ package com.typingpractice.typing_practice_be.quote.statistics.repository;
 
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.statistics.domain.GlobalQuoteStatistics;
+import com.typingpractice.typing_practice_be.quote.statistics.dto.QuoteProfileAggregation;
 import jakarta.persistence.EntityManager;
 
 import java.util.List;
@@ -36,10 +37,11 @@ public class GlobalQuoteStatisticsRepository {
         .getSingleResult();
   }
 
-  public Object[] aggregateByLanguage(QuoteLanguage language) {
-    return (Object[])
-        em.createNativeQuery(
-                """
+  public QuoteProfileAggregation aggregateByLanguage(QuoteLanguage language) {
+    Object[] row =
+        (Object[])
+            em.createNativeQuery(
+                    """
 								SELECT
 										COALESCE(AVG(length), 0), COALESCE(STDDEV_POP(length), 0),
 										COALESCE(AVG(punc_rate), 0), COALESCE(STDDEV_POP(punc_rate), 0),
@@ -53,7 +55,9 @@ public class GlobalQuoteStatisticsRepository {
 								FROM quote
 								WHERE language = :language AND deleted = false
 								""")
-            .setParameter("language", language.name())
-            .getSingleResult();
+                .setParameter("language", language.name())
+                .getSingleResult();
+
+    return QuoteProfileAggregation.from(row);
   }
 }
