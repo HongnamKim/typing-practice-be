@@ -7,7 +7,10 @@ import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
 import com.typingpractice.typing_practice_be.quote.service.DifficultySeedCalculator;
 import com.typingpractice.typing_practice_be.quote.service.QuoteProfileCalculator;
 import com.typingpractice.typing_practice_be.quote.statistics.domain.GlobalQuoteStatistics;
+import com.typingpractice.typing_practice_be.quote.statistics.dto.QuoteProfileAggregation;
 import com.typingpractice.typing_practice_be.quote.statistics.repository.GlobalQuoteStatisticsRepository;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.GlobalTypingPerformance;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.repository.QuoteTypingStatsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,13 +31,16 @@ public class GlobalQuoteStatisticsBatchService {
 
   private static final float CHANGE_THRESHOLD = 0.05f;
   private static final int PAGE_SIZE = 5000;
+  private final QuoteTypingStatsRepository quoteTypingStatsRepository;
 
   @Transactional
   public void runScheduledBatch() {
     for (QuoteLanguage lang : QuoteLanguage.values()) {
       GlobalQuoteStatistics prev = statsService.getByLanguage(lang);
+      // 일별 전체 문장의 평균 코퍼스, 타이핑 속도, 정확도 계산
       GlobalQuoteStatistics next = recalculateStats(lang);
 
+      // 평균 코퍼스 변화가 클 경우 seed 재계산
       if (shouldRecalculateSeeds(prev, next, lang)) {
         log.info("[{}] 변화율 임계값 초과 -> seed 재계산 시작", lang);
         recalculateAllSeeds(lang, next);
@@ -58,8 +64,15 @@ public class GlobalQuoteStatisticsBatchService {
   }
 
   private GlobalQuoteStatistics recalculateStats(QuoteLanguage lang) {
-    Object[] row = statsRepository.aggregateByLanguage(lang);
-    GlobalQuoteStatistics next = GlobalQuoteStatistics.createFromAggregation(lang, row);
+    QuoteProfileAggregation statsAgg = statsRepository.aggregateByLanguage(lang);
+    GlobalQuoteStatistics next = GlobalQuoteStatistics.createFromAggregation(lang, statsAgg);
+
+    // 전역 타이핑 결과 갱신
+    GlobalTypingPerformance perf = quoteTypingStatsRepository.aggregateGlobalAvgByLanguage(lang);
+    if (!perf.isEmpty()) {
+      next.updateGlobalTypingPerformance(perf.getAvgCpm(), perf.getAvgAcc());
+    }
+
     statsRepository.save(next);
     log.info(
         "[{}] 전역 통계 재계산 완료 - lenMean = {}, puncMean = {}",
