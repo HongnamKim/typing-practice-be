@@ -28,10 +28,10 @@ public class GlobalQuoteStatisticsBatchService {
   private final QuoteRepository quoteRepository;
   private final DifficultySeedCalculator seedCalculator;
   private final QuoteProfileCalculator quoteProfileCalculator;
+  private final QuoteTypingStatsRepository quoteTypingStatsRepository;
 
   private static final float CHANGE_THRESHOLD = 0.05f;
   private static final int PAGE_SIZE = 5000;
-  private final QuoteTypingStatsRepository quoteTypingStatsRepository;
 
   @Transactional
   public void runScheduledBatch() {
@@ -133,7 +133,7 @@ public class GlobalQuoteStatisticsBatchService {
         }
 
         float seed = seedCalculator.calculate(quote.getProfile(), stats, lang);
-        quote.updateDifficulty(seed);
+        quote.updateDifficultySeed(seed);
       }
 
       totalUpdated += quotes.size();

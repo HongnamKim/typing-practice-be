@@ -109,9 +109,13 @@ public class Quote extends BaseEntity {
     this.profile = profile;
   }
 
-  public void updateDifficulty(float seed) {
+  public void updateDifficultySeed(float seed) {
     this.profile.setDifficultySeed(seed);
     this.difficulty = seed;
+  }
+
+  public void updateDynamicDifficulty(float difficulty) {
+    this.difficulty = difficulty;
   }
 
   public void updateStatus(QuoteStatus quoteStatus) {
