@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.statistics.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
+import com.typingpractice.typing_practice_be.quote.service.DifficultyBatchService;
 import com.typingpractice.typing_practice_be.quote.statistics.service.GlobalQuoteStatisticsBatchService;
 import com.typingpractice.typing_practice_be.statistics.dto.MemberStatsDayRequest;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.MemberDailyStatsBatchService;
@@ -20,6 +21,7 @@ public class AdminStatisticsController {
   private final MemberTypingStatsBatchService memberTypingStatsBatchService;
   private final MemberDailyStatsBatchService memberDailyStatsBatchService;
   private final MemberTypoStatsBatchService memberTypoStatsBatchService;
+  private final DifficultyBatchService difficultyBatchService;
 
   @PostMapping("/global-quote/recalculate")
   public ApiResponse<Void> recalculate() {
@@ -30,6 +32,14 @@ public class AdminStatisticsController {
   @PostMapping("/quote-typing/recalculate")
   public ApiResponse<Void> recalculateQuoteTypingStats() {
     quoteTypingStatsBatchService.runManualRecalculation();
+    return ApiResponse.ok(null);
+  }
+
+  @PostMapping("/difficulty/recalculate")
+  public ApiResponse<Void> recalculateDynamicDifficulty() {
+    quoteTypingStatsBatchService.runManualRecalculation();
+    globalQuoteStatisticsBatchService.runManualRecalculation();
+    difficultyBatchService.runDynamicDifficultyBatch();
     return ApiResponse.ok(null);
   }
 

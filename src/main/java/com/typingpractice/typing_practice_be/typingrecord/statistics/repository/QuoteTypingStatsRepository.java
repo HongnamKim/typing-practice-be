@@ -7,6 +7,7 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -41,5 +42,17 @@ public class QuoteTypingStatsRepository {
 
     return GlobalTypingPerformance.of(
         ((Number) row[0]).floatValue(), ((Number) row[1]).floatValue());
+  }
+
+  public List<QuoteTypingStats> findByLanguageWithQuote(
+      QuoteLanguage language, int page, int size) {
+    return em.createQuery(
+            "select s from QuoteTypingStats s join fetch s.quote "
+                + "where s.language = :language and s.validAttemptsCount > 0",
+            QuoteTypingStats.class)
+        .setParameter("language", language)
+        .setFirstResult(page * size)
+        .setMaxResults(size)
+        .getResultList();
   }
 }
