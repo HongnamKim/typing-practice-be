@@ -1,22 +1,28 @@
 package com.typingpractice.typing_practice_be.common.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
-
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 public abstract class BaseEntity {
-  @CreatedDate private LocalDateTime createdAt;
+  @CreatedDate
+  @Column(columnDefinition = "timestamp with time zone")
+  private LocalDateTime createdAt;
 
-  @LastModifiedDate private LocalDateTime updatedAt;
+  @LastModifiedDate
+  @Column(columnDefinition = "timestamp with time zone")
+  private LocalDateTime updatedAt;
 
   private boolean deleted = false;
+
+  @Column(columnDefinition = "timestamp with time zone")
   private LocalDateTime deletedAt;
 }

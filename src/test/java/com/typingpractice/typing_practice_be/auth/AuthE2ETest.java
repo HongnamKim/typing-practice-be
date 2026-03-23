@@ -179,10 +179,12 @@ public class AuthE2ETest {
               "user-" + System.currentTimeMillis(),
               "picture-url");
 
-      Mockito.doReturn(tokenResponse).when(authService).getAccessToken(Mockito.anyString());
+      Mockito.doReturn(tokenResponse)
+          .when(authService)
+          .getAccessToken(Mockito.any(GoogleLoginRequest.class));
       Mockito.doReturn(userInfo).when(authService).getUserInfo(Mockito.anyString());
 
-      GoogleLoginRequest request = GoogleLoginRequest.create("mock-auth-code");
+      GoogleLoginRequest request = GoogleLoginRequest.create("mock-auth-code", null);
 
       // when
       ResponseEntity<Map> response = restTemplate.postForEntity("/auth/google", request, Map.class);

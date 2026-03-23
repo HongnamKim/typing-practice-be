@@ -11,6 +11,7 @@ import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
@@ -65,7 +66,9 @@ class ReportServiceTest {
   }
 
   private Quote createQuote(QuoteType type, QuoteStatus status) {
-    Quote quote = Quote.create(createMember(99L), "테스트 문장", "저자", type);
+    Quote quote =
+        Quote.create(
+            createMember(99L), "테스트 문장", "저자", type, QuoteLanguage.KOREAN, null, 0f, "hash");
     if (type == QuoteType.PUBLIC && status == QuoteStatus.ACTIVE) {
       quote.approvePublish();
     }
@@ -104,7 +107,7 @@ class ReportServiceTest {
 
       when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
       when(quoteRepository.findById(1L)).thenReturn(Optional.of(quote));
-      when(dailyLimitService.canReport(1L)).thenReturn(true);
+      when(dailyLimitService.tryIncrementReportCount(1L)).thenReturn(true);
       when(reportRepository.existsByQuoteAndMember(quote, member)).thenReturn(false);
 
       // when
@@ -126,7 +129,7 @@ class ReportServiceTest {
 
       when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
       when(quoteRepository.findById(1L)).thenReturn(Optional.of(quote));
-      when(dailyLimitService.canReport(1L)).thenReturn(true);
+      when(dailyLimitService.tryIncrementReportCount(1L)).thenReturn(true);
       when(reportRepository.existsByQuoteAndMember(quote, member)).thenReturn(false);
       // when
       reportService.createReport(1L, 1L, query);
@@ -206,7 +209,7 @@ class ReportServiceTest {
 
       when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
       when(quoteRepository.findById(1L)).thenReturn(Optional.of(quote));
-      when(dailyLimitService.canReport(1L)).thenReturn(false);
+      when(dailyLimitService.tryIncrementReportCount(1L)).thenReturn(false);
 
       // when & then
       assertThatThrownBy(() -> reportService.createReport(1L, 1L, query))
@@ -223,7 +226,7 @@ class ReportServiceTest {
 
       when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
       when(quoteRepository.findById(1L)).thenReturn(Optional.of(quote));
-      when(dailyLimitService.canReport(1L)).thenReturn(true);
+      when(dailyLimitService.tryIncrementReportCount(1L)).thenReturn(true);
       when(reportRepository.existsByQuoteAndMember(quote, member)).thenReturn(true);
 
       // when & then
@@ -283,7 +286,7 @@ class ReportServiceTest {
       when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
       when(quoteRepository.findById(1L)).thenReturn(Optional.of(quote));
       when(reportRepository.findById(1L)).thenReturn(Optional.of(report));
-      when(dailyLimitService.canReport(1L)).thenReturn(true);
+      when(dailyLimitService.tryIncrementReportCount(1L)).thenReturn(true);
       when(reportRepository.existsByQuoteAndMember(quote, member)).thenReturn(false);
 
       // when

@@ -46,7 +46,7 @@ public class AuthController {
 
   @PostMapping("/google")
   public ApiResponse<LoginResponse> googleLogin(@RequestBody GoogleLoginRequest request) {
-    GoogleTokenResponse accessTokenResponse = authService.getAccessToken(request.getCode());
+    GoogleTokenResponse accessTokenResponse = authService.getAccessToken(request);
     String accessToken = accessTokenResponse.getAccessToken();
 
     GoogleUserInfo userInfo = authService.getUserInfo(accessToken);

@@ -4,12 +4,15 @@ import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import com.typingpractice.typing_practice_be.report.domain.ReportReason;
 import com.typingpractice.typing_practice_be.report.repository.ReportRepository;
+import com.typingpractice.typing_practice_be.quote.statistics.domain.GlobalQuoteStatistics;
+import com.typingpractice.typing_practice_be.quote.statistics.repository.GlobalQuoteStatisticsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -28,16 +31,26 @@ public class DataInitService implements CommandLineRunner {
   private final MemberRepository memberRepository;
   private final QuoteRepository quoteRepository;
   private final ReportRepository reportRepository;
+  private final GlobalQuoteStatisticsRepository globalQuoteStatisticsRepository;
 
   @Override
   @Transactional
   public void run(String... args) {
+    initGlobalQuoteStatistics();
     initAdmin();
     List<Member> members = initMembers();
-    List<Quote> quotes = initQuotes(members);
-    initReports(members, quotes);
+    //    List<Quote> quotes = initQuotes(members);
+    //    initReports(members, quotes);
+    //
+    //    log.info("초기 데이터 생성 완료");
+  }
 
-    log.info("초기 데이터 생성 완료");
+  private void initGlobalQuoteStatistics() {
+    if (globalQuoteStatisticsRepository.count() == 0) {
+      globalQuoteStatisticsRepository.save(GlobalQuoteStatistics.createKoreanDefault());
+      globalQuoteStatisticsRepository.save(GlobalQuoteStatistics.createEnglishDefault());
+      log.info("전역 통계 초기값 생성 완료");
+    }
   }
 
   private void initAdmin() {
@@ -67,7 +80,16 @@ public class DataInitService implements CommandLineRunner {
       Member owner = members.get(i % 10);
       QuoteType type = i % 5 == 0 ? QuoteType.PRIVATE : QuoteType.PUBLIC;
 
-      Quote quote = Quote.create(owner, "테스트 문장입니다. 번호: " + i, "작자 " + i, type);
+      Quote quote =
+          Quote.create(
+              owner,
+              "테스트 문장입니다. 번호: " + i,
+              "작자 " + i,
+              type,
+              QuoteLanguage.KOREAN,
+              null,
+              0f,
+              "hash" + i);
 
       if (type == QuoteType.PUBLIC && i % 5 < 4) {
         quote.approvePublish();

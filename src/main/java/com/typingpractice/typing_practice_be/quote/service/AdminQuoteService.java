@@ -24,18 +24,6 @@ public class AdminQuoteService {
   private final QuoteRepository quoteRepository;
   private final ReportRepository reportRepository;
 
-  //  public List<Quote> findPendingQuotes() {
-  //    List<Quote> pendingQuotes = quoteRepository.findByStatus(QuoteStatus.PENDING);
-  //
-  //    return pendingQuotes;
-  //  }
-
-  //  public List<Quote> findHiddenQuotes() {
-  //    List<Quote> hiddenQuotes = quoteRepository.findByStatus(QuoteStatus.HIDDEN);
-  //
-  //    return hiddenQuotes;
-  //  }
-
   @Transactional
   public Quote approvePublish(Long quoteId) {
     Quote quote = findQuoteById(quoteId);
@@ -110,6 +98,12 @@ public class AdminQuoteService {
     List<Quote> content = hasNext ? quotes.subList(0, query.getSize()) : quotes;
 
     return new PageResult<>(content, query.getPage(), query.getSize(), hasNext);
+  }
+
+  public Quote findQuoteByIdWithTypingStats(Long quoteId) {
+    return quoteRepository
+        .findByIdWithTypingStats(quoteId)
+        .orElseThrow(QuoteNotFoundException::new);
   }
 
   @Transactional

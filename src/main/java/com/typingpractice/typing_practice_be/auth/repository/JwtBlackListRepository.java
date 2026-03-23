@@ -1,34 +1,31 @@
 package com.typingpractice.typing_practice_be.auth.repository;
 
-import com.typingpractice.typing_practice_be.auth.domain.JwtBlackList;
-import jakarta.persistence.EntityManager;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
-
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
 public class JwtBlackListRepository {
-  private final EntityManager em;
 
-  public Long save(JwtBlackList jwtBlackList) {
-    em.persist(jwtBlackList);
+  private final StringRedisTemplate redisTemplate;
 
-    return jwtBlackList.getId();
+  private static final String KEY_PREFIX = "blacklist:";
+
+  public void save(String jwtId, LocalDateTime expiresIn) {
+    Duration ttl = Duration.between(LocalDateTime.now(ZoneOffset.UTC), expiresIn);
+
+    if (ttl.isNegative() || ttl.isZero()) {
+      return;
+    }
+
+    redisTemplate.opsForValue().set(KEY_PREFIX + jwtId, "true", ttl);
   }
 
   public boolean existByJwtId(String jwtId) {
-
-    return !em.createQuery("select j from JwtBlackList j where jwtId = :jwtId", JwtBlackList.class)
-        .setParameter("jwtId", jwtId)
-        .getResultList()
-        .isEmpty();
-  }
-
-  public void deleteExpiredTokens(LocalDateTime now) {
-    em.createQuery("delete from JwtBlackList j where j.expiresIn < :now")
-        .setParameter("now", now)
-        .executeUpdate();
+    return redisTemplate.hasKey(KEY_PREFIX + jwtId);
   }
 }

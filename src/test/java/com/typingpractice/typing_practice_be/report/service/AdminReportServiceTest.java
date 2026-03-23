@@ -9,6 +9,7 @@ import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
@@ -58,7 +59,16 @@ class AdminReportServiceTest {
   }
 
   private Quote createQuote() {
-    Quote quote = Quote.create(createMember(99L), "테스트 문장", "저자", QuoteType.PUBLIC);
+    Quote quote =
+        Quote.create(
+            createMember(99L),
+            "테스트 문장",
+            "저자",
+            QuoteType.PUBLIC,
+            QuoteLanguage.KOREAN,
+            null,
+            0f,
+            "hash");
     quote.approvePublish();
     return quote;
   }

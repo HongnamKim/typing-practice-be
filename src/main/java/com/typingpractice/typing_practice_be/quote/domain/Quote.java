@@ -2,6 +2,7 @@ package com.typingpractice.typing_practice_be.quote.domain;
 
 import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
 import com.typingpractice.typing_practice_be.member.domain.Member;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.QuoteTypingStats;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -27,8 +28,21 @@ public class Quote extends BaseEntity {
   @Enumerated(EnumType.STRING)
   private QuoteType type;
 
+  @Enumerated(EnumType.STRING)
+  private QuoteLanguage language;
+
+  private Float difficulty;
+
+  @Embedded private QuoteProfile profile;
+
+  @OneToOne(mappedBy = "quote", fetch = FetchType.LAZY)
+  private QuoteTypingStats typingStats;
+
   private String sentence;
   private String author;
+
+  @Column(length = 64)
+  private String sentenceHash; // 문장 완전일치 검증용
 
   private int reportCount;
 
@@ -36,18 +50,27 @@ public class Quote extends BaseEntity {
   @JoinColumn(name = "member_id")
   private Member member;
 
-  //  @OneToMany(mappedBy = "quote", cascade = CascadeType.REMOVE)
-  //  private List<Report> reports = new ArrayList<>();
-
   public static final String DEFAULT_AUTHOR = "작자 미상";
   public static final int HIDDEN_THRESHOLD = 5; // 자동 숨김 기준값
 
-  public static Quote create(Member member, String sentence, String author, QuoteType type) {
+  public static Quote create(
+      Member member,
+      String sentence,
+      String author,
+      QuoteType type,
+      QuoteLanguage language,
+      QuoteProfile profile,
+      Float difficulty,
+      String sentenceHash) {
     Quote quote = new Quote();
     quote.member = member;
+    quote.sentenceHash = sentenceHash;
     quote.sentence = sentence;
     quote.author = author != null ? author : DEFAULT_AUTHOR;
     quote.type = type;
+    quote.language = language;
+    quote.profile = profile;
+    quote.difficulty = difficulty;
     quote.reportCount = 0;
     quote.status = quote.type == QuoteType.PUBLIC ? QuoteStatus.PENDING : QuoteStatus.ACTIVE;
 
@@ -74,16 +97,25 @@ public class Quote extends BaseEntity {
     }
   }
 
-  /*public void updateSentence(String sentence) {
-    this.sentence = sentence;
-  }*/
-
-  /*public void updateAuthor(String author) {
-    this.author = author;
-  }*/
+  public void updateSentenceHash(String sentenceHash) {
+    this.sentenceHash = sentenceHash;
+  }
 
   public void updateType(QuoteType quoteType) {
     this.type = quoteType;
+  }
+
+  public void updateProfile(QuoteProfile profile) {
+    this.profile = profile;
+  }
+
+  public void updateDifficultySeed(float seed) {
+    this.profile.setDifficultySeed(seed);
+    this.difficulty = seed;
+  }
+
+  public void updateDynamicDifficulty(float difficulty) {
+    this.difficulty = difficulty;
   }
 
   public void updateStatus(QuoteStatus quoteStatus) {

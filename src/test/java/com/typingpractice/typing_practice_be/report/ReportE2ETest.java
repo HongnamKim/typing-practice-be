@@ -7,6 +7,7 @@ import com.typingpractice.typing_practice_be.auth.dto.LoginResponse;
 import com.typingpractice.typing_practice_be.auth.dto.TestLoginRequest;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.member.dto.admin.MemberBanRequest;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteCreateRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
 import com.typingpractice.typing_practice_be.report.domain.ReportReason;
@@ -30,7 +31,8 @@ public class ReportE2ETest extends BaseE2ETest {
     String userToken = getAccessToken(USER_PROVIDER_ID);
     HttpHeaders userHeaders = createAuthHeader(userToken);
 
-    QuoteCreateRequest request = QuoteCreateRequest.create("신고 테스트용 문장입니다.", null);
+    QuoteCreateRequest request =
+        QuoteCreateRequest.create("신고 테스트용 문장입니다.", null, QuoteLanguage.KOREAN);
     ResponseEntity<ApiResponse<QuoteResponse>> createResponse =
         restTemplate.exchange(
             "/quotes/public",

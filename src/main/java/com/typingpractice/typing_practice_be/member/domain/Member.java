@@ -3,8 +3,6 @@ package com.typingpractice.typing_practice_be.member.domain;
 import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import jakarta.persistence.*;
-
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -21,6 +19,7 @@ public class Member extends BaseEntity {
   @Column(name = "member_id")
   private Long id;
 
+  @Column(unique = true)
   private String providerId;
 
   private String email;
@@ -32,12 +31,6 @@ public class Member extends BaseEntity {
   private MemberRole role;
 
   private String banReason = "";
-
-  private int reportCount = 0;
-  private LocalDate lastReportDate = LocalDate.now();
-
-  private int dailyQuoteUploadCount = 0;
-  private LocalDate lastQuoteUploadDate = LocalDate.now();
 
   @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)
   private List<Report> reports = new ArrayList<>();
@@ -51,11 +44,6 @@ public class Member extends BaseEntity {
     member.nickname = nickname != null ? nickname : DEFAULT_NICKNAME;
     member.role = MemberRole.USER;
 
-    member.reportCount = 0;
-    member.lastReportDate = LocalDate.now();
-    member.dailyQuoteUploadCount = 0;
-    member.lastQuoteUploadDate = LocalDate.now();
-
     return member;
   }
 
@@ -65,43 +53,6 @@ public class Member extends BaseEntity {
 
   public void updateRole(MemberRole role) {
     this.role = role;
-  }
-
-  public boolean canReportToday(int limit) {
-    // 날짜 변경됨.
-    if (LocalDate.now().isAfter(lastReportDate)) {
-      return true;
-    }
-
-    return this.reportCount < limit;
-  }
-
-  public boolean canUploadQuote(int limit) {
-    if (LocalDate.now().isAfter(lastQuoteUploadDate)) {
-      return true;
-    }
-
-    return this.dailyQuoteUploadCount < limit;
-  }
-
-  public void incrementReportCount() {
-    LocalDate today = LocalDate.now();
-    if (today.isAfter(this.lastReportDate)) {
-      this.reportCount = 0;
-      this.lastReportDate = today;
-    }
-
-    this.reportCount++;
-  }
-
-  public void incrementQuoteUploadCount() {
-    LocalDate today = LocalDate.now();
-    if (today.isAfter(this.lastQuoteUploadDate)) {
-      this.dailyQuoteUploadCount = 0;
-      this.lastQuoteUploadDate = today;
-    }
-
-    this.dailyQuoteUploadCount++;
   }
 
   public void ban(String reason) {

@@ -6,18 +6,18 @@ import com.typingpractice.typing_practice_be.dailylimit.exception.DailyQuoteUplo
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
-import com.typingpractice.typing_practice_be.quote.domain.Quote;
-import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
-import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
-import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
-import com.typingpractice.typing_practice_be.quote.exception.QuoteNotOwnedException;
-import com.typingpractice.typing_practice_be.quote.exception.QuoteNotProcessableException;
+import com.typingpractice.typing_practice_be.quote.domain.*;
+import com.typingpractice.typing_practice_be.quote.exception.*;
 import com.typingpractice.typing_practice_be.quote.query.PublicQuoteQuery;
 import com.typingpractice.typing_practice_be.quote.query.QuoteCreateQuery;
 import com.typingpractice.typing_practice_be.quote.query.QuotePaginationQuery;
 import com.typingpractice.typing_practice_be.quote.query.QuoteUpdateQuery;
+import com.typingpractice.typing_practice_be.quote.reject.service.QuoteSimilarityRejectService;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
 import java.util.List;
+
+import com.typingpractice.typing_practice_be.quote.statistics.domain.GlobalQuoteStatistics;
+import com.typingpractice.typing_practice_be.quote.statistics.service.GlobalQuoteStatisticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +26,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class QuoteService {
+  private final QuoteLanguageValidator quoteLanguageValidator;
+  private final SentenceHashGenerator sentenceHashGenerator;
+  private final QuoteProfileCalculator quoteProfileCalculator;
+  private final DifficultySeedCalculator difficultySeedCalculator;
+  private final GlobalQuoteStatisticsService globalQuoteStatisticsService;
+
+  private final QuoteSimilarityRejectService rejectService;
+
   private final QuoteRepository quoteRepository;
   private final MemberRepository memberRepository;
 
@@ -48,14 +56,79 @@ public class QuoteService {
   public Quote create(Long memberId, QuoteCreateQuery query) {
     Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-    if (!dailyLimitService.canUploadQuote(memberId)) {
+    if (!dailyLimitService.tryIncrementQuoteUploadCount(memberId)) {
       throw new DailyQuoteUploadLimitException();
     }
 
-    Quote quote = Quote.create(member, query.getSentence(), query.getAuthor(), query.getType());
+    String sentence = query.getSentence();
+    QuoteLanguage language = query.getLanguage();
+    // 언어 검증
+    quoteLanguageValidator.validate(sentence, language);
+
+    // 중복 검증
+    String sentenceHash = sentenceHashGenerator.generate(sentence);
+    if (query.getType() == QuoteType.PUBLIC) {
+      // 공개 문장 업로드
+
+      // 동일 문장 검증
+      if (quoteRepository.existsBySentenceHash(sentenceHash, memberId)) {
+        throw new QuoteDuplicateException();
+      }
+
+      // 유사 문장 검증
+      quoteRepository
+          .findMostSimilar(sentence, language, memberId)
+          .ifPresent(
+              row -> {
+                String similar = (String) row[0];
+                float sim = ((Number) row[1]).floatValue();
+                rejectService.log(memberId, sentence, similar, sim, language);
+
+                throw new QuoteSimilarException(similar, sim);
+              });
+
+    } else if (query.getType() == QuoteType.PRIVATE) {
+      // 비공개 문장 업로드
+
+      // 동일 문장 검증
+      if (quoteRepository.existsBySentenceHashInMyQuotes(sentenceHash, memberId)) {
+        throw new QuoteDuplicateException();
+      }
+
+      // 유사 문장 검증
+      quoteRepository
+          .findMostSimilarInMyQuotes(sentence, language, memberId)
+          .ifPresent(
+              row -> {
+                String similar = (String) row[0];
+                float sim = ((Number) row[1]).floatValue();
+                rejectService.log(memberId, sentence, similar, sim, language);
+
+                throw new QuoteSimilarException(similar, sim);
+              });
+    }
+
+    // 입력 변수
+    QuoteProfile profile = quoteProfileCalculator.calculate(sentence, language);
+    // 전역 통계
+    GlobalQuoteStatistics stats = globalQuoteStatisticsService.getByLanguage(language);
+
+    // difficulty seed 계산
+    float seed = difficultySeedCalculator.calculate(profile, stats, language);
+    profile.setDifficultySeed(seed);
+
+    Quote quote =
+        Quote.create(
+            member,
+            query.getSentence(),
+            query.getAuthor(),
+            query.getType(),
+            query.getLanguage(),
+            profile,
+            seed,
+            sentenceHash);
 
     quoteRepository.save(quote);
-    dailyLimitService.incrementQuoteUploadCount(memberId);
 
     return quote;
   }
@@ -66,6 +139,30 @@ public class QuoteService {
 
     if (quote.getType() != QuoteType.PRIVATE || quote.getStatus() != QuoteStatus.ACTIVE) {
       throw new QuoteNotProcessableException();
+    }
+
+    if (query.getSentence() != null) {
+      String sentenceHash = sentenceHashGenerator.generate(query.getSentence());
+      // 동일 문장 검증
+      if (quoteRepository.existsBySentenceHashInMyQuotesExcluding(
+          sentenceHash, memberId, quoteId)) {
+        throw new QuoteDuplicateException();
+      }
+
+      // 유사도 검증
+      quoteRepository
+          .findMostSimilarInMyQuotesExcluding(
+              query.getSentence(), quote.getLanguage(), memberId, quoteId)
+          .ifPresent(
+              row -> {
+                String similar = (String) row[0];
+                float sim = ((Number) row[1]).floatValue();
+                rejectService.log(memberId, query.getSentence(), similar, sim, quote.getLanguage());
+
+                throw new QuoteSimilarException(similar, sim);
+              });
+
+      quote.updateSentenceHash(sentenceHash);
     }
 
     quote.update(query.getSentence(), query.getAuthor());
@@ -112,6 +209,21 @@ public class QuoteService {
     if (quote.getType() != QuoteType.PRIVATE || quote.getStatus() != QuoteStatus.ACTIVE) {
       throw new QuoteNotProcessableException();
     }
+
+    if (quoteRepository.existsBySentenceHashExcluding(quote.getSentenceHash(), memberId, quoteId)) {
+      throw new QuoteDuplicateException();
+    }
+
+    quoteRepository
+        .findMostSimilarExcluding(quote.getSentence(), quote.getLanguage(), memberId, quoteId)
+        .ifPresent(
+            row -> {
+              String similar = (String) row[0];
+              float sim = ((Number) row[1]).floatValue();
+              rejectService.log(memberId, quote.getSentence(), similar, sim, quote.getLanguage());
+
+              throw new QuoteSimilarException(similar, sim);
+            });
 
     quote.updateType(QuoteType.PUBLIC);
     quote.updateStatus(QuoteStatus.PENDING);

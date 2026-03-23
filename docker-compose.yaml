@@ -11,5 +11,25 @@ services:
       POSTGRES_PASSWORD: user
       POSTGRES_DB: typing
 
+  redis:
+    image: redis:8
+    restart: always
+    ports:
+      - '6379:6379'
+  #    command: redis-server --requirepass redis123
+
+  mongodb:
+    image: mongo:8
+    container_name: typing-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+#    environment:
+#      MONGO_INITDB_ROOT_USERNAME: user
+#      MONGO_INITDB_ROOT_PASSWORD: user
+
+
 volumes:
   postgres-data:
+  mongodb_data:

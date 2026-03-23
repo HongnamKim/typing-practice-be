@@ -12,8 +12,11 @@ public enum ErrorCode {
   GOOGLE_AUTH_FAILED(HttpStatus.BAD_REQUEST, "Google 인증에 실패했습니다."),
   GOOGLE_SERVER_ERROR(HttpStatus.BAD_GATEWAY, "Google 서버 오류가 발생했습니다."),
   UNAUTHORIZED_ERROR(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다."),
+  AUTH_DUPLICATE_USER(HttpStatus.CONFLICT, "이미 가입된 계정입니다."),
 
   AUTH_INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
+
+  REFRESH_COOLDOWN(HttpStatus.TOO_MANY_REQUESTS, "잠시 후 다시 시도해주세요."),
 
   MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없습니다."),
   MEMBER_NOT_PROCESSABLE(HttpStatus.BAD_REQUEST, "처리할 수 없는 회원입니다."),
@@ -24,6 +27,9 @@ public enum ErrorCode {
   QUOTE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 예문을 찾을 수 없습니다."),
   QUOTE_NOT_OWNED(HttpStatus.FORBIDDEN, "문장에 대한 권한이 없습니다."),
   QUOTE_NOT_PROCESSABLE(HttpStatus.BAD_REQUEST, "처리할 수 없는 문장입니다."),
+  QUOTE_LANGUAGE_MISMATCH(HttpStatus.BAD_REQUEST, "선택한 언어와 맞지 않는 문자가 포함되어 있습니다."),
+  QUOTE_DUPLICATE(HttpStatus.CONFLICT, "동일한 문장이 이미 존재합니다."),
+  QUOTE_SIMILAR(HttpStatus.CONFLICT, "유사한 문장이 이미 존재합니다."),
 
   EMPTY_UPDATE_REQUEST(HttpStatus.BAD_REQUEST, "수정할 내용이 없습니다."),
 

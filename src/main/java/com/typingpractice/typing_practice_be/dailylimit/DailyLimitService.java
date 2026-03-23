@@ -1,11 +1,8 @@
 package com.typingpractice.typing_practice_be.dailylimit;
 
 public interface DailyLimitService {
-  boolean canReport(Long memberId);
 
-  void incrementReportCount(Long memberId);
+  boolean tryIncrementQuoteUploadCount(Long memberId);
 
-  boolean canUploadQuote(Long memberId);
-
-  void incrementQuoteUploadCount(Long memberId);
+  boolean tryIncrementReportCount(Long memberId);
 }

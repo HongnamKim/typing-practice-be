@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.quote.dto;
 
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.ToString;
@@ -15,10 +16,13 @@ public class QuoteCreateRequest {
   @Length(min = 1, max = 20)
   private String author;
 
-  public static QuoteCreateRequest create(String sentence, String author) {
+  private QuoteLanguage language;
+
+  public static QuoteCreateRequest create(String sentence, String author, QuoteLanguage language) {
     QuoteCreateRequest request = new QuoteCreateRequest();
     request.sentence = sentence;
     request.author = author;
+    request.language = language != null ? language : QuoteLanguage.KOREAN;
 
     return request;
   }

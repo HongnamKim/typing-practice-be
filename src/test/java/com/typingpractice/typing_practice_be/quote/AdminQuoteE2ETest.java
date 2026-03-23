@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import com.typingpractice.typing_practice_be.auth.dto.LoginResponse;
 import com.typingpractice.typing_practice_be.auth.dto.TestLoginRequest;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteCreateRequest;
@@ -51,7 +52,8 @@ public class AdminQuoteE2ETest {
 
   private Long createPublicQuote(String token) {
     HttpHeaders headers = createAuthHeader(token);
-    QuoteCreateRequest request = QuoteCreateRequest.create("테스트용 문장입니다.", null);
+    QuoteCreateRequest request =
+        QuoteCreateRequest.create("테스트용 문장입니다.", null, QuoteLanguage.KOREAN);
 
     ResponseEntity<ApiResponse<QuoteResponse>> response =
         restTemplate.exchange(
@@ -66,7 +68,8 @@ public class AdminQuoteE2ETest {
 
   private Long createPrivateQuote(String token) {
     HttpHeaders headers = createAuthHeader(token);
-    QuoteCreateRequest request = QuoteCreateRequest.create("테스트용 비공개 문장입니다.", null);
+    QuoteCreateRequest request =
+        QuoteCreateRequest.create("테스트용 비공개 문장입니다.", null, QuoteLanguage.KOREAN);
 
     ResponseEntity<ApiResponse<QuoteResponse>> response =
         restTemplate.exchange(
