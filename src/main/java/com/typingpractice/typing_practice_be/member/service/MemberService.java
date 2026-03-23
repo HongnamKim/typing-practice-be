@@ -2,17 +2,18 @@ package com.typingpractice.typing_practice_be.member.service;
 
 import com.typingpractice.typing_practice_be.auth.dto.google.GoogleUserInfo;
 import com.typingpractice.typing_practice_be.auth.repository.RefreshTokenRepository;
+import com.typingpractice.typing_practice_be.member.config.AdminProperties;
 import com.typingpractice.typing_practice_be.member.domain.Member;
+import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.dto.LoginResult;
 import com.typingpractice.typing_practice_be.member.exception.DuplicateNicknameException;
-import com.typingpractice.typing_practice_be.member.query.MemberCreateQuery;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
+import com.typingpractice.typing_practice_be.member.query.MemberCreateQuery;
 import com.typingpractice.typing_practice_be.member.query.MemberUpdateQuery;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
-
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,78 +22,86 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class MemberService {
-	private final MemberRepository memberRepository;
-	private final RefreshTokenRepository refreshTokenRepository;
+  private final MemberRepository memberRepository;
+  private final RefreshTokenRepository refreshTokenRepository;
 
-	public Member findMemberById(Long memberId) {
-		return memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
-	}
+  private final AdminProperties adminProperties;
 
-	@Transactional
-	public LoginResult loginOrSignIn(GoogleUserInfo googleUserInfo) {
-		Optional<Member> optionalMember =
-						memberRepository.findByProviderId(googleUserInfo.getProviderId());
+  public Member findMemberById(Long memberId) {
+    return memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+  }
 
-		// 가입 완료한 회원
-		if (optionalMember.isPresent()) {
-			Member member = optionalMember.get();
+  @Transactional
+  public LoginResult loginOrSignIn(GoogleUserInfo googleUserInfo) {
+    Optional<Member> optionalMember =
+        memberRepository.findByProviderId(googleUserInfo.getProviderId());
 
-			return LoginResult.create(member, false);
-		} else {
-			// 신규 회원
-			MemberCreateQuery memberCreateQuery =
-							MemberCreateQuery.of(
-											googleUserInfo.getProviderId(),
-											googleUserInfo.getEmail(),
-											UUID.randomUUID().toString());
+    // 가입 완료한 회원
+    if (optionalMember.isPresent()) {
+      Member member = optionalMember.get();
 
-			Member member = join(memberCreateQuery);
-			return LoginResult.create(member, true);
-		}
-	}
+      return LoginResult.create(member, false);
+    } else {
+      // 신규 회원
+      MemberCreateQuery memberCreateQuery =
+          MemberCreateQuery.of(
+              googleUserInfo.getProviderId(),
+              googleUserInfo.getEmail(),
+              UUID.randomUUID().toString());
 
-	private Member join(MemberCreateQuery memberCreateQuery) {
-		Member member =
-						Member.createMember(
-										memberCreateQuery.getProviderId(),
-										memberCreateQuery.getEmail(),
-										memberCreateQuery.getNickname());
+      Member member = join(memberCreateQuery);
+      return LoginResult.create(member, true);
+    }
+  }
 
-		memberRepository.save(member);
+  private Member join(MemberCreateQuery memberCreateQuery) {
+    Member member =
+        Member.createMember(
+            memberCreateQuery.getProviderId(),
+            memberCreateQuery.getEmail(),
+            memberCreateQuery.getNickname());
 
-		return member;
-	}
+    List<String> adminEmails = adminProperties.getEmails();
 
-	public boolean checkNicknameDuplicated(String nickname) {
-		return memberRepository.existByNickname(nickname);
-	}
+    if (adminEmails.contains(memberCreateQuery.getEmail())) {
+      member.updateRole(MemberRole.ADMIN);
+    }
 
-	@Transactional
-	public Member updateNickname(Long memberId, MemberUpdateQuery query) {
-		Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+    memberRepository.save(member);
 
-		String nickname = query.getNickname();
+    return member;
+  }
 
-		// 변경하지 않은 경우 그냥 반환
-		if (member.getNickname().equals(nickname)) {
-			return member;
-		}
+  public boolean checkNicknameDuplicated(String nickname) {
+    return memberRepository.existByNickname(nickname);
+  }
 
-		if (memberRepository.existByNickname(nickname)) {
-			throw new DuplicateNicknameException();
-		}
+  @Transactional
+  public Member updateNickname(Long memberId, MemberUpdateQuery query) {
+    Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-		member.updateNickName(nickname);
+    String nickname = query.getNickname();
 
-		return member;
-	}
+    // 변경하지 않은 경우 그냥 반환
+    if (member.getNickname().equals(nickname)) {
+      return member;
+    }
 
-	@Transactional
-	public void deleteMember(Long memberId) {
-		Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+    if (memberRepository.existByNickname(nickname)) {
+      throw new DuplicateNicknameException();
+    }
 
-		refreshTokenRepository.deleteByMemberId(memberId);
+    member.updateNickName(nickname);
 
-		memberRepository.deleteMember(member);
-	}
+    return member;
+  }
+
+  @Transactional
+  public void deleteMember(Long memberId) {
+    Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+
+    refreshTokenRepository.deleteByMemberId(memberId);
+
+    memberRepository.deleteMember(member);
+  }
 }
