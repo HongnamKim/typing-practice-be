@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: local
+    active: local #prod
   application:
     name: typing-practice-be
 
@@ -9,10 +9,9 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-jwt:
-  access-token-expiration-ms: 300000
-  refresh-token-expiration-days: 15
 
+dotenv:
+  path: .env.${spring.profiles.active}
 
 springdoc:
   api-docs:

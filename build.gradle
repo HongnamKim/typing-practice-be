@@ -49,6 +49,8 @@ dependencies {
 
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
+
+    implementation 'one.stayfocused.spring:dotenv-spring-boot:1.0.0'
 }
 
 tasks.named('test') {
