@@ -88,12 +88,15 @@ public class QuoteService {
 
 		return new PageResult<>(content, query.getPage(), query.getCount(), hasNext);
 
-		//		List<Quote> quotes = quoteRepository.findPublicQuotes(query);
-		//
-		//		boolean hasNext = quotes.size() > query.getCount();
-		//		List<Quote> content = hasNext ? quotes.subList(0, query.getCount()) : quotes;
-		//
-		//		return new PageResult<>(content, query.getPage(), query.getCount(), hasNext);
+//		long t3 = System.currentTimeMillis();
+//		List<Quote> quotes = quoteRepository.findPublicQuotes(query);
+//		long t4 = System.currentTimeMillis();
+//		log.info("[성능] DB 조회: {}ms", t4 - t3);
+//
+//		boolean hasNext = quotes.size() > query.getCount();
+//		List<Quote> content = hasNext ? quotes.subList(0, query.getCount()) : quotes;
+//
+//		return new PageResult<>(content, query.getPage(), query.getCount(), hasNext);
 	}
 
 	public Quote findById(Long quoteId) {
