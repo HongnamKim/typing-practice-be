@@ -1,15 +1,15 @@
 services:
-  #  postgres:
-  #    image: postgres:16
-  #    restart: always
-  #    volumes:
-  #      - ./postgres-data:/var/lib/postgresql/data
-  #    ports:
-  #      - '5432:5432'
-  #    environment:
-  #      POSTGRES_USER: user
-  #      POSTGRES_PASSWORD: user
-  #      POSTGRES_DB: typing
+  app:
+    build: .
+    restart: always
+    ports:
+      - '8080:8080'
+    depends_on:
+      - redis
+    env_file:
+      - .env.prod
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
 
   redis:
     image: redis:8
@@ -17,5 +17,21 @@ services:
     ports:
       - '6379:6379'
 
-#volumes:
-#  postgres-data:
+  prometheus:
+    image: prom/prometheus:latest
+    restart: always
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./prometheus-prod.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: always
+    ports:
+      - '7070:3000'
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+volumes:
+  grafana-data:
