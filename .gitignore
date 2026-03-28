@@ -12,6 +12,8 @@ data.mv.db
 .env.local
 .env.prod
 
+nginx/nginx.conf
+
 # application-local.yaml (민감정보 포함)
 src/main/resources/application-local.yaml
 src/main/resources/application-prod.yaml
