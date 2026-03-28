@@ -48,13 +48,13 @@ public class SecurityConfig {
 										auth ->
 														auth
 																		// 인증 불필요
-																		.requestMatchers("/swagger-ui/**", "/api-docs/**")
-																		.permitAll()
-																		.requestMatchers("/h2-console/**")
-																		.permitAll()
+																		// .requestMatchers("/swagger-ui/**", "/api-docs/**")
+																		// .permitAll()
+																		// .requestMatchers("/h2-console/**")
+																		// .permitAll()
+																		// .requestMatchers("/auth/test")
+																		// .permitAll()
 																		.requestMatchers("/auth/google")
-																		.permitAll()
-																		.requestMatchers("/auth/test")
 																		.permitAll()
 																		.requestMatchers("/auth/refresh")
 																		.permitAll()
@@ -93,7 +93,11 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:3001"));
+		configuration.setAllowedOrigins(
+						List.of(
+										"https://typing-practice-omega.vercel.app",
+										"http://localhost:3000",
+										"http://localhost:3001"));
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(List.of("*"));
 
