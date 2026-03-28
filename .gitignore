@@ -5,8 +5,18 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+data.mv.db
+
+# .env
+.env
+.env.local
+.env.prod
+
+nginx/nginx.conf
+
 # application-local.yaml (민감정보 포함)
 src/main/resources/application-local.yaml
+src/main/resources/application-prod.yaml
 
 # config.js
 src/main/resources/config.js

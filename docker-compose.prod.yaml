@@ -1,0 +1,64 @@
+services:
+  app:
+    build: .
+    restart: always
+    ports:
+      - '8080:8080'
+    depends_on:
+      - redis
+    env_file:
+      - .env.prod
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+
+  redis:
+    image: redis:8
+    restart: always
+    ports:
+      - '6379:6379'
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    restart: always
+    ports:
+      - '9121:9121'
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: always
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./prometheus-prod.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: always
+    ports:
+      - '7070:3000'
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    depends_on:
+      - app
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+
+volumes:
+  grafana-data:

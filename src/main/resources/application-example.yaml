@@ -1,0 +1,44 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        #show_sql: true
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+
+  data:
+    redis:
+      host: localhost #redis
+      port: 6379
+    mongodb:
+      uri: ${MONGODB_URI}
+
+jwt:
+  access-token-expiration-ms: 300000
+  refresh-token-expiration-days: 15
+  secret: ${JWT_SECRET}
+
+google:
+  client-id: ${GOOGLE_CLIENT_ID}
+  client-secret: ${GOOGLE_CLIENT_SECRET}
+  redirect-uri: ${GOOGLE_REDIRECT_URI}
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+admin:
+  emails:
+    - ${ADMIN_EMAIL}
