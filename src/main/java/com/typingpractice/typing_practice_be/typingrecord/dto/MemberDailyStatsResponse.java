@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.typingrecord.dto;
 
 import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.MemberDailyStats;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.MemberDailyAggregation;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.TodayTypingSnapshot;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -23,6 +24,30 @@ public class MemberDailyStatsResponse {
     response.days = days;
     response.content = content;
     return response;
+  }
+
+  public static MemberDailyStatsResponse of(
+      int days,
+      List<MemberDailyStats> pgList,
+      MemberDailyAggregation yesterday,
+      TodayTypingSnapshot today,
+      LocalDate todayDate) {
+
+    List<DayEntry> content = new ArrayList<>();
+
+    for (MemberDailyStats stats : pgList) {
+      content.add(DayEntry.from(stats));
+    }
+
+    if (yesterday != null) {
+      content.add(DayEntry.from(yesterday));
+    }
+
+    if (today.getTotalAttempts() > 0) {
+      content.add(DayEntry.fromToday(today, todayDate));
+    }
+
+    return create(days, content);
   }
 
   public static MemberDailyStatsResponse of(
@@ -50,6 +75,18 @@ public class MemberDailyStatsResponse {
     private int bestCpm;
     private int resetCount;
     private float practiceTimeMin;
+
+    public static DayEntry from(MemberDailyAggregation agg) {
+      DayEntry entry = new DayEntry();
+      entry.date = agg.getDateAsLocalDate();
+      entry.attempts = agg.getAttempts();
+      entry.avgCpm = agg.getAvgCpm();
+      entry.avgAcc = agg.getAvgAcc();
+      entry.bestCpm = agg.getBestCpm();
+      entry.resetCount = agg.getResetCount();
+      entry.practiceTimeMin = agg.getPracticeTimeMin();
+      return entry;
+    }
 
     public static DayEntry from(MemberDailyStats stats) {
       DayEntry entry = new DayEntry();

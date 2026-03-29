@@ -2,6 +2,7 @@ package com.typingpractice.typing_practice_be.typingrecord.dto;
 
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.MemberTypoDetailStats;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.MemberTypoAggregation;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.TodayTypoDetailEntry;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.TodayTypoDetailSnapshot;
 import lombok.AccessLevel;
@@ -16,6 +17,44 @@ import java.util.Map;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MemberTypoDetailStatsResponse {
   private List<DetailEntry> content;
+
+  public static MemberTypoDetailStatsResponse of(
+      QuoteLanguage language,
+      String expected,
+      List<MemberTypoDetailStats> pgList,
+      List<MemberTypoAggregation> yesterdayList,
+      TodayTypoDetailSnapshot todayFiltered) {
+
+    Map<String, DetailEntry> mergedMap = new HashMap<>();
+
+    for (MemberTypoDetailStats stats : pgList) {
+      String key =
+          TodayTypoDetailSnapshot.toKey(
+              stats.getLanguage(), stats.getExpected(), stats.getActual());
+      mergedMap.put(key, DetailEntry.from(stats));
+    }
+
+    for (MemberTypoAggregation agg : yesterdayList) {
+      String key =
+          TodayTypoDetailSnapshot.toKey(agg.getLanguage(), agg.getExpected(), agg.getActual());
+      mergedMap.merge(key, DetailEntry.from(agg), DetailEntry::merge);
+    }
+
+    for (Map.Entry<String, TodayTypoDetailEntry> entry : todayFiltered.getDetailMap().entrySet()) {
+      mergedMap.merge(
+          entry.getKey(),
+          DetailEntry.fromToday(language, expected, entry.getKey(), entry.getValue()),
+          DetailEntry::merge);
+    }
+
+    MemberTypoDetailStatsResponse response = new MemberTypoDetailStatsResponse();
+    response.content =
+        mergedMap.values().stream()
+            .sorted((a, b) -> Integer.compare(b.getTypoCount(), a.getTypoCount()))
+            .toList();
+
+    return response;
+  }
 
   public static MemberTypoDetailStatsResponse of(
       QuoteLanguage language,
@@ -60,6 +99,19 @@ public class MemberTypoDetailStatsResponse {
     private int medialCount;
     private int finalCount;
     private int letterCount;
+
+    public static DetailEntry from(MemberTypoAggregation agg) {
+      DetailEntry entry = new DetailEntry();
+      entry.language = agg.getLanguage();
+      entry.expected = agg.getExpected();
+      entry.actual = agg.getActual();
+      entry.typoCount = agg.getCount();
+      entry.initialCount = agg.getInitialCount();
+      entry.medialCount = agg.getMedialCount();
+      entry.finalCount = agg.getFinalCount();
+      entry.letterCount = agg.getLetterCount();
+      return entry;
+    }
 
     public static DetailEntry from(MemberTypoDetailStats stats) {
       DetailEntry entry = new DetailEntry();

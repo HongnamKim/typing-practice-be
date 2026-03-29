@@ -6,6 +6,7 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -18,6 +19,16 @@ public class TypingRecordRepository {
 
   public TypingRecord save(TypingRecord record) {
     return mongoTemplate.save(record);
+  }
+
+  public boolean existsByMemberIdBetween(Long memberId, LocalDateTime from, LocalDateTime to) {
+    long count =
+        mongoTemplate.count(
+            Query.query(
+                Criteria.where("memberId").is(memberId).and("completedAt").gte(from).lt(to)),
+            "typingRecord");
+
+    return count > 0;
   }
 
   public List<Long> findDistinctMemberIds() {

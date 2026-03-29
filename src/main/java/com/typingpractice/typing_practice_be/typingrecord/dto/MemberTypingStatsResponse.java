@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.typingrecord.dto;
 
 import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.MemberTypingStats;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.MemberTypingAggregation;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.TodayTypingSnapshot;
 import lombok.Getter;
 import lombok.ToString;
@@ -72,5 +73,52 @@ public class MemberTypingStatsResponse {
         Math.max(pg.getBestCpm(), today.getBestCpm()),
         pg.getTotalPracticeTimeMin() + today.getTotalPracticeTimeMin(),
         pg.getTotalResetCount() + today.getTotalResetCount());
+  }
+
+  public static MemberTypingStatsResponse of(
+      MemberTypingStats pg, MemberTypingAggregation yesterday, TodayTypingSnapshot today) {
+
+    int totalAttempts = 0;
+    float sumCpm = 0, sumAcc = 0;
+    int bestCpm = 0;
+    float totalPracticeTimeMin = 0;
+    int totalResetCount = 0;
+
+    if (pg != null) {
+      totalAttempts += pg.getTotalAttempts();
+      sumCpm += pg.getAvgCpm() * pg.getTotalAttempts();
+      sumAcc += pg.getAvgAcc() * pg.getTotalAttempts();
+      bestCpm = pg.getBestCpm();
+      totalPracticeTimeMin += pg.getTotalPracticeTimeMin();
+      totalResetCount += pg.getTotalResetCount();
+    }
+
+    if (yesterday != null) {
+      totalAttempts += yesterday.getTotalAttempts();
+      sumCpm += yesterday.getAvgCpm() * yesterday.getTotalAttempts();
+      sumAcc += yesterday.getAvgAcc() * yesterday.getTotalAttempts();
+      bestCpm = Math.max(bestCpm, yesterday.getBestCpm());
+      totalPracticeTimeMin += yesterday.getTotalPracticeTimeMin();
+      totalResetCount += yesterday.getTotalResetCount();
+    }
+
+    if (today.getTotalAttempts() > 0) {
+      totalAttempts += today.getTotalAttempts();
+      sumCpm += today.getAvgCpm() * today.getTotalAttempts();
+      sumAcc += today.getAvgAcc() * today.getTotalAttempts();
+      bestCpm = Math.max(bestCpm, today.getBestCpm());
+      totalPracticeTimeMin += today.getTotalPracticeTimeMin();
+      totalResetCount += today.getTotalResetCount();
+    }
+
+    if (totalAttempts == 0) return empty();
+
+    return create(
+        totalAttempts,
+        sumCpm / totalAttempts,
+        sumAcc / totalAttempts,
+        bestCpm,
+        totalPracticeTimeMin,
+        totalResetCount);
   }
 }
