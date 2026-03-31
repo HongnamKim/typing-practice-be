@@ -1,6 +1,8 @@
 package com.typingpractice.typing_practice_be.typingrecord.statistics.repository;
 
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.QuoteTypingStats;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.GlobalTypingPerformance;
 import jakarta.persistence.EntityManager;
@@ -32,8 +34,13 @@ public class QuoteTypingStatsRepository {
         (Object[])
             em.createQuery(
                     "select avg(s.avgCpm), avg(s.avgAcc) from QuoteTypingStats s "
-                        + "where s.language = :language and s.validAttemptsCount > 0")
+                        + "join s.quote q "
+                        + "where s.language = :language and s.validAttemptsCount > 0 "
+                        + "and q.type = :type "
+                        + "and q.status = :status")
                 .setParameter("language", language)
+                .setParameter("type", QuoteType.PUBLIC)
+                .setParameter("status", QuoteStatus.ACTIVE)
                 .getSingleResult();
 
     if (row[0] == null) {
