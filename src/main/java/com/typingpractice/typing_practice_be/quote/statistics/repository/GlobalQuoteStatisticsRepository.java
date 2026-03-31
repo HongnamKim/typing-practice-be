@@ -53,7 +53,7 @@ public class GlobalQuoteStatisticsRepository {
 										COALESCE(AVG(case_flip_rate), 0), COALESCE(STDDEV_POP(case_flip_rate), 0),
 										COALESCE(AVG(avg_word_len), 0), COALESCE(STDDEV_POP(avg_word_len), 0)
 								FROM quote
-								WHERE language = :language AND deleted = false
+								WHERE language = :language AND deleted = false AND type = 'PUBLIC' AND status = 'ACTIVE'
 								""")
                 .setParameter("language", language.name())
                 .getSingleResult();
