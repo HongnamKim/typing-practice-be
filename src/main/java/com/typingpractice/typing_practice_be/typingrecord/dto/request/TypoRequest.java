@@ -1,4 +1,4 @@
-package com.typingpractice.typing_practice_be.typingrecord.dto;
+package com.typingpractice.typing_practice_be.typingrecord.dto.request;
 
 import com.typingpractice.typing_practice_be.typingrecord.domain.Typo;
 import com.typingpractice.typing_practice_be.typingrecord.domain.TypoType;

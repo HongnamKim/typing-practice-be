@@ -39,7 +39,7 @@ public class DataInitService implements CommandLineRunner {
     initGlobalQuoteStatistics();
     initAdmin();
     List<Member> members = initMembers();
-    //    List<Quote> quotes = initQuotes(members);
+    List<Quote> quotes = initQuotes(members);
     //    initReports(members, quotes);
     //
     //    log.info("초기 데이터 생성 완료");

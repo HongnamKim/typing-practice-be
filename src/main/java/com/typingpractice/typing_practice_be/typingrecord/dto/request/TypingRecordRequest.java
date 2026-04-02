@@ -1,4 +1,4 @@
-package com.typingpractice.typing_practice_be.typingrecord.dto;
+package com.typingpractice.typing_practice_be.typingrecord.dto.request;
 
 import com.typingpractice.typing_practice_be.typingrecord.domain.Typo;
 import jakarta.validation.Valid;
@@ -14,6 +14,8 @@ import java.util.List;
 public class TypingRecordRequest {
   @NotNull @Positive private Long quoteId;
 
+  private String anonymousId; // 비회원 식별자
+
   @NotNull @Positive private Integer cpm;
 
   @NotNull private Float accuracy;
@@ -24,21 +26,27 @@ public class TypingRecordRequest {
 
   @Valid private List<TypoRequest> typos;
 
+  private TrackingRequest tracking;
+
   public static TypingRecordRequest create(
       Long quoteId,
+      String anonymousId,
       Integer cpm,
       Float accuracy,
       Integer charLength,
       Integer resetCount,
-      List<TypoRequest> typos) {
+      List<TypoRequest> typos,
+      TrackingRequest tracking) {
     TypingRecordRequest request = new TypingRecordRequest();
 
     request.quoteId = quoteId;
+    request.anonymousId = anonymousId;
     request.cpm = cpm;
     request.accuracy = accuracy;
     request.charLength = charLength;
     request.resetCount = resetCount;
     request.typos = typos;
+    request.tracking = tracking;
 
     return request;
   }

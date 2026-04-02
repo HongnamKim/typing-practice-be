@@ -1,7 +1,7 @@
 package com.typingpractice.typing_practice_be.typingrecord.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
-import com.typingpractice.typing_practice_be.typingrecord.dto.TypingRecordRequest;
+import com.typingpractice.typing_practice_be.typingrecord.dto.request.TypingRecordRequest;
 import com.typingpractice.typing_practice_be.typingrecord.query.TypingRecordQuery;
 import com.typingpractice.typing_practice_be.typingrecord.service.TypingRecordService;
 import jakarta.validation.Valid;
