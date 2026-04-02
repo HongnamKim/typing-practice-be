@@ -2,7 +2,7 @@ package com.typingpractice.typing_practice_be.typingrecord.query;
 
 import com.typingpractice.typing_practice_be.typingrecord.domain.TrackingInfo;
 import com.typingpractice.typing_practice_be.typingrecord.domain.Typo;
-import com.typingpractice.typing_practice_be.typingrecord.dto.TypingRecordRequest;
+import com.typingpractice.typing_practice_be.typingrecord.dto.request.TypingRecordRequest;
 import java.util.List;
 import lombok.Getter;
 import lombok.ToString;

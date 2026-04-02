@@ -1,10 +1,12 @@
 package com.typingpractice.typing_practice_be.typingrecord.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -14,6 +16,7 @@ import java.util.List;
 @Document(collection = "typingRecord")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ToString
 public class TypingRecord {
   private static final int CPM_UPPER_LIMIT = 1500;
   private static final float ACCURACY_LOWER_LIMIT = 0.5f;
@@ -66,6 +69,7 @@ public class TypingRecord {
     return record;
   }
 
+  @JsonIgnore
   public boolean isLoggedIn() {
     return memberId != null;
   }
