@@ -1,4 +1,4 @@
-package com.typingpractice.typing_practice_be.typingrecord.dto;
+package com.typingpractice.typing_practice_be.typingrecord.dto.response;
 
 import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.MemberTypingStats;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.MemberTypingAggregation;

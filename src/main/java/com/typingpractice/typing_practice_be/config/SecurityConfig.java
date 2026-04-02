@@ -50,10 +50,9 @@ public class SecurityConfig {
                     // 인증 불필요
                     // .requestMatchers("/swagger-ui/**", "/api-docs/**")
                     // .permitAll()
-                    // .requestMatchers("/h2-console/**")
-                    // .permitAll()
                     // .requestMatchers("/auth/test")
                     // .permitAll()
+                    //
                     .requestMatchers("/auth/google")
                     .permitAll()
                     .requestMatchers("/auth/refresh")

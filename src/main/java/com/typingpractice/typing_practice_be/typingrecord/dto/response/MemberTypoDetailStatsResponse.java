@@ -1,4 +1,4 @@
-package com.typingpractice.typing_practice_be.typingrecord.dto;
+package com.typingpractice.typing_practice_be.typingrecord.dto.response;
 
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.MemberTypoDetailStats;

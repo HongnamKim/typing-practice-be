@@ -3,9 +3,11 @@ package com.typingpractice.typing_practice_be.typingrecord.domain;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ToString
 public class TrackingInfo {
   private String sessionId;
   private String referrer;

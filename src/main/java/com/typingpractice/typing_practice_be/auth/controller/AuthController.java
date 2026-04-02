@@ -23,24 +23,24 @@ public class AuthController {
   private final MemberService memberService;
   private final JwtTokenProvider jwtTokenProvider;
 
-  //	@PostMapping("/test")
-  //	public ApiResponse<LoginResponse> testLogin(@RequestBody TestLoginRequest request) {
+  //  @PostMapping("/test")
+  //  public ApiResponse<LoginResponse> testLogin(@RequestBody TestLoginRequest request) {
   //
-  //		LoginResult loginResult =
-  //						memberService.loginOrSignIn(
-  //										GoogleUserInfo.create(
-  //														request.getProviderId(),
-  //														"email",
-  //														"user_" + UUID.randomUUID().toString().substring(0, 8),
-  //														"picture"));
+  //    LoginResult loginResult =
+  //        memberService.loginOrSignIn(
+  //            GoogleUserInfo.create(
+  //                request.getProviderId(),
+  //                "email",
+  //                "user_" + UUID.randomUUID().toString().substring(0, 8),
+  //                "picture"));
   //
-  //		Member member = loginResult.getMember();
+  //    Member member = loginResult.getMember();
   //
-  //		String token = jwtTokenProvider.createToken(member.getId(), member.getRole());
-  //		String refreshToken = authService.createRefreshToken(member);
+  //    String token = jwtTokenProvider.createToken(member.getId(), member.getRole());
+  //    String refreshToken = authService.createRefreshToken(member);
   //
-  //		return ApiResponse.ok(LoginResponse.from(loginResult, token, refreshToken));
-  //	}
+  //    return ApiResponse.ok(LoginResponse.from(loginResult, token, refreshToken));
+  //  }
 
   @PostMapping("/google")
   public ApiResponse<LoginResponse> googleLogin(@RequestBody GoogleLoginRequest request) {

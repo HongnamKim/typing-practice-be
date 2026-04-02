@@ -56,6 +56,14 @@ public class TodayTypingStatsRedisService {
     return Duration.between(nowKst, midnightKst);
   }
 
+  public void invalidateAll(Long memberId) {
+    for (QuoteLanguage lang : QuoteLanguage.values()) {
+      invalidateTyping(memberId, lang);
+    }
+    invalidateTypo(memberId);
+    invalidateTypoDetail(memberId);
+  }
+
   // 이벤트 수신 후 오늘 통계 업데이트
   public void incrementTyping(TypingRecordSavedEvent event) {
     String key = typingKey(event.getMemberId(), event.getLanguage());
