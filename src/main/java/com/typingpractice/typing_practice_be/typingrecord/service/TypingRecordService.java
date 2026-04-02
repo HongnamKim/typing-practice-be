@@ -26,13 +26,16 @@ public class TypingRecordService {
     TypingRecord record =
         TypingRecord.create(
             memberId,
+            query.getAnonymousId(),
             quote.getId(),
             quote.getLanguage(),
+            quote.getType(),
             query.getCpm(),
             query.getAccuracy(),
             query.getCharLength(),
             query.getResetCount(),
-            query.getTypos());
+            query.getTypos(),
+            query.getTracking());
 
     TypingRecord saved = typingRecordRepository.save(record);
 
