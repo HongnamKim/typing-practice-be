@@ -1,4 +1,4 @@
-package com.typingpractice.typing_practice_be.typingrecord.statistics.service;
+package com.typingpractice.typing_practice_be.typingrecord.statistics.service.batch;
 
 import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;

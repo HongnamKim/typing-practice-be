@@ -10,6 +10,8 @@ services:
       - .env.prod
     environment:
       - SPRING_PROFILES_ACTIVE=prod
+    volumes:
+      - ./fallback:/data/fallback
 
   redis:
     image: redis:8
