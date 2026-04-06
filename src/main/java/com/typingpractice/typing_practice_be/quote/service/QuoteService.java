@@ -19,9 +19,9 @@ import com.typingpractice.typing_practice_be.quote.service.difficulty.QuoteProfi
 import com.typingpractice.typing_practice_be.quote.statistics.domain.GlobalQuoteStatistics;
 import com.typingpractice.typing_practice_be.quote.statistics.service.GlobalQuoteStatisticsService;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -73,8 +73,13 @@ public class QuoteService {
 		List<Long> slicedIds = ids.subList(from, to);
 		List<Quote> fetched = quoteRepository.findByIds(slicedIds, language);
 
-		boolean hasNext = fetched.size() > query.getCount();
-		List<Quote> content = hasNext ? fetched.subList(0, query.getCount()) : fetched;
+		// 셔플 순서 복원
+		Map<Long, Quote> map =
+						fetched.stream().collect(Collectors.toMap(Quote::getId, Function.identity()));
+		List<Quote> ordered = slicedIds.stream().map(map::get).filter(Objects::nonNull).toList();
+
+		boolean hasNext = ordered.size() > query.getCount();
+		List<Quote> content = hasNext ? ordered.subList(0, query.getCount()) : ordered;
 
 		return new PageResult<>(content, query.getPage(), query.getCount(), hasNext);
 	}
