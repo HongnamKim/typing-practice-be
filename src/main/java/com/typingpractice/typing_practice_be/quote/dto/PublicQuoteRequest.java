@@ -23,8 +23,8 @@ public class PublicQuoteRequest {
 	private final QuoteLanguage language;
 
 	@NotNull
-	@DecimalMin("-1.0")
-	@DecimalMax("1.0")
+	@DecimalMin("-999999999")
+	@DecimalMax("999999999")
 	private final Float seed;
 
 	public PublicQuoteRequest(
