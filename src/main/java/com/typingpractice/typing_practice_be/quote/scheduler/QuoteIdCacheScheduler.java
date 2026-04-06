@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 public class QuoteIdCacheScheduler {
 	private final QuoteIdCacheService quoteIdCacheService;
 
-	private static final int REFRESH_PERIOD = 5 * 60 * 1000;
+	private static final int REFRESH_PERIOD = 10 * 60 * 1000;
 
 	@EventListener(ApplicationReadyEvent.class)
 	public void initOnStartup() {
