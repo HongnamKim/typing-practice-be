@@ -33,259 +33,260 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class QuoteService {
-	private final QuoteLanguageValidator quoteLanguageValidator;
-	private final SentenceHashGenerator sentenceHashGenerator;
-	private final QuoteProfileCalculator quoteProfileCalculator;
-	private final DifficultySeedCalculator difficultySeedCalculator;
-	private final GlobalQuoteStatisticsService globalQuoteStatisticsService;
+  private final QuoteLanguageValidator quoteLanguageValidator;
+  private final SentenceHashGenerator sentenceHashGenerator;
+  private final QuoteProfileCalculator quoteProfileCalculator;
+  private final DifficultySeedCalculator difficultySeedCalculator;
+  private final GlobalQuoteStatisticsService globalQuoteStatisticsService;
 
-	private final QuoteSimilarityRejectService rejectService;
+  private final QuoteSimilarityRejectService rejectService;
 
-	private final QuoteRepository quoteRepository;
-	private final MemberRepository memberRepository;
+  private final QuoteRepository quoteRepository;
+  private final MemberRepository memberRepository;
 
-	private final DailyLimitService dailyLimitService;
-	private final QuoteIdCacheService quoteIdCacheService;
+  private final DailyLimitService dailyLimitService;
+  private final QuoteIdCacheService quoteIdCacheService;
 
-	public PageResult<Quote> findRandomPublicQuotes(PublicQuoteQuery query) {
+  public PageResult<Quote> findRandomPublicQuotes(PublicQuoteQuery query) {
 
-		QuoteLanguage language = query.getLanguage();
-		Random random = new Random((long) (query.getSeed() * 1_000));
+    QuoteLanguage language = query.getLanguage();
+    Random random = new Random((long) (query.getSeed() * 1_000));
 
-		List<Long> ids;
-		if (query.getOnlyMyQuotes() && query.getMemberId() != null) {
-			// 로그인한 유저의 내 문장만 조회
-			ids = quoteIdCacheService.getIdsByMemberId(query.getMemberId(), language);
-		} else {
-			// 전체 문장 랜덤 조회
-			ids = quoteIdCacheService.getPublicIds(language, QuoteDifficultyTier.ALL);
-		}
+    List<Long> ids;
+    if (query.getOnlyMyQuotes() && query.getMemberId() != null) {
+      // 로그인한 유저의 내 문장만 조회
+      ids = quoteIdCacheService.getIdsByMemberId(query.getMemberId(), language);
+    } else {
+      // 전체 문장 랜덤 조회
+      ids = quoteIdCacheService.getPublicIds(language, QuoteDifficultyTier.ALL);
+    }
 
-		Collections.shuffle(ids, random);
+    Collections.shuffle(ids, random);
 
-		int from = (query.getPage() - 1) * query.getCount();
-		int to = Math.min(from + query.getCount() + 1, ids.size());
+    int from = (query.getPage() - 1) * query.getCount();
+    int to = Math.min(from + query.getCount() + 1, ids.size());
 
-		if (from >= ids.size()) {
-			return new PageResult<>(List.of(), query.getPage(), query.getCount(), false);
-		}
+    if (from >= ids.size()) {
+      return new PageResult<>(List.of(), query.getPage(), query.getCount(), false);
+    }
 
-		List<Long> slicedIds = ids.subList(from, to);
-		List<Quote> fetched = quoteRepository.findByIds(slicedIds, language);
+    List<Long> slicedIds = ids.subList(from, to);
 
-		// 셔플 순서 복원
-		Map<Long, Quote> map =
-						fetched.stream().collect(Collectors.toMap(Quote::getId, Function.identity()));
-		List<Quote> ordered = slicedIds.stream().map(map::get).filter(Objects::nonNull).toList();
+    List<Quote> fetched = quoteRepository.findByIds(slicedIds, language);
 
-		boolean hasNext = ordered.size() > query.getCount();
-		List<Quote> content = hasNext ? ordered.subList(0, query.getCount()) : ordered;
+    // 셔플 순서 복원
+    Map<Long, Quote> map =
+        fetched.stream().collect(Collectors.toMap(Quote::getId, Function.identity()));
+    List<Quote> ordered = slicedIds.stream().map(map::get).filter(Objects::nonNull).toList();
 
-		return new PageResult<>(content, query.getPage(), query.getCount(), hasNext);
-	}
+    boolean hasNext = ordered.size() > query.getCount();
+    List<Quote> content = hasNext ? ordered.subList(0, query.getCount()) : ordered;
 
-	public Quote findById(Long quoteId) {
-		return quoteRepository.findById(quoteId).orElseThrow(QuoteNotFoundException::new);
-	}
+    return new PageResult<>(content, query.getPage(), query.getCount(), hasNext);
+  }
 
-	@Transactional
-	public Quote create(Long memberId, QuoteCreateQuery query) {
-		Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+  public Quote findById(Long quoteId) {
+    return quoteRepository.findById(quoteId).orElseThrow(QuoteNotFoundException::new);
+  }
 
-		if (!dailyLimitService.tryIncrementQuoteUploadCount(memberId)) {
-			throw new DailyQuoteUploadLimitException();
-		}
+  @Transactional
+  public Quote create(Long memberId, QuoteCreateQuery query) {
+    Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-		String sentence = query.getSentence();
-		QuoteLanguage language = query.getLanguage();
-		// 언어 검증
-		quoteLanguageValidator.validate(sentence, language);
+    if (!dailyLimitService.tryIncrementQuoteUploadCount(memberId)) {
+      throw new DailyQuoteUploadLimitException();
+    }
 
-		// 중복 검증
-		String sentenceHash = sentenceHashGenerator.generate(sentence);
-		if (query.getType() == QuoteType.PUBLIC) {
-			// 공개 문장 업로드
+    String sentence = query.getSentence();
+    QuoteLanguage language = query.getLanguage();
+    // 언어 검증
+    quoteLanguageValidator.validate(sentence, language);
 
-			// 동일 문장 검증
-			if (quoteRepository.existsBySentenceHash(sentenceHash, memberId)) {
-				throw new QuoteDuplicateException();
-			}
+    // 중복 검증
+    String sentenceHash = sentenceHashGenerator.generate(sentence);
+    if (query.getType() == QuoteType.PUBLIC) {
+      // 공개 문장 업로드
 
-			// 유사 문장 검증
-			quoteRepository
-							.findMostSimilar(sentence, language, memberId)
-							.ifPresent(
-											row -> {
-												String similar = (String) row[0];
-												float sim = ((Number) row[1]).floatValue();
-												rejectService.log(memberId, sentence, similar, sim, language);
+      // 동일 문장 검증
+      if (quoteRepository.existsBySentenceHash(sentenceHash, memberId)) {
+        throw new QuoteDuplicateException();
+      }
 
-												throw new QuoteSimilarException(similar, sim);
-											});
+      // 유사 문장 검증
+      quoteRepository
+          .findMostSimilar(sentence, language, memberId)
+          .ifPresent(
+              row -> {
+                String similar = (String) row[0];
+                float sim = ((Number) row[1]).floatValue();
+                rejectService.log(memberId, sentence, similar, sim, language);
 
-		} else if (query.getType() == QuoteType.PRIVATE) {
-			// 비공개 문장 업로드
+                throw new QuoteSimilarException(similar, sim);
+              });
 
-			// 동일 문장 검증
-			if (quoteRepository.existsBySentenceHashInMyQuotes(sentenceHash, memberId)) {
-				throw new QuoteDuplicateException();
-			}
+    } else if (query.getType() == QuoteType.PRIVATE) {
+      // 비공개 문장 업로드
 
-			// 유사 문장 검증
-			quoteRepository
-							.findMostSimilarInMyQuotes(sentence, language, memberId)
-							.ifPresent(
-											row -> {
-												String similar = (String) row[0];
-												float sim = ((Number) row[1]).floatValue();
-												rejectService.log(memberId, sentence, similar, sim, language);
+      // 동일 문장 검증
+      if (quoteRepository.existsBySentenceHashInMyQuotes(sentenceHash, memberId)) {
+        throw new QuoteDuplicateException();
+      }
 
-												throw new QuoteSimilarException(similar, sim);
-											});
-		}
+      // 유사 문장 검증
+      quoteRepository
+          .findMostSimilarInMyQuotes(sentence, language, memberId)
+          .ifPresent(
+              row -> {
+                String similar = (String) row[0];
+                float sim = ((Number) row[1]).floatValue();
+                rejectService.log(memberId, sentence, similar, sim, language);
 
-		// 입력 변수
-		QuoteProfile profile = quoteProfileCalculator.calculate(sentence, language);
-		// 전역 통계
-		GlobalQuoteStatistics stats = globalQuoteStatisticsService.getByLanguage(language);
+                throw new QuoteSimilarException(similar, sim);
+              });
+    }
 
-		// difficulty seed 계산
-		float seed = difficultySeedCalculator.calculate(profile, stats, language);
-		profile.setDifficultySeed(seed);
+    // 입력 변수
+    QuoteProfile profile = quoteProfileCalculator.calculate(sentence, language);
+    // 전역 통계
+    GlobalQuoteStatistics stats = globalQuoteStatisticsService.getByLanguage(language);
 
-		Quote quote =
-						Quote.create(
-										member,
-										query.getSentence(),
-										query.getAuthor(),
-										query.getType(),
-										query.getLanguage(),
-										profile,
-										seed,
-										sentenceHash);
-		quote.updateDynamicDifficulty(seed); // 통계 없을 때 초기 난이도
-		quoteRepository.save(quote);
+    // difficulty seed 계산
+    float seed = difficultySeedCalculator.calculate(profile, stats, language);
+    profile.setDifficultySeed(seed);
 
-		quoteIdCacheService.invalidateMemberIds(memberId, language);
+    Quote quote =
+        Quote.create(
+            member,
+            query.getSentence(),
+            query.getAuthor(),
+            query.getType(),
+            query.getLanguage(),
+            profile,
+            seed,
+            sentenceHash);
+    quote.updateDynamicDifficulty(seed); // 통계 없을 때 초기 난이도
+    quoteRepository.save(quote);
 
-		return quote;
-	}
+    quoteIdCacheService.invalidateMemberIds(memberId, language);
 
-	@Transactional
-	public Quote updatePrivateQuote(Long memberId, Long quoteId, QuoteUpdateQuery query) {
-		Quote quote = findMyQuoteById(memberId, quoteId);
+    return quote;
+  }
 
-		if (quote.getType() != QuoteType.PRIVATE || quote.getStatus() != QuoteStatus.ACTIVE) {
-			throw new QuoteNotProcessableException();
-		}
+  @Transactional
+  public Quote updatePrivateQuote(Long memberId, Long quoteId, QuoteUpdateQuery query) {
+    Quote quote = findMyQuoteById(memberId, quoteId);
 
-		if (query.getSentence() != null) {
-			String sentenceHash = sentenceHashGenerator.generate(query.getSentence());
-			// 동일 문장 검증
-			if (quoteRepository.existsBySentenceHashInMyQuotesExcluding(
-							sentenceHash, memberId, quoteId)) {
-				throw new QuoteDuplicateException();
-			}
+    if (quote.getType() != QuoteType.PRIVATE || quote.getStatus() != QuoteStatus.ACTIVE) {
+      throw new QuoteNotProcessableException();
+    }
 
-			// 유사도 검증
-			quoteRepository
-							.findMostSimilarInMyQuotesExcluding(
-											query.getSentence(), quote.getLanguage(), memberId, quoteId)
-							.ifPresent(
-											row -> {
-												String similar = (String) row[0];
-												float sim = ((Number) row[1]).floatValue();
-												rejectService.log(memberId, query.getSentence(), similar, sim, quote.getLanguage());
+    if (query.getSentence() != null) {
+      String sentenceHash = sentenceHashGenerator.generate(query.getSentence());
+      // 동일 문장 검증
+      if (quoteRepository.existsBySentenceHashInMyQuotesExcluding(
+          sentenceHash, memberId, quoteId)) {
+        throw new QuoteDuplicateException();
+      }
 
-												throw new QuoteSimilarException(similar, sim);
-											});
+      // 유사도 검증
+      quoteRepository
+          .findMostSimilarInMyQuotesExcluding(
+              query.getSentence(), quote.getLanguage(), memberId, quoteId)
+          .ifPresent(
+              row -> {
+                String similar = (String) row[0];
+                float sim = ((Number) row[1]).floatValue();
+                rejectService.log(memberId, query.getSentence(), similar, sim, quote.getLanguage());
 
-			quote.updateSentenceHash(sentenceHash);
-		}
+                throw new QuoteSimilarException(similar, sim);
+              });
 
-		quote.update(query.getSentence(), query.getAuthor());
+      quote.updateSentenceHash(sentenceHash);
+    }
 
-		return quote;
-	}
+    quote.update(query.getSentence(), query.getAuthor());
 
-	@Transactional
-	public void deleteQuote(Long memberId, Long quoteId) {
-		Quote quote = findMyQuoteById(memberId, quoteId);
+    return quote;
+  }
 
-		if (quote.getType() != QuoteType.PRIVATE || quote.getStatus() != QuoteStatus.ACTIVE) {
-			throw new QuoteNotProcessableException();
-		}
+  @Transactional
+  public void deleteQuote(Long memberId, Long quoteId) {
+    Quote quote = findMyQuoteById(memberId, quoteId);
 
-		quoteRepository.deleteQuote(quote);
+    if (quote.getType() != QuoteType.PRIVATE || quote.getStatus() != QuoteStatus.ACTIVE) {
+      throw new QuoteNotProcessableException();
+    }
 
-		quoteIdCacheService.invalidateMemberIds(memberId, quote.getLanguage());
-	}
+    quoteRepository.deleteQuote(quote);
 
-	public PageResult<Quote> getMyQuotes(Long memberId, QuotePaginationQuery query) {
-		Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+    quoteIdCacheService.invalidateMemberIds(memberId, quote.getLanguage());
+  }
 
-		List<Quote> quotes = quoteRepository.findByMember(member, query);
+  public PageResult<Quote> getMyQuotes(Long memberId, QuotePaginationQuery query) {
+    Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-		boolean hasNext = quotes.size() > query.getSize();
-		List<Quote> content = hasNext ? quotes.subList(0, query.getSize()) : quotes;
+    List<Quote> quotes = quoteRepository.findByMember(member, query);
 
-		return new PageResult<>(content, query.getPage(), query.getSize(), hasNext);
-	}
+    boolean hasNext = quotes.size() > query.getSize();
+    List<Quote> content = hasNext ? quotes.subList(0, query.getSize()) : quotes;
 
-	private Quote findMyQuoteById(Long memberId, Long quoteId) {
-		Quote quote = quoteRepository.findById(quoteId).orElseThrow(QuoteNotFoundException::new);
+    return new PageResult<>(content, query.getPage(), query.getSize(), hasNext);
+  }
 
-		if (!quote.getMember().getId().equals(memberId)) {
-			throw new QuoteNotOwnedException();
-		}
+  private Quote findMyQuoteById(Long memberId, Long quoteId) {
+    Quote quote = quoteRepository.findById(quoteId).orElseThrow(QuoteNotFoundException::new);
 
-		return quote;
-	}
+    if (!quote.getMember().getId().equals(memberId)) {
+      throw new QuoteNotOwnedException();
+    }
 
-	@Transactional
-	public Quote publishQuote(Long memberId, Long quoteId) {
-		Quote quote = findMyQuoteById(memberId, quoteId);
+    return quote;
+  }
 
-		if (quote.getType() != QuoteType.PRIVATE || quote.getStatus() != QuoteStatus.ACTIVE) {
-			throw new QuoteNotProcessableException();
-		}
+  @Transactional
+  public Quote publishQuote(Long memberId, Long quoteId) {
+    Quote quote = findMyQuoteById(memberId, quoteId);
 
-		if (quoteRepository.existsBySentenceHashExcluding(quote.getSentenceHash(), memberId, quoteId)) {
-			throw new QuoteDuplicateException();
-		}
+    if (quote.getType() != QuoteType.PRIVATE || quote.getStatus() != QuoteStatus.ACTIVE) {
+      throw new QuoteNotProcessableException();
+    }
 
-		quoteRepository
-						.findMostSimilarExcluding(quote.getSentence(), quote.getLanguage(), memberId, quoteId)
-						.ifPresent(
-										row -> {
-											String similar = (String) row[0];
-											float sim = ((Number) row[1]).floatValue();
-											rejectService.log(memberId, quote.getSentence(), similar, sim, quote.getLanguage());
+    if (quoteRepository.existsBySentenceHashExcluding(quote.getSentenceHash(), memberId, quoteId)) {
+      throw new QuoteDuplicateException();
+    }
 
-											throw new QuoteSimilarException(similar, sim);
-										});
+    quoteRepository
+        .findMostSimilarExcluding(quote.getSentence(), quote.getLanguage(), memberId, quoteId)
+        .ifPresent(
+            row -> {
+              String similar = (String) row[0];
+              float sim = ((Number) row[1]).floatValue();
+              rejectService.log(memberId, quote.getSentence(), similar, sim, quote.getLanguage());
 
-		quote.updateType(QuoteType.PUBLIC);
-		quote.updateStatus(QuoteStatus.PENDING);
+              throw new QuoteSimilarException(similar, sim);
+            });
 
-		quoteIdCacheService.invalidateMemberIds(memberId, quote.getLanguage());
+    quote.updateType(QuoteType.PUBLIC);
+    quote.updateStatus(QuoteStatus.PENDING);
 
-		return quote;
-	}
+    quoteIdCacheService.invalidateMemberIds(memberId, quote.getLanguage());
 
-	@Transactional
-	public Quote cancelPublishQuote(Long memberId, Long quoteId) {
-		Quote quote = findMyQuoteById(memberId, quoteId);
+    return quote;
+  }
 
-		if (quote.getType() != QuoteType.PUBLIC || quote.getStatus() != QuoteStatus.PENDING) {
-			throw new QuoteNotProcessableException();
-		}
+  @Transactional
+  public Quote cancelPublishQuote(Long memberId, Long quoteId) {
+    Quote quote = findMyQuoteById(memberId, quoteId);
 
-		quote.updateType(QuoteType.PRIVATE);
-		quote.updateStatus(QuoteStatus.ACTIVE);
+    if (quote.getType() != QuoteType.PUBLIC || quote.getStatus() != QuoteStatus.PENDING) {
+      throw new QuoteNotProcessableException();
+    }
 
-		quoteIdCacheService.invalidateMemberIds(memberId, quote.getLanguage());
+    quote.updateType(QuoteType.PRIVATE);
+    quote.updateStatus(QuoteStatus.ACTIVE);
 
-		return quote;
-	}
+    quoteIdCacheService.invalidateMemberIds(memberId, quote.getLanguage());
+
+    return quote;
+  }
 }
