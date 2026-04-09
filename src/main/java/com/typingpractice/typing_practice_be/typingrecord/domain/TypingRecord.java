@@ -39,6 +39,14 @@ public class TypingRecord {
   private LocalDateTime completedAt;
   private TrackingInfo tracking;
 
+  private ServingType servingType;
+
+  private float estimatedDifficulty;
+  private float estimatedUncertainty;
+
+  private float avgCpmSnapshot;
+  private float avgAccSnapshot;
+
   public static TypingRecord create(
       Long memberId,
       String anonymousId,
@@ -50,7 +58,12 @@ public class TypingRecord {
       int charLength,
       int resetCount,
       List<Typo> typos,
-      TrackingInfo tracking) {
+      TrackingInfo tracking,
+      ServingType servingType,
+      float estimatedDifficulty,
+      float estimatedUncertainty,
+      float avgCpmSnapshot,
+      float avgAccSnapshot) {
     TypingRecord record = new TypingRecord();
 
     record.memberId = memberId;
@@ -66,6 +79,12 @@ public class TypingRecord {
     record.typos = typos;
     record.completedAt = LocalDateTime.now();
     record.tracking = tracking;
+
+    record.servingType = servingType;
+    record.estimatedDifficulty = estimatedDifficulty;
+    record.estimatedUncertainty = estimatedUncertainty;
+    record.avgCpmSnapshot = avgCpmSnapshot;
+    record.avgAccSnapshot = avgAccSnapshot;
     return record;
   }
 

@@ -6,6 +6,7 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -15,6 +16,14 @@ public class MemberTypingStatsRepository {
 
   public void save(MemberTypingStats stats) {
     em.persist(stats);
+  }
+
+  public List<MemberTypingStats> findByMemberId(Long memberId) {
+    return em.createQuery(
+            "select s from MemberTypingStats s where s.member.id = :memberId",
+            MemberTypingStats.class)
+        .setParameter("memberId", memberId)
+        .getResultList();
   }
 
   public Optional<MemberTypingStats> findByMemberIdAndLanguage(
