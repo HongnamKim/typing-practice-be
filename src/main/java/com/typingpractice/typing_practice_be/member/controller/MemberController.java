@@ -5,11 +5,14 @@ import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.dto.*;
 import com.typingpractice.typing_practice_be.member.query.MemberUpdateQuery;
 import com.typingpractice.typing_practice_be.member.service.MemberService;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.MemberTypingStats;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController()
 @RequestMapping("/members")
@@ -54,6 +57,15 @@ public class MemberController {
 
     memberService.deleteMember(memberId);
     return ApiResponse.ok(null);
+  }
+
+  @GetMapping("/me/typing-profile")
+  public ApiResponse<List<MemberTypingStats>> getTypingProfile() {
+    Long memberId = getAuthenticatedMemberId();
+
+    List<MemberTypingStats> memberTypingStats = memberService.findMemberTypingStats(memberId);
+
+    return ApiResponse.ok(memberTypingStats);
   }
 
   private Long getAuthenticatedMemberId() {

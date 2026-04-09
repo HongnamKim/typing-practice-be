@@ -28,7 +28,8 @@ public class QuoteRepository {
 
   public Optional<Quote> findById(Long quoteId) {
     return em.createQuery(
-            "select q from Quote q left join fetch q.member m where q.id = :quoteId", Quote.class)
+            "select q from Quote q left join fetch q.member m left join fetch q.typingStats qs where q.id = :quoteId",
+            Quote.class)
         .setParameter("quoteId", quoteId)
         .setMaxResults(1)
         .getResultStream()
