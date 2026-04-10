@@ -22,9 +22,6 @@ public class TypingRecordQuery {
   private final TrackingInfo tracking;
   private final ServingType servingType;
 
-  private final float estimatedDifficulty;
-  private final float estimatedUncertainty;
-
   private TypingRecordQuery(
       Long quoteId,
       int cpm,
@@ -34,9 +31,7 @@ public class TypingRecordQuery {
       List<Typo> typos,
       String anonymousId,
       TrackingInfo tracking,
-      ServingType servingType,
-      float estimatedDifficulty,
-      float estimatedUncertainty) {
+      ServingType servingType) {
     this.quoteId = quoteId;
     this.cpm = cpm;
     this.accuracy = accuracy;
@@ -46,9 +41,6 @@ public class TypingRecordQuery {
     this.anonymousId = anonymousId;
     this.tracking = tracking;
     this.servingType = servingType;
-
-    this.estimatedDifficulty = estimatedDifficulty;
-    this.estimatedUncertainty = estimatedUncertainty;
   }
 
   public static TypingRecordQuery from(TypingRecordRequest request) {
@@ -72,8 +64,6 @@ public class TypingRecordQuery {
         request.toTypos(),
         request.getAnonymousId(),
         tracking,
-        servingType,
-        request.getEstimatedDifficulty(),
-        request.getEstimatedUncertainty());
+        servingType);
   }
 }
