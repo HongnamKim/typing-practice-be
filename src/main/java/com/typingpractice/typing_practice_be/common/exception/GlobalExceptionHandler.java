@@ -2,6 +2,7 @@ package com.typingpractice.typing_practice_be.common.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -33,6 +34,15 @@ public class GlobalExceptionHandler {
     ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, message);
     problemDetail.setTitle("Invalid Parameter Type");
 
+    return problemDetail;
+  }
+
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  public ProblemDetail handleMessageNotReadable(HttpMessageNotReadableException e) {
+    ProblemDetail problemDetail =
+        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "잘못된 요청입니다.");
+
+    problemDetail.setTitle("Invalid Request Body");
     return problemDetail;
   }
 }

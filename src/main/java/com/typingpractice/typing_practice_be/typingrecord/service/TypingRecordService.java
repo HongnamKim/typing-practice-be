@@ -26,8 +26,8 @@ public class TypingRecordService {
     Quote quote =
         quoteRepository.findById(query.getQuoteId()).orElseThrow(QuoteNotFoundException::new);
 
-    float avgCpm = quote.getTypingStats() != null ? quote.getTypingStats().getAvgCpm() : 0;
-    float avgAcc = quote.getTypingStats() != null ? quote.getTypingStats().getAvgAcc() : 0;
+    float quoteAvgCpm = quote.getTypingStats() != null ? quote.getTypingStats().getAvgCpm() : 0;
+    float quoteAvgAcc = quote.getTypingStats() != null ? quote.getTypingStats().getAvgAcc() : 0;
 
     TypingRecord record =
         TypingRecord.create(
@@ -43,10 +43,10 @@ public class TypingRecordService {
             query.getTypos(),
             query.getTracking(),
             query.getServingType(),
-            query.getEstimatedDifficulty(),
-            query.getEstimatedUncertainty(),
-            avgCpm,
-            avgAcc);
+            0, // estimatedDifficulty - 서버 계산으로 대체 예정
+            0, // estimatedUncertainty - 서버 계산으로 대체 예정
+            quoteAvgCpm,
+            quoteAvgAcc);
 
     TypingRecord saved;
     try {

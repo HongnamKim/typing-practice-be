@@ -31,9 +31,6 @@ public class TypingRecordRequest {
 
   private ServingType servingType;
 
-  private Float estimatedDifficulty; // 추정된 적정 난이도
-  private Float estimatedUncertainty; // 추정의 불확실성
-
   public static TypingRecordRequest create(
       Long quoteId,
       String anonymousId,
@@ -43,9 +40,7 @@ public class TypingRecordRequest {
       Integer resetCount,
       List<TypoRequest> typos,
       TrackingRequest tracking,
-      ServingType servingType,
-      Float estimatedDifficulty,
-      Float estimatedUncertainty) {
+      ServingType servingType) {
     TypingRecordRequest request = new TypingRecordRequest();
 
     request.quoteId = quoteId;
@@ -57,8 +52,6 @@ public class TypingRecordRequest {
     request.typos = typos;
     request.tracking = tracking;
     request.servingType = servingType != null ? servingType : ServingType.RANDOM;
-    request.estimatedDifficulty = estimatedDifficulty;
-    request.estimatedUncertainty = estimatedUncertainty;
 
     return request;
   }
