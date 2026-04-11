@@ -1,24 +1,25 @@
 package com.typingpractice.typing_practice_be.member.controller;
 
+import com.typingpractice.typing_practice_be.adaptiveserving.dto.AdaptiveServingEstimation;
+import com.typingpractice.typing_practice_be.adaptiveserving.service.AdaptiveServingRedisService;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.dto.*;
 import com.typingpractice.typing_practice_be.member.query.MemberUpdateQuery;
 import com.typingpractice.typing_practice_be.member.service.MemberService;
-import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.MemberTypingStats;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController()
 @RequestMapping("/members")
 @RequiredArgsConstructor
 public class MemberController {
   private final MemberService memberService;
+  private final AdaptiveServingRedisService adaptiveServingRedisService;
 
   @GetMapping("/me")
   public ApiResponse<MemberResponse> findMember() {
@@ -60,12 +61,14 @@ public class MemberController {
   }
 
   @GetMapping("/me/typing-profile")
-  public ApiResponse<List<MemberTypingStats>> getTypingProfile() {
+  public ApiResponse<AdaptiveServingEstimation> getTypingProfile(
+      @RequestParam QuoteLanguage language) {
     Long memberId = getAuthenticatedMemberId();
 
-    List<MemberTypingStats> memberTypingStats = memberService.findMemberTypingStats(memberId);
+    AdaptiveServingEstimation estimation =
+        adaptiveServingRedisService.getEstimation(memberId, language);
 
-    return ApiResponse.ok(memberTypingStats);
+    return ApiResponse.ok(estimation);
   }
 
   private Long getAuthenticatedMemberId() {

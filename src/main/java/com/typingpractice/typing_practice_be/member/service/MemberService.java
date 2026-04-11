@@ -11,8 +11,6 @@ import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundExce
 import com.typingpractice.typing_practice_be.member.query.MemberCreateQuery;
 import com.typingpractice.typing_practice_be.member.query.MemberUpdateQuery;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
-import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.MemberTypingStats;
-import com.typingpractice.typing_practice_be.typingrecord.statistics.repository.MemberTypingStatsRepository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class MemberService {
   private final MemberRepository memberRepository;
-  private final MemberTypingStatsRepository memberTypingStatsRepository;
   private final RefreshTokenRepository refreshTokenRepository;
 
   private final AdminProperties adminProperties;
@@ -106,9 +103,5 @@ public class MemberService {
     refreshTokenRepository.deleteByMemberId(memberId);
 
     memberRepository.deleteMember(member);
-  }
-
-  public List<MemberTypingStats> findMemberTypingStats(Long memberId) {
-    return this.memberTypingStatsRepository.findByMemberId(memberId);
   }
 }

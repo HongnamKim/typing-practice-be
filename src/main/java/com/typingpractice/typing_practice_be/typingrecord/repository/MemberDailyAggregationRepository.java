@@ -30,6 +30,8 @@ public class MemberDailyAggregationRepository {
                     .and("completedAt")
                     .gte(from)
                     .lt(to)
+                    .and("outlier")
+                    .is(false)
                     .and("cpm")
                     .gt(0)),
             Aggregation.addFields()
@@ -79,6 +81,8 @@ public class MemberDailyAggregationRepository {
                     .and("completedAt")
                     .gte(from)
                     .lt(to)
+                    .and("outlier")
+                    .is(false)
                     .and("cpm")
                     .gt(0)),
             Aggregation.addFields()

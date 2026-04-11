@@ -31,3 +31,12 @@ quote:
   similarity-threshold:
     korean: 0.5
     english: 0.5
+
+adaptive-serving:
+  beta: 15
+  sigma-obs: 4 #10
+  perf-coefficient: 1.5
+  sigma-process: 1 #2
+  surprise-threshold: 2
+  default-mu: 50
+  default-sigma: 15

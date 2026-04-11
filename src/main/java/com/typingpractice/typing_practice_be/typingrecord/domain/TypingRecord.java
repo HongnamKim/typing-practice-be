@@ -44,6 +44,7 @@ public class TypingRecord {
   private float estimatedDifficulty;
   private float estimatedUncertainty;
 
+  private float quoteDifficulty;
   private float avgCpmSnapshot;
   private float avgAccSnapshot;
 
@@ -62,6 +63,7 @@ public class TypingRecord {
       ServingType servingType,
       float estimatedDifficulty,
       float estimatedUncertainty,
+      float quoteDifficulty,
       float avgCpmSnapshot,
       float avgAccSnapshot) {
     TypingRecord record = new TypingRecord();
@@ -83,6 +85,7 @@ public class TypingRecord {
     record.servingType = servingType;
     record.estimatedDifficulty = estimatedDifficulty;
     record.estimatedUncertainty = estimatedUncertainty;
+    record.quoteDifficulty = quoteDifficulty;
     record.avgCpmSnapshot = avgCpmSnapshot;
     record.avgAccSnapshot = avgAccSnapshot;
     return record;
