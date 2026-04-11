@@ -19,6 +19,21 @@ public class MemberDailyStatsRepository {
     em.persist(stats);
   }
 
+  public List<MemberDailyStats> findRecentByMemberIdAndLanguage(
+      Long memberId, QuoteLanguage language, int limit) {
+    return em.createQuery(
+            "select s from MemberDailyStats s "
+                + "where s.member.id = :memberId "
+                + "and s.language = :language "
+                + "order by s.date desc",
+            MemberDailyStats.class)
+        .setParameter("memberId", memberId)
+        .setParameter("language", language)
+        .setMaxResults(limit)
+        .getResultList()
+        .reversed();
+  }
+
   public Optional<MemberDailyStats> findByMemberIdAndDate(Long memberId, LocalDate date) {
     return em.createQuery(
             "select s from MemberDailyStats s where s.member.id = :memberId and s.date = :date",
