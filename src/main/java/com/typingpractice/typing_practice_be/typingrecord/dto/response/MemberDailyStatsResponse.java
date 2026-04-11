@@ -47,6 +47,10 @@ public class MemberDailyStatsResponse {
       content.add(DayEntry.fromToday(today, todayDate));
     }
 
+    if (content.size() > days) {
+      content = content.subList(content.size() - days, content.size());
+    }
+
     return create(days, content);
   }
 
