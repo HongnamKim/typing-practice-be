@@ -104,17 +104,15 @@ public class MemberStatisticsService {
 
   public MemberDailyStatsResponse getDailyStats(Long memberId, QuoteLanguage language, int days) {
     LocalDate todayKst = LocalDate.now(TimeUtils.KST);
-    LocalDate from = todayKst.minusDays(days - 1);
-    LocalDate yesterday = todayKst.minusDays(1);
 
     List<MemberDailyStats> pgList =
-        memberDailyStatsRepository.findByMemberIdAndLanguageAndDateBetween(
-            memberId, language, from, yesterday);
+        memberDailyStatsRepository.findRecentByMemberIdAndLanguage(memberId, language, days);
 
     TodayTypingSnapshot today = todayTypingStatsRedisService.getTyping(memberId, language);
 
     MemberDailyAggregation yesterdayAgg = null;
     if (isYesterdayBatchPending(memberId, language)) {
+      LocalDate yesterday = todayKst.minusDays(1);
       LocalDateTime yesterdayFrom = TimeUtils.startOfDayKstToUtc(yesterday);
       LocalDateTime yesterdayTo = TimeUtils.endOfDayKstToUtc(yesterday);
 
