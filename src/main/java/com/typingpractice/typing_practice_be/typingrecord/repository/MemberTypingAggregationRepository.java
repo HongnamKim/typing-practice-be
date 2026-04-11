@@ -19,7 +19,8 @@ public class MemberTypingAggregationRepository {
   public List<MemberTypingAggregation> aggregateByMemberIds(List<Long> memberIds) {
     Aggregation aggregation =
         Aggregation.newAggregation(
-            Aggregation.match(Criteria.where("memberId").in(memberIds).and("cpm").gt(0)),
+            Aggregation.match(
+                Criteria.where("memberId").in(memberIds).and("outlier").is(false).and("cpm").gt(0)),
             Aggregation.group("memberId", "language")
                 .count()
                 .as("totalAttempts")
@@ -64,6 +65,8 @@ public class MemberTypingAggregationRepository {
                     .and("completedAt")
                     .gte(from)
                     .lt(to)
+                    .and("outlier")
+                    .is(false)
                     .and("cpm")
                     .gt(0)),
             Aggregation.group("memberId", "language")
@@ -109,6 +112,8 @@ public class MemberTypingAggregationRepository {
                     .in(memberIds)
                     .and("language")
                     .is(language.name())
+                    .and("outlier")
+                    .is(false)
                     .and("cpm")
                     .gt(0)),
             Aggregation.group("memberId", "language")
@@ -157,6 +162,8 @@ public class MemberTypingAggregationRepository {
                     .and("completedAt")
                     .gte(from)
                     .lt(to)
+                    .and("outlier")
+                    .is(false)
                     .and("cpm")
                     .gt(0)),
             Aggregation.group("memberId", "language")

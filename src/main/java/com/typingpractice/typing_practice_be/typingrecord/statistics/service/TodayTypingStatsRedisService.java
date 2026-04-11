@@ -66,6 +66,7 @@ public class TodayTypingStatsRedisService {
 
   // 이벤트 수신 후 오늘 통계 업데이트
   public void incrementTyping(TypingRecordSavedEvent event) {
+    if (event.isOutlier()) return;
     String key = typingKey(event.getMemberId(), event.getLanguage());
 
     TodayTypingSnapshot snapshot = getSnapshotOrEmpty(key);
