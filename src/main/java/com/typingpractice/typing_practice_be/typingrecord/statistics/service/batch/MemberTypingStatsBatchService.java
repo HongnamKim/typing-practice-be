@@ -1,5 +1,8 @@
 package com.typingpractice.typing_practice_be.typingrecord.statistics.service.batch;
 
+import com.typingpractice.typing_practice_be.adaptiveserving.config.AdaptiveServingProperties;
+import com.typingpractice.typing_practice_be.adaptiveserving.dto.AdaptiveServingRecord;
+import com.typingpractice.typing_practice_be.adaptiveserving.service.AdaptiveServingCalculator;
 import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
@@ -25,6 +28,9 @@ public class MemberTypingStatsBatchService {
   private final TypingRecordRepository typingRecordRepository;
   private final MemberTypingAggregationRepository typingAggregationRepository;
   private final MemberTypingStatsRepository memberTypingStatsRepository;
+
+  private final AdaptiveServingCalculator calculator;
+  private final AdaptiveServingProperties properties;
 
   private static final int CHUNK_SIZE = 500;
 
@@ -55,17 +61,6 @@ public class MemberTypingStatsBatchService {
     log.info("MemberTypingStats 전체 재계산 완료 - {}건 처리", totalProcessed);
   }
 
-  // 어드민: 날짜 범위 재실행
-  //  @Transactional
-  //  public void runRecalculationForPeriod(LocalDateTime from, LocalDateTime to) {
-  //    log.info("MemberTypingStats 기간 재계산 시작 - 범위: {} - {}", from, to);
-  //
-  //    List<Long> memberIds = typingRecordRepository.findDistinctMemberIdsBetween(from, to);
-  //    int totalProcessed = processChunks(memberIds, from, to, false);
-  //
-  //    log.info("MemberTypingStats 기간 재계산 완료 - {}건 처리", totalProcessed);
-  //  }
-
   private int processChunks(
       List<Long> memberIds, LocalDateTime from, LocalDateTime to, boolean overwrite) {
     int totalProcessed = 0;
@@ -79,7 +74,7 @@ public class MemberTypingStatsBatchService {
               : typingAggregationRepository.aggregateByMemberIdsBetween(chunk, from, to);
 
       for (MemberTypingAggregation agg : aggregations) {
-        upsert(agg.getMemberId(), agg, overwrite);
+        upsert(agg.getMemberId(), agg, overwrite, from, to);
         totalProcessed++;
       }
     }
@@ -87,7 +82,12 @@ public class MemberTypingStatsBatchService {
     return totalProcessed;
   }
 
-  private void upsert(Long memberId, MemberTypingAggregation agg, boolean overwrite) {
+  private void upsert(
+      Long memberId,
+      MemberTypingAggregation agg,
+      boolean overwrite,
+      LocalDateTime from,
+      LocalDateTime to) {
     MemberTypingStats stats =
         memberTypingStatsRepository
             .findByMemberIdAndLanguage(memberId, agg.getLanguage())
@@ -131,5 +131,41 @@ public class MemberTypingStatsBatchService {
           agg.getTotalResetCount(),
           agg.getLastPracticedAt());
     }
+
+    List<AdaptiveServingRecord> records =
+        overwrite
+            ? typingRecordRepository.findForAdaptiveServing(memberId, agg.getLanguage())
+            : typingRecordRepository.findForAdaptiveServingBetween(
+                memberId, agg.getLanguage(), from, to);
+
+    float mu, sigma;
+    if (overwrite) { // mu, sigma 재계산
+      mu = properties.getDefaultMu();
+      sigma = properties.getDefaultSigma();
+    } else { // 기존 mu, sigma
+      mu =
+          stats.getEstimatedDifficulty() != 0
+              ? stats.getEstimatedDifficulty()
+              : properties.getDefaultMu();
+      sigma =
+          stats.getEstimatedUncertainty() != 0
+              ? stats.getEstimatedUncertainty()
+              : properties.getDefaultSigma();
+    }
+
+    for (AdaptiveServingRecord record : records) {
+      float perf =
+          calculator.calcPerfNormalized(
+              record.getCpm(),
+              record.getAccuracy(),
+              record.getAvgCpmSnapshot(),
+              record.getAvgAccSnapshot());
+      float x = calculator.calcObservation(record.getQuoteDifficulty(), perf);
+      float[] updated = calculator.update(mu, sigma, x);
+      mu = updated[0];
+      sigma = updated[1];
+    }
+
+    stats.updateEstimation(mu, sigma);
   }
 }
