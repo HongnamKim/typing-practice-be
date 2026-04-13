@@ -105,4 +105,9 @@ public class MemberTypingStats extends BaseEntity {
     this.totalResetCount = totalResetCount;
     this.lastPracticedAt = lastPracticedAt;
   }
+
+  public void updateEstimation(float estimatedDifficulty, float estimatedUncertainty) {
+    this.estimatedDifficulty = estimatedDifficulty;
+    this.estimatedUncertainty = estimatedUncertainty;
+  }
 }
