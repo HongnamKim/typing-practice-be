@@ -38,6 +38,10 @@ public class AdaptiveServingCalculator {
     float baseProcessNoise = properties.getSigmaProcess();
     float surpriseThreshold = properties.getSurpriseThreshold();
 
+    // sigma 최소값 보장 (0 또는 음수 방지)
+    if (sigma <= 0) sigma = properties.getDefaultSigma();
+    if (sigmaObs <= 0) return new float[] {mu, sigma};
+
     // Adaptive process noise: surprise 가 크면 sigma 를 더 넓힘 -> 평소와 다른 데이터
     float surprise = Math.abs(x - mu) / sigma;
     float processNoise =

@@ -3,15 +3,14 @@ package com.typingpractice.typing_practice_be.quote.repository;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.quote.config.SimilarityThresholdProperties;
 import com.typingpractice.typing_practice_be.quote.domain.*;
+import com.typingpractice.typing_practice_be.quote.dto.QuoteIdWithDifficulty;
 import com.typingpractice.typing_practice_be.quote.query.PublicQuoteQuery;
 import com.typingpractice.typing_practice_be.quote.query.QuotePaginationQuery;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -86,6 +85,25 @@ public class QuoteRepository {
     }
 
     return query.getResultList();
+  }
+
+  public List<QuoteIdWithDifficulty> findAllPublicIdsWithDifficulty(QuoteLanguage language) {
+    List<Object[]> rows =
+        em.createQuery(
+                "select q.id, q.difficulty from Quote q "
+                    + "where q.type = :type and q.status = :status and q.language = :language",
+                Object[].class)
+            .setParameter("type", QuoteType.PUBLIC)
+            .setParameter("status", QuoteStatus.ACTIVE)
+            .setParameter("language", language)
+            .getResultList();
+
+    return rows.stream()
+        .map(
+            row ->
+                QuoteIdWithDifficulty.create(
+                    (Long) row[0], row[1] != null ? ((Number) row[1]).floatValue() : 0f))
+        .toList();
   }
 
   public List<Quote> findAll(QuotePaginationQuery query) {

@@ -7,6 +7,7 @@ import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
 import com.typingpractice.typing_practice_be.quote.domain.*;
+import com.typingpractice.typing_practice_be.quote.dto.QuoteIdWithDifficulty;
 import com.typingpractice.typing_practice_be.quote.exception.*;
 import com.typingpractice.typing_practice_be.quote.query.PublicQuoteQuery;
 import com.typingpractice.typing_practice_be.quote.query.QuoteCreateQuery;
@@ -18,11 +19,9 @@ import com.typingpractice.typing_practice_be.quote.service.difficulty.Difficulty
 import com.typingpractice.typing_practice_be.quote.service.difficulty.QuoteProfileCalculator;
 import com.typingpractice.typing_practice_be.quote.statistics.domain.GlobalQuoteStatistics;
 import com.typingpractice.typing_practice_be.quote.statistics.service.GlobalQuoteStatisticsService;
-
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -48,33 +47,37 @@ public class QuoteService {
   private final QuoteIdCacheService quoteIdCacheService;
 
   public PageResult<Quote> findRandomPublicQuotes(PublicQuoteQuery query) {
-
     QuoteLanguage language = query.getLanguage();
     Random random = new Random((long) (query.getSeed() * 1_000));
 
-    List<Long> ids;
-    if (query.getOnlyMyQuotes() && query.getMemberId() != null) {
-      // 로그인한 유저의 내 문장만 조회
-      ids = quoteIdCacheService.getIdsByMemberId(query.getMemberId(), language);
-    } else {
-      // 전체 문장 랜덤 조회
-      ids = quoteIdCacheService.getPublicIds(language, QuoteDifficultyTier.ALL);
-    }
-
-    Collections.shuffle(ids, random);
-
     int from = (query.getPage() - 1) * query.getCount();
-    int to = Math.min(from + query.getCount() + 1, ids.size());
+    List<Long> slicedIds;
 
-    if (from >= ids.size()) {
-      return new PageResult<>(List.of(), query.getPage(), query.getCount(), false);
+    if (query.getOnlyMyQuotes() && query.getMemberId() != null) {
+      // 내 문장만
+      List<Long> ids = quoteIdCacheService.getIdsByMemberId(query.getMemberId(), language);
+      Collections.shuffle(ids, random);
+
+      int to = Math.min(from + query.getCount() + 1, ids.size());
+      if (from >= ids.size()) {
+        return new PageResult<>(List.of(), query.getPage(), query.getCount(), false);
+      }
+      slicedIds = ids.subList(from, to);
+    } else {
+      // 공개 문장
+      List<QuoteIdWithDifficulty> quotes = quoteIdCacheService.getPublicQuotes(language);
+      Collections.shuffle(quotes, random);
+
+      int to = Math.min(from + query.getCount() + 1, quotes.size());
+      if (from >= quotes.size()) {
+        return new PageResult<>(List.of(), query.getPage(), query.getCount(), false);
+      }
+      slicedIds = quotes.subList(from, to).stream().map(QuoteIdWithDifficulty::getId).toList();
     }
-
-    List<Long> slicedIds = ids.subList(from, to);
 
     List<Quote> fetched = quoteRepository.findByIds(slicedIds, language);
 
-    // 셔플 순서 복원
+    // 셔플 순서로 복원
     Map<Long, Quote> map =
         fetched.stream().collect(Collectors.toMap(Quote::getId, Function.identity()));
     List<Quote> ordered = slicedIds.stream().map(map::get).filter(Objects::nonNull).toList();

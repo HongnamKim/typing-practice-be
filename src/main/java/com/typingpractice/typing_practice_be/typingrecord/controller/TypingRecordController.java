@@ -28,8 +28,6 @@ public class TypingRecordController {
   public ApiResponse<Void> save(@RequestBody @Valid TypingRecordRequest request) {
     Long memberId = getMemberIdOrNull();
 
-    System.out.println("request = " + request);
-
     TypingRecordQuery query = TypingRecordQuery.from(request);
 
     typingRecordService.save(memberId, query);

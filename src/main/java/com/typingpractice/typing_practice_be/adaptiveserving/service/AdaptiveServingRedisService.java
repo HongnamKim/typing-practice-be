@@ -103,8 +103,6 @@ public class AdaptiveServingRedisService {
             event.getAvgCpmSnapshot(),
             event.getAvgAccSnapshot());
 
-    System.out.println("perfNormalized = " + perfNormalized);
-
     float x = calculator.calcObservation(event.getDifficulty(), perfNormalized);
     float[] updated = calculator.update(current.getMu(), current.getSigma(), x);
 
