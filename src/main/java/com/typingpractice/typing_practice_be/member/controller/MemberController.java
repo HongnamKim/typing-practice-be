@@ -1,10 +1,13 @@
 package com.typingpractice.typing_practice_be.member.controller;
 
+import com.typingpractice.typing_practice_be.adaptiveserving.dto.AdaptiveServingEstimation;
+import com.typingpractice.typing_practice_be.adaptiveserving.service.AdaptiveServingRedisService;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.dto.*;
 import com.typingpractice.typing_practice_be.member.query.MemberUpdateQuery;
 import com.typingpractice.typing_practice_be.member.service.MemberService;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class MemberController {
   private final MemberService memberService;
+  private final AdaptiveServingRedisService adaptiveServingRedisService;
 
   @GetMapping("/me")
   public ApiResponse<MemberResponse> findMember() {
@@ -54,6 +58,17 @@ public class MemberController {
 
     memberService.deleteMember(memberId);
     return ApiResponse.ok(null);
+  }
+
+  @GetMapping("/me/typing-profile")
+  public ApiResponse<AdaptiveServingEstimation> getTypingProfile(
+      @RequestParam QuoteLanguage language) {
+    Long memberId = getAuthenticatedMemberId();
+
+    AdaptiveServingEstimation estimation =
+        adaptiveServingRedisService.getEstimation(memberId, language);
+
+    return ApiResponse.ok(estimation);
   }
 
   private Long getAuthenticatedMemberId() {

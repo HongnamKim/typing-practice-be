@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.typingrecord.dto.request;
 
+import com.typingpractice.typing_practice_be.typingrecord.domain.ServingType;
 import com.typingpractice.typing_practice_be.typingrecord.domain.Typo;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -28,6 +29,8 @@ public class TypingRecordRequest {
 
   private TrackingRequest tracking;
 
+  private ServingType servingType;
+
   public static TypingRecordRequest create(
       Long quoteId,
       String anonymousId,
@@ -36,7 +39,8 @@ public class TypingRecordRequest {
       Integer charLength,
       Integer resetCount,
       List<TypoRequest> typos,
-      TrackingRequest tracking) {
+      TrackingRequest tracking,
+      ServingType servingType) {
     TypingRecordRequest request = new TypingRecordRequest();
 
     request.quoteId = quoteId;
@@ -47,6 +51,7 @@ public class TypingRecordRequest {
     request.resetCount = resetCount;
     request.typos = typos;
     request.tracking = tracking;
+    request.servingType = servingType != null ? servingType : ServingType.RANDOM;
 
     return request;
   }

@@ -20,6 +20,10 @@ public class TypingRecordSavedEvent {
   private final boolean outlier;
   private final List<Typo> typos;
 
+  private final float difficulty;
+  private final float avgCpmSnapshot;
+  private final float avgAccSnapshot;
+
   private TypingRecordSavedEvent(
       Long memberId,
       QuoteLanguage language,
@@ -28,7 +32,10 @@ public class TypingRecordSavedEvent {
       int charLength,
       int resetCount,
       boolean outlier,
-      List<Typo> typos) {
+      List<Typo> typos,
+      float difficulty,
+      float avgCpmSnapshot,
+      float avgAccSnapshot) {
     this.memberId = memberId;
     this.language = language;
     this.cpm = cpm;
@@ -37,6 +44,10 @@ public class TypingRecordSavedEvent {
     this.resetCount = resetCount;
     this.outlier = outlier;
     this.typos = typos;
+
+    this.difficulty = difficulty;
+    this.avgCpmSnapshot = avgCpmSnapshot;
+    this.avgAccSnapshot = avgAccSnapshot;
   }
 
   public static TypingRecordSavedEvent from(TypingRecord record) {
@@ -48,6 +59,9 @@ public class TypingRecordSavedEvent {
         record.getCharLength(),
         record.getResetCount(),
         record.isOutlier(),
-        record.getTypos());
+        record.getTypos(),
+        record.getQuoteDifficulty(),
+        record.getAvgCpmSnapshot(),
+        record.getAvgAccSnapshot());
   }
 }

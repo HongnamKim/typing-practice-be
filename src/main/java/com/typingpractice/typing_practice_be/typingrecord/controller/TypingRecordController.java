@@ -27,6 +27,7 @@ public class TypingRecordController {
   @PostMapping("/typing-records")
   public ApiResponse<Void> save(@RequestBody @Valid TypingRecordRequest request) {
     Long memberId = getMemberIdOrNull();
+
     TypingRecordQuery query = TypingRecordQuery.from(request);
 
     typingRecordService.save(memberId, query);
