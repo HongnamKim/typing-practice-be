@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.typingrecord.query;
 
+import com.typingpractice.typing_practice_be.typingrecord.domain.ServingType;
 import com.typingpractice.typing_practice_be.typingrecord.domain.TrackingInfo;
 import com.typingpractice.typing_practice_be.typingrecord.domain.Typo;
 import com.typingpractice.typing_practice_be.typingrecord.dto.request.TypingRecordRequest;
@@ -19,6 +20,7 @@ public class TypingRecordQuery {
   private final int resetCount;
   private final List<Typo> typos;
   private final TrackingInfo tracking;
+  private final ServingType servingType;
 
   private TypingRecordQuery(
       Long quoteId,
@@ -28,7 +30,8 @@ public class TypingRecordQuery {
       int resetCount,
       List<Typo> typos,
       String anonymousId,
-      TrackingInfo tracking) {
+      TrackingInfo tracking,
+      ServingType servingType) {
     this.quoteId = quoteId;
     this.cpm = cpm;
     this.accuracy = accuracy;
@@ -37,6 +40,7 @@ public class TypingRecordQuery {
     this.typos = typos;
     this.anonymousId = anonymousId;
     this.tracking = tracking;
+    this.servingType = servingType;
   }
 
   public static TypingRecordQuery from(TypingRecordRequest request) {
@@ -48,6 +52,8 @@ public class TypingRecordQuery {
               request.getTracking().getReferrer(),
               request.getTracking().getDeviceType());
     }
+    ServingType servingType =
+        request.getServingType() != null ? request.getServingType() : ServingType.RANDOM;
 
     return new TypingRecordQuery(
         request.getQuoteId(),
@@ -57,6 +63,7 @@ public class TypingRecordQuery {
         request.getResetCount(),
         request.toTypos(),
         request.getAnonymousId(),
-        tracking);
+        tracking,
+        servingType);
   }
 }

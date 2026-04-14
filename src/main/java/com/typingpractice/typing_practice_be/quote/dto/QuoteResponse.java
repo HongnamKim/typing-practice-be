@@ -5,6 +5,8 @@ import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import java.time.LocalDateTime;
+
+import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.QuoteTypingStats;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -22,6 +24,9 @@ public class QuoteResponse {
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
+  private float avgCpm;
+  private float avgAcc;
+
   protected void fillFrom(Quote quote) {
     this.quoteId = quote.getId();
     this.sentence = quote.getSentence();
@@ -33,6 +38,13 @@ public class QuoteResponse {
     this.reportCount = quote.getReportCount();
     this.createdAt = quote.getCreatedAt();
     this.updatedAt = quote.getUpdatedAt();
+
+    if (quote.getTypingStats() != null) {
+      QuoteTypingStats typingStats = quote.getTypingStats();
+
+      this.avgAcc = typingStats.getAvgAcc();
+      this.avgCpm = typingStats.getAvgCpm();
+    }
   }
 
   public static QuoteResponse from(Quote quote) {

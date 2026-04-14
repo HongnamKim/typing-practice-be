@@ -38,6 +38,9 @@ public class MemberTypingStats extends BaseEntity {
   private float totalPracticeTimeMin;
   private int totalResetCount;
 
+  private float estimatedDifficulty; // μ — 추정된 적정 난이도
+  private float estimatedUncertainty; // σ — 추정의 불확실성
+
   @Column(columnDefinition = "timestamp with time zone")
   private LocalDateTime lastPracticedAt;
 
@@ -101,5 +104,10 @@ public class MemberTypingStats extends BaseEntity {
     this.totalPracticeTimeMin = totalPracticeTimeMin;
     this.totalResetCount = totalResetCount;
     this.lastPracticedAt = lastPracticedAt;
+  }
+
+  public void updateEstimation(float estimatedDifficulty, float estimatedUncertainty) {
+    this.estimatedDifficulty = estimatedDifficulty;
+    this.estimatedUncertainty = estimatedUncertainty;
   }
 }
