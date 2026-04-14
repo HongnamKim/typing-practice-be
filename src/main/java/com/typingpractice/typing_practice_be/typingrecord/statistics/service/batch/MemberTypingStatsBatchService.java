@@ -32,7 +32,7 @@ public class MemberTypingStatsBatchService {
   private final AdaptiveServingCalculator calculator;
   private final AdaptiveServingProperties properties;
 
-  private static final int CHUNK_SIZE = 500;
+  private static final int CHUNK_SIZE = 100;
 
   // 스케줄 배치: 전날 하루치 증분
   @Transactional

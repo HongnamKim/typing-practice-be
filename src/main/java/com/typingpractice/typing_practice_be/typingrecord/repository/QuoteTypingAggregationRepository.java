@@ -36,7 +36,13 @@ public class QuoteTypingAggregationRepository {
   public List<QuoteTypingAggregation> aggregateByQuoteIds(List<Long> quoteIds) {
     Aggregation aggregation =
         Aggregation.newAggregation(
-            Aggregation.match(Criteria.where("outlier").is(false).and("quoteId").in(quoteIds)),
+            Aggregation.match(
+                Criteria.where("outlier")
+                    .is(false)
+                    .and("quoteId")
+                    .in(quoteIds)
+                    .and("servingType")
+                    .in(null, "RANDOM")),
             Aggregation.group("quoteId")
                 .first("language")
                 .as("language")
@@ -85,6 +91,8 @@ public class QuoteTypingAggregationRepository {
                     .is(false)
                     .and("quoteId")
                     .in(quoteIds)
+                    .and("servingType")
+                    .in(null, "RANDOM")
                     .and("completedAt")
                     .gte(from)
                     .lt(to)),

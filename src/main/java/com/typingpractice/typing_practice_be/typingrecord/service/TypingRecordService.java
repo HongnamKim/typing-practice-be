@@ -1,5 +1,7 @@
 package com.typingpractice.typing_practice_be.typingrecord.service;
 
+import com.typingpractice.typing_practice_be.adaptiveserving.dto.AdaptiveServingEstimation;
+import com.typingpractice.typing_practice_be.adaptiveserving.service.AdaptiveServingRedisService;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
@@ -19,6 +21,7 @@ public class TypingRecordService {
   private final TypingRecordRepository typingRecordRepository;
   private final TypingRecordFallbackService fallbackService;
   private final QuoteRepository quoteRepository;
+  private final AdaptiveServingRedisService adaptiveServingRedisService;
 
   private final ApplicationEventPublisher eventPublisher;
 
@@ -29,6 +32,15 @@ public class TypingRecordService {
     float quoteDifficulty = quote.getDifficulty() != null ? quote.getDifficulty() : 0f;
     float quoteAvgCpm = quote.getTypingStats() != null ? quote.getTypingStats().getAvgCpm() : 0f;
     float quoteAvgAcc = quote.getTypingStats() != null ? quote.getTypingStats().getAvgAcc() : 0f;
+
+    float estimatedDifficulty = 0f;
+    float estimatedUncertainty = 0f;
+    if (memberId != null) {
+      AdaptiveServingEstimation estimation =
+          adaptiveServingRedisService.getEstimation(memberId, quote.getLanguage());
+      estimatedDifficulty = estimation.getMu();
+      estimatedUncertainty = estimation.getSigma();
+    }
 
     TypingRecord record =
         TypingRecord.create(
@@ -44,8 +56,8 @@ public class TypingRecordService {
             query.getTypos(),
             query.getTracking(),
             query.getServingType(),
-            0f, // estimatedDifficulty - 서버 계산으로 대체 예정
-            0f, // estimatedUncertainty - 서버 계산으로 대체 예정
+            estimatedDifficulty,
+            estimatedUncertainty,
             quoteDifficulty,
             quoteAvgCpm,
             quoteAvgAcc);
