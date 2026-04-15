@@ -14,6 +14,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -23,24 +25,24 @@ public class AuthController {
   private final MemberService memberService;
   private final JwtTokenProvider jwtTokenProvider;
 
-  //  @PostMapping("/test")
-  //  public ApiResponse<LoginResponse> testLogin(@RequestBody TestLoginRequest request) {
-  //
-  //    LoginResult loginResult =
-  //        memberService.loginOrSignIn(
-  //            GoogleUserInfo.create(
-  //                request.getProviderId(),
-  //                "email",
-  //                "user_" + UUID.randomUUID().toString().substring(0, 8),
-  //                "picture"));
-  //
-  //    Member member = loginResult.getMember();
-  //
-  //    String token = jwtTokenProvider.createToken(member.getId(), member.getRole());
-  //    String refreshToken = authService.createRefreshToken(member);
-  //
-  //    return ApiResponse.ok(LoginResponse.from(loginResult, token, refreshToken));
-  //  }
+  @PostMapping("/test")
+  public ApiResponse<LoginResponse> testLogin(@RequestBody TestLoginRequest request) {
+
+    LoginResult loginResult =
+        memberService.loginOrSignIn(
+            GoogleUserInfo.create(
+                request.getProviderId(),
+                "email",
+                "user_" + UUID.randomUUID().toString().substring(0, 8),
+                "picture"));
+
+    Member member = loginResult.getMember();
+
+    String token = jwtTokenProvider.createToken(member.getId(), member.getRole());
+    String refreshToken = authService.createRefreshToken(member);
+
+    return ApiResponse.ok(LoginResponse.from(loginResult, token, refreshToken));
+  }
 
   @PostMapping("/google")
   public ApiResponse<LoginResponse> googleLogin(@RequestBody GoogleLoginRequest request) {
