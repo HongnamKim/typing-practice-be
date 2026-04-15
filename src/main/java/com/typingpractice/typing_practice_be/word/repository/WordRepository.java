@@ -41,4 +41,22 @@ public class WordRepository {
   public void deleteWord(Word w) {
     em.remove(w);
   }
+
+  public Long findMaxIdByLanguage(WordLanguage language) {
+    return em.createQuery("select max(w.id) from Word w where w.language = :language", Long.class)
+        .setParameter("language", language)
+        .getSingleResult();
+  }
+
+  public List<Word> findPageByLanguageAndIdRange(
+      WordLanguage language, Long cursorId, Long maxId, int size) {
+    return em.createQuery(
+            "select w from Word w where w.language = :language and w.id > :cursorId and w.id <= :maxId order by w.id ASC",
+            Word.class)
+        .setParameter("language", language)
+        .setParameter("cursorId", cursorId)
+        .setParameter("maxId", maxId)
+        .setMaxResults(size)
+        .getResultList();
+  }
 }

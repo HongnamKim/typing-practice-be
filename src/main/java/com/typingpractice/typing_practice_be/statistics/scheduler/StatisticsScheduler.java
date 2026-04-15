@@ -7,6 +7,7 @@ import com.typingpractice.typing_practice_be.typingrecord.statistics.service.bat
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.batch.MemberTypingStatsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.batch.MemberTypoStatsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.batch.QuoteTypingStatsBatchService;
+import com.typingpractice.typing_practice_be.word.statistics.service.GlobalWordStatisticsBatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,6 +24,8 @@ public class StatisticsScheduler {
   private final MemberTypoStatsBatchService memberTypoStatsBatchService;
   private final DifficultyBatchService difficultyBatchService;
 
+  private final GlobalWordStatisticsBatchService globalWordStatisticsBatchService;
+
   @Scheduled(cron = "0 0 3 * * *", zone = TimeUtils.KST_ZONE)
   public void runDailyBatch() {
     log.info("전역 통계 배치 시작");
@@ -33,5 +36,12 @@ public class StatisticsScheduler {
     memberDailyStatsBatchService.runScheduledBatch(); // 개인 일간 통계
     memberTypoStatsBatchService.runScheduledBatch(); // 개인 오타 통계
     log.info("전역 통계 배치 완료");
+  }
+
+  @Scheduled(cron = "0 0 4 * * *", zone = TimeUtils.KST_ZONE)
+  public void runWordDailyBatch() {
+    log.info("단어 전역 통계 배치 시작");
+    globalWordStatisticsBatchService.runScheduledBatch();
+    log.info("단어 전역 통계 배치 완료");
   }
 }
