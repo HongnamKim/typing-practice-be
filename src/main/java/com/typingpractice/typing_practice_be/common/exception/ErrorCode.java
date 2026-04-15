@@ -31,6 +31,10 @@ public enum ErrorCode {
   QUOTE_DUPLICATE(HttpStatus.CONFLICT, "동일한 문장이 이미 존재합니다."),
   QUOTE_SIMILAR(HttpStatus.CONFLICT, "유사한 문장이 이미 존재합니다."),
 
+  WORD_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 단어를 찾을 수 없습니다"),
+  WORD_LANGUAGE_MISMATCH(HttpStatus.BAD_REQUEST, "선택한 언어와 맞지 않는 문자가 포함되어 있습니다."),
+  WORD_DUPLICATE(HttpStatus.CONFLICT, "동일한 단어가 이미 존재합니다."),
+
   EMPTY_UPDATE_REQUEST(HttpStatus.BAD_REQUEST, "수정할 내용이 없습니다."),
 
   REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "신고 내역을 찾을 수 없습니다."),

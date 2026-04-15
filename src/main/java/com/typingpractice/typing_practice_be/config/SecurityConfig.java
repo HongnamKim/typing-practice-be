@@ -48,16 +48,18 @@ public class SecurityConfig {
             auth ->
                 auth
                     // 인증 불필요
-                    // .requestMatchers("/swagger-ui/**", "/api-docs/**")
-                    // .permitAll()
-                    // .requestMatchers("/auth/test")
-                    // .permitAll()
+                    .requestMatchers("/swagger-ui/**", "/api-docs/**")
+                    .permitAll()
+                    .requestMatchers("/auth/test")
+                    .permitAll()
                     //
                     .requestMatchers("/auth/google")
                     .permitAll()
                     .requestMatchers("/auth/refresh")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/quotes")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/words")
                     .permitAll()
                     .requestMatchers("/error")
                     .permitAll()

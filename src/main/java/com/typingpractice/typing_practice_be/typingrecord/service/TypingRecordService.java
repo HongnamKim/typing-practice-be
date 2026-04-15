@@ -3,6 +3,7 @@ package com.typingpractice.typing_practice_be.typingrecord.service;
 import com.typingpractice.typing_practice_be.adaptiveserving.dto.AdaptiveServingEstimation;
 import com.typingpractice.typing_practice_be.adaptiveserving.service.AdaptiveServingRedisService;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
 import com.typingpractice.typing_practice_be.typingrecord.domain.TypingRecord;
@@ -29,6 +30,8 @@ public class TypingRecordService {
     Quote quote =
         quoteRepository.findById(query.getQuoteId()).orElseThrow(QuoteNotFoundException::new);
 
+    QuoteLanguage language = quote.getLanguage();
+
     float quoteDifficulty = quote.getDifficulty() != null ? quote.getDifficulty() : 0f;
     float quoteAvgCpm = quote.getTypingStats() != null ? quote.getTypingStats().getAvgCpm() : 0f;
     float quoteAvgAcc = quote.getTypingStats() != null ? quote.getTypingStats().getAvgAcc() : 0f;
@@ -37,7 +40,7 @@ public class TypingRecordService {
     float estimatedUncertainty = 0f;
     if (memberId != null) {
       AdaptiveServingEstimation estimation =
-          adaptiveServingRedisService.getEstimation(memberId, quote.getLanguage());
+          adaptiveServingRedisService.getEstimation(memberId, language);
       estimatedDifficulty = estimation.getMu();
       estimatedUncertainty = estimation.getSigma();
     }
@@ -47,7 +50,7 @@ public class TypingRecordService {
             memberId,
             query.getAnonymousId(),
             quote.getId(),
-            quote.getLanguage(),
+            language,
             quote.getType(),
             query.getCpm(),
             query.getAccuracy(),
