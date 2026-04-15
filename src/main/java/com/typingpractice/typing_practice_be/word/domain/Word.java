@@ -45,6 +45,13 @@ public class Word extends BaseEntity {
     this.word = word;
   }
 
+  public void updateDifficultySeed(float seed) {
+    if (this.profile != null) {
+      this.profile.setDifficultySeed(seed);
+    }
+    this.difficulty = seed;
+  }
+
   public void updateDifficulty(Float difficulty) {
     this.difficulty = difficulty;
   }

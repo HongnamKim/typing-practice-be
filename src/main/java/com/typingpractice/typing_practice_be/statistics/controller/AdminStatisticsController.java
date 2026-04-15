@@ -8,6 +8,7 @@ import com.typingpractice.typing_practice_be.typingrecord.statistics.service.bat
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.batch.MemberTypingStatsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.batch.MemberTypoStatsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.batch.QuoteTypingStatsBatchService;
+import com.typingpractice.typing_practice_be.word.statistics.service.GlobalWordStatisticsBatchService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +23,8 @@ public class AdminStatisticsController {
   private final MemberDailyStatsBatchService memberDailyStatsBatchService;
   private final MemberTypoStatsBatchService memberTypoStatsBatchService;
   private final DifficultyBatchService difficultyBatchService;
+
+  private final GlobalWordStatisticsBatchService globalWordStatisticsBatchService;
 
   @PostMapping("/global-quote/recalculate")
   public ApiResponse<Void> recalculate() {
@@ -63,6 +66,12 @@ public class AdminStatisticsController {
   @PostMapping("/member-typo/recalculate")
   public ApiResponse<Void> recalculateMemberTypoStats() {
     memberTypoStatsBatchService.runManualRecalculation();
+    return ApiResponse.ok(null);
+  }
+
+  @PostMapping("/global-word/recalculate")
+  public ApiResponse<Void> recalculateGlobalWordStats() {
+    globalWordStatisticsBatchService.runManualRecalculation();
     return ApiResponse.ok(null);
   }
 }
