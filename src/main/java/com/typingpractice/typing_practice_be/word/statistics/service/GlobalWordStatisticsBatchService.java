@@ -4,6 +4,7 @@ import com.typingpractice.typing_practice_be.word.domain.Word;
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
 import com.typingpractice.typing_practice_be.word.domain.WordProfile;
 import com.typingpractice.typing_practice_be.word.repository.WordRepository;
+import com.typingpractice.typing_practice_be.word.service.WordIdCacheService;
 import com.typingpractice.typing_practice_be.word.service.difficulty.WordDifficultySeedCalculator;
 import com.typingpractice.typing_practice_be.word.service.difficulty.WordProfileCalculator;
 import com.typingpractice.typing_practice_be.word.statistics.domain.GlobalWordStatistics;
@@ -22,6 +23,8 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class GlobalWordStatisticsBatchService {
   private final GlobalWordStatisticsRepository statsRepository;
+  private final WordIdCacheService wordIdCacheService;
+
   private final WordRepository wordRepository;
   private final WordDifficultySeedCalculator seedCalculator;
   private final WordProfileCalculator profileCalculator;
@@ -79,6 +82,8 @@ public class GlobalWordStatisticsBatchService {
       totalUpdated += words.size();
       cursor = words.getLast().getId();
     }
+
+    wordIdCacheService.buildCache(lang);
 
     log.info("[Word:{}] seed 재계산 완료 - {}건 갱신", lang, totalUpdated);
   }

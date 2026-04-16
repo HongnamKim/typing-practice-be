@@ -32,12 +32,6 @@ public class WordRepository {
         .getResultList();
   }
 
-  public List<Long> findAllIds(WordLanguage language) {
-    return em.createQuery("select w.id from Word w where w.language = :language", Long.class)
-        .setParameter("language", language)
-        .getResultList();
-  }
-
   public void deleteWord(Word w) {
     em.remove(w);
   }
@@ -57,6 +51,22 @@ public class WordRepository {
         .setParameter("cursorId", cursorId)
         .setParameter("maxId", maxId)
         .setMaxResults(size)
+        .getResultList();
+  }
+
+  public List<Object[]> findAllIdsWithDifficulty(WordLanguage language) {
+    return em.createQuery(
+            "select w.id, w.difficulty from Word w where w.language = :language order by w.difficulty asc",
+            Object[].class)
+        .setParameter("language", language)
+        .getResultList();
+  }
+
+  public List<Long> findAllIdsSortedByDifficulty(WordLanguage language) {
+    return em.createQuery(
+            "select w.id from Word w where w.language = :language order by w.difficulty asc",
+            Long.class)
+        .setParameter("language", language)
         .getResultList();
   }
 }
