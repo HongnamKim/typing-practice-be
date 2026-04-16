@@ -32,6 +32,7 @@ public enum ErrorCode {
   QUOTE_SIMILAR(HttpStatus.CONFLICT, "유사한 문장이 이미 존재합니다."),
 
   WORD_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 단어를 찾을 수 없습니다"),
+  WORD_INVALID_CHARACTER(HttpStatus.BAD_REQUEST, "단어에 숫자는 포함될 수 없습니다."),
   WORD_LANGUAGE_MISMATCH(HttpStatus.BAD_REQUEST, "선택한 언어와 맞지 않는 문자가 포함되어 있습니다."),
   WORD_DUPLICATE(HttpStatus.CONFLICT, "동일한 단어가 이미 존재합니다."),
 
