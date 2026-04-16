@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.word.service;
 
 import com.typingpractice.typing_practice_be.word.domain.Word;
+import com.typingpractice.typing_practice_be.word.domain.WordDifficultyTier;
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
 import com.typingpractice.typing_practice_be.word.domain.WordProfile;
 import com.typingpractice.typing_practice_be.word.exception.WordNotFoundException;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class WordService {
+  private final WordIdCacheService wordIdCacheService;
   private final WordRepository wordRepository;
   private final WordLanguageValidator validator;
 
@@ -26,10 +28,10 @@ public class WordService {
   private final WordDifficultySeedCalculator seedCalculator;
   private final GlobalWordStatisticsService globalWordStatisticsService;
 
-  public List<Word> findRandomWords(WordLanguage language, int count) {
-    List<Long> allIds = wordRepository.findAllIds(language);
+  public List<Word> findWords(WordLanguage language, WordDifficultyTier tier, int count) {
+    List<Long> ids = wordIdCacheService.getIdsByTier(language, tier);
 
-    List<Long> shuffled = new ArrayList<>(allIds);
+    List<Long> shuffled = new ArrayList<>(ids);
     Collections.shuffle(shuffled);
 
     List<Long> selectedIds = shuffled.subList(0, Math.min(count, shuffled.size()));
@@ -56,6 +58,7 @@ public class WordService {
     w.updateDifficulty(seed);
 
     wordRepository.save(w);
+    wordIdCacheService.add(language, w.getId(), seed);
     return w;
   }
 
@@ -70,6 +73,7 @@ public class WordService {
   @Transactional
   public void deleteWord(Long id) {
     Word w = wordRepository.findById(id).orElseThrow(WordNotFoundException::new);
+    wordIdCacheService.remove(w.getLanguage(), w.getId());
 
     wordRepository.deleteWord(w);
   }

@@ -19,7 +19,8 @@ public class WordController {
   @GetMapping()
   public ApiResponse<List<WordResponse>> getRandomWords(
       @ModelAttribute @Valid WordRequest request) {
-    List<Word> words = wordService.findRandomWords(request.getLanguage(), request.getCount());
+    List<Word> words =
+        wordService.findWords(request.getLanguage(), request.getDifficulty(), request.getCount());
 
     List<WordResponse> response = words.stream().map(WordResponse::from).toList();
 
