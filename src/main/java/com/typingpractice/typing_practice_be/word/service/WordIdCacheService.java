@@ -57,7 +57,7 @@ public class WordIdCacheService {
     redisTemplate.opsForZSet().remove(key(language), String.valueOf(wordId));
   }
 
-  public List<Long> getIdsByTier(WordLanguage language, WordDifficultyTier tier) {
+  public List<Long> getIdsByTier(WordLanguage language, WordDifficultyTier tier, int count) {
     String k = key(language);
 
     try {
@@ -66,21 +66,24 @@ public class WordIdCacheService {
         return fallback(language, tier);
       }
 
-      Set<String> members;
       if (tier == WordDifficultyTier.RANDOM) {
-        members = redisTemplate.opsForZSet().range(k, 0, -1);
-      } else {
-        long easyEnd = totalSize / 3;
-        long normalEnd = totalSize * 2 / 3;
-
-        members =
-            switch (tier) {
-              case EASY -> redisTemplate.opsForZSet().range(k, 0, easyEnd - 1);
-              case NORMAL -> redisTemplate.opsForZSet().range(k, easyEnd, normalEnd - 1);
-              case HARD -> redisTemplate.opsForZSet().range(k, normalEnd, -1);
-              default -> redisTemplate.opsForZSet().range(k, 0, -1);
-            };
+        Set<String> members = redisTemplate.opsForZSet().distinctRandomMembers(k, count);
+        if (members == null || members.isEmpty()) {
+          return fallback(language, tier);
+        }
+        return members.stream().map(Long::parseLong).toList();
       }
+
+      long easyEnd = totalSize / 3;
+      long normalEnd = totalSize * 2 / 3;
+
+      Set<String> members =
+          switch (tier) {
+            case EASY -> redisTemplate.opsForZSet().range(k, 0, easyEnd - 1);
+            case NORMAL -> redisTemplate.opsForZSet().range(k, easyEnd, normalEnd - 1);
+            case HARD -> redisTemplate.opsForZSet().range(k, normalEnd, -1);
+            default -> redisTemplate.opsForZSet().range(k, 0, -1);
+          };
 
       if (members == null || members.isEmpty()) {
         return fallback(language, tier);

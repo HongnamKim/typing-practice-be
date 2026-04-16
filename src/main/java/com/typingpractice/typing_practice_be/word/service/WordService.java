@@ -29,14 +29,15 @@ public class WordService {
   private final GlobalWordStatisticsService globalWordStatisticsService;
 
   public List<Word> findWords(WordLanguage language, WordDifficultyTier tier, int count) {
-    List<Long> ids = wordIdCacheService.getIdsByTier(language, tier);
+    List<Long> ids = wordIdCacheService.getIdsByTier(language, tier, count);
 
-    List<Long> shuffled = new ArrayList<>(ids);
-    Collections.shuffle(shuffled);
+    if (tier != WordDifficultyTier.RANDOM) {
+      List<Long> shuffled = new ArrayList<>(ids);
+      Collections.shuffle(shuffled);
+      ids = shuffled.subList(0, Math.min(count, shuffled.size()));
+    }
 
-    List<Long> selectedIds = shuffled.subList(0, Math.min(count, shuffled.size()));
-
-    List<Word> fetched = wordRepository.findByIds(selectedIds, language);
+    List<Word> fetched = wordRepository.findByIds(ids, language);
     Collections.shuffle(fetched);
 
     return fetched;
