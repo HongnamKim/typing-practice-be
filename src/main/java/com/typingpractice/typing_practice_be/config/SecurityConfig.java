@@ -65,6 +65,8 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers(HttpMethod.POST, "/typing-records")
                     .permitAll()
+                    .requestMatchers(HttpMethod.POST, "/word-typing-records")
+                    .permitAll()
                     .requestMatchers("/actuator/prometheus")
                     .permitAll()
                     // 관리자 전용
