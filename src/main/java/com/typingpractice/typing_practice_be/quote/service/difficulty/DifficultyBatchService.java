@@ -18,50 +18,55 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class DifficultyBatchService {
-	private final QuoteTypingStatsRepository quoteTypingStatsRepository; // 각 문장 별 타이핑 기록
-	private final GlobalQuoteStatisticsService
-					globalQuoteStatisticsService; // 일별 전체 문장 코퍼스, 속도, 정확도 기록
-	private final DynamicDifficultyCalculator dynamicDifficultyCalculator; // 동적난이도 계산기
+  private final QuoteTypingStatsRepository quoteTypingStatsRepository; // 각 문장 별 타이핑 기록
+  private final GlobalQuoteStatisticsService
+      globalQuoteStatisticsService; // 일별 전체 문장 코퍼스, 속도, 정확도 기록
+  private final DynamicDifficultyCalculator dynamicDifficultyCalculator; // 동적난이도 계산기
 
-	private static final int PAGE_SIZE = 500;
+  private static final int PAGE_SIZE = 500;
 
-	@Transactional
-	public void runDynamicDifficultyBatch() {
-		for (QuoteLanguage lang : QuoteLanguage.values()) {
-			GlobalQuoteStatistics globalStats = globalQuoteStatisticsService.getByLanguage(lang);
+  @Transactional
+  public void runDynamicDifficultyBatch() {
+    for (QuoteLanguage lang : QuoteLanguage.values()) {
+      GlobalQuoteStatistics globalStats = globalQuoteStatisticsService.getByLanguage(lang);
 
-			if (globalStats.getGlobalAvgCpm() == null || globalStats.getGlobalAvgAcc() == null) {
-				log.info("[{}] 전역 타이핑 기록 없음 -> 동적 보정 스킵", lang);
-				continue;
-			}
+      if (globalStats.getGlobalAvgCpm() == null || globalStats.getGlobalAvgAcc() == null) {
+        log.info("[{}] 전역 타이핑 기록 없음 -> 동적 보정 스킵", lang);
+        continue;
+      }
 
-			int totalUpdated = recalculateByLanguage(lang, globalStats);
-			log.info("[{}] 동적 난이도 보정 완료 - {}건 갱신", lang, totalUpdated);
-		}
-	}
+      int totalUpdated = recalculateByLanguage(lang, globalStats);
+      log.info("[{}] 동적 난이도 보정 완료 - {}건 갱신", lang, totalUpdated);
+    }
+  }
 
-	private int recalculateByLanguage(QuoteLanguage lang, GlobalQuoteStatistics globalStats) {
-		int totalUpdated = 0;
-		int page = 0;
+  private int recalculateByLanguage(QuoteLanguage lang, GlobalQuoteStatistics globalStats) {
+    int totalUpdated = 0;
+    int page = 0;
 
-		while (true) {
-			List<QuoteTypingStats> statsList =
-							quoteTypingStatsRepository.findByLanguageWithQuote(lang, page, PAGE_SIZE);
+    while (true) {
+      List<QuoteTypingStats> statsList =
+          quoteTypingStatsRepository.findByLanguageWithQuote(lang, page, PAGE_SIZE);
 
-			if (statsList.isEmpty()) break;
+      if (statsList.isEmpty()) break;
 
-			for (QuoteTypingStats stats : statsList) {
-				Quote quote = stats.getQuote();
-				float seed = quote.getProfile().getDifficultySeed();
+      for (QuoteTypingStats stats : statsList) {
+        Quote quote = stats.getQuote();
+        if (quote.getProfile() == null) {
+          log.warn("[{}] Quote profile 미존재, 스킵 - quoteId: {}", lang, quote.getId());
+          continue;
+        }
 
-				float difficulty = dynamicDifficultyCalculator.calculate(stats, globalStats, seed);
-				quote.updateDynamicDifficulty(difficulty);
-			}
+        float seed = quote.getProfile().getDifficultySeed();
 
-			totalUpdated += statsList.size();
-			page++;
-		}
+        float difficulty = dynamicDifficultyCalculator.calculate(stats, globalStats, seed);
+        quote.updateDynamicDifficulty(difficulty);
+      }
 
-		return totalUpdated;
-	}
+      totalUpdated += statsList.size();
+      page++;
+    }
+
+    return totalUpdated;
+  }
 }
