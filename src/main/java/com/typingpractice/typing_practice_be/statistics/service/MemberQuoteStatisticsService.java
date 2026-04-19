@@ -34,7 +34,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class MemberStatisticsService {
+public class MemberQuoteStatisticsService {
   private final TypingRecordRepository typingRecordRepository;
   private final MemberTypingAggregationRepository memberTypingAggregationRepository;
   private final MemberDailyAggregationRepository memberDailyAggregationRepository;
