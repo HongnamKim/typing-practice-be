@@ -8,6 +8,7 @@ import com.typingpractice.typing_practice_be.typingrecord.statistics.service.bat
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.batch.MemberTypoStatsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.batch.QuoteTypingStatsBatchService;
 import com.typingpractice.typing_practice_be.word.statistics.service.GlobalWordStatisticsBatchService;
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.service.MemberWordTypingStatsBatchService;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.service.WordTypingStatsBatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ public class StatisticsScheduler {
 
   private final WordTypingStatsBatchService wordTypingStatsBatchService;
   private final GlobalWordStatisticsBatchService globalWordStatisticsBatchService;
+  private final MemberWordTypingStatsBatchService memberWordTypingStatsBatchService;
 
   @Scheduled(cron = "0 0 3 * * *", zone = TimeUtils.KST_ZONE)
   public void runDailyBatch() {
@@ -45,6 +47,7 @@ public class StatisticsScheduler {
     log.info("단어 전역 통계 배치 시작");
     wordTypingStatsBatchService.runScheduledBatch(); // 단어별 타이핑 통계
     globalWordStatisticsBatchService.runScheduledBatch(); // 전역 통계 (단어 특성 + 타이핑 성능)
+    memberWordTypingStatsBatchService.runScheduledBatch(); // 개인 타이핑 통계
     log.info("단어 전역 통계 배치 완료");
   }
 }

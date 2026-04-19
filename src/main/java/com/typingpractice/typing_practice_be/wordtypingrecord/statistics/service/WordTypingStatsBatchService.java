@@ -4,7 +4,7 @@ import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.word.domain.Word;
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
 import com.typingpractice.typing_practice_be.word.repository.WordRepository;
-import com.typingpractice.typing_practice_be.wordtypingrecord.query.aggregation.WordTypingAggregationRepository;
+import com.typingpractice.typing_practice_be.wordtypingrecord.repository.aggregation.WordTypingAggregationRepository;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.domain.WordTypingStats;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.WordTypingAggregation;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.repository.WordTypingStatsRepository;

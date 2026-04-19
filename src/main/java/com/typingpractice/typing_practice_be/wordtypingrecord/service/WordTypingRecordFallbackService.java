@@ -4,13 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.typingpractice.typing_practice_be.wordtypingrecord.domain.WordTypingRecord;
 import com.typingpractice.typing_practice_be.wordtypingrecord.repository.WordTypingRecordRepository;
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.service.TodayWordTypingStatsRedisService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,16 +23,19 @@ import org.springframework.stereotype.Service;
 @Service
 public class WordTypingRecordFallbackService {
   private final WordTypingRecordRepository repository;
+  private final TodayWordTypingStatsRedisService todayWordTypingStatsRedisService;
   private final ObjectMapper objectMapper;
   private final Path fallbackFilePath;
   private final AtomicBoolean flushing = new AtomicBoolean(false);
 
   public WordTypingRecordFallbackService(
       WordTypingRecordRepository repository,
+      TodayWordTypingStatsRedisService redisService,
       @Value(
               "${fallback.word-typing-record.path:/data/fallback/fallback-word-typing-records.jsonl}")
           String path) {
     this.repository = repository;
+    this.todayWordTypingStatsRedisService = redisService;
     this.fallbackFilePath = Paths.get(path);
     this.objectMapper = new ObjectMapper();
     this.objectMapper.registerModule(new JavaTimeModule());
@@ -68,6 +74,7 @@ public class WordTypingRecordFallbackService {
     try {
       List<String> lines = Files.readAllLines(fallbackFilePath);
       List<String> failedLines = new ArrayList<>();
+      Set<Long> affectedMemberIds = new HashSet<>();
       int successCount = 0;
 
       for (String line : lines) {
@@ -75,11 +82,21 @@ public class WordTypingRecordFallbackService {
         try {
           WordTypingRecord record = objectMapper.readValue(line, WordTypingRecord.class);
           repository.save(record);
+
+          if (record.getMemberId() != null) {
+            affectedMemberIds.add(record.getMemberId());
+          }
+
           successCount++;
         } catch (Exception e) {
           log.error("[WordFallback] flush 중 레코드 저장 실패: {}", e.getMessage());
           failedLines.add(line);
         }
+      }
+
+      // Redis invalidate
+      for (Long memberId : affectedMemberIds) {
+        todayWordTypingStatsRedisService.invalidateAll(memberId);
       }
 
       if (failedLines.isEmpty()) {
@@ -89,7 +106,10 @@ public class WordTypingRecordFallbackService {
         log.warn("[WordFallback] {}건 flush 실패 - 파일에 유지", failedLines.size());
       }
 
-      log.info("[WordFallback] flush 완료 - {}건 복구", successCount);
+      log.info(
+          "[WordFallback] flush 완료 - {}건 복구, Redis 무효화 {}명",
+          successCount,
+          affectedMemberIds.size());
 
     } catch (IOException e) {
       log.error("[WordFallback] flush 실패: {}", e.getMessage());

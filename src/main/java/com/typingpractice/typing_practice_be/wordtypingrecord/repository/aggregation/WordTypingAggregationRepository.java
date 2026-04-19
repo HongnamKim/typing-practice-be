@@ -1,4 +1,4 @@
-package com.typingpractice.typing_practice_be.wordtypingrecord.query.aggregation;
+package com.typingpractice.typing_practice_be.wordtypingrecord.repository.aggregation;
 
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.WordTypingAggregation;
 import lombok.RequiredArgsConstructor;

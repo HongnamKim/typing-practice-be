@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.wordtypingrecord.event;
 
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.service.TodayWordTypingStatsRedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -9,10 +10,13 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class WordTypingRecordEventListener {
+  private final TodayWordTypingStatsRedisService todayWordTypingStatsRedisService;
+
   @EventListener
   public void handleWordTypingRecordSaved(WordTypingRecordSavedEvent event) {
     try {
-      // TodayWordTypingStatsRedisService.incrementTyping
+      todayWordTypingStatsRedisService.incrementTyping(event);
+
       // TodayWordTypingStatsRedisService.incrementTypoAndDetail
       // AdaptiveServingRedisService.updateWordEstimation
     } catch (Exception e) {
