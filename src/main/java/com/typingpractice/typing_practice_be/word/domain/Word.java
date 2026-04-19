@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.word.domain;
 
 import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.domain.WordTypingStats;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -32,6 +33,9 @@ public class Word extends BaseEntity {
   private Float difficulty;
 
   @Embedded private WordProfile profile;
+
+  @OneToOne(mappedBy = "word", fetch = FetchType.LAZY)
+  private WordTypingStats typingStats;
 
   public static Word create(String word, WordLanguage language) {
     Word w = new Word();

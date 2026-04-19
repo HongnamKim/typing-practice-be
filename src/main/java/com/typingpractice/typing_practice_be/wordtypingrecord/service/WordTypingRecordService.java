@@ -1,10 +1,12 @@
 package com.typingpractice.typing_practice_be.wordtypingrecord.service;
 
 import com.typingpractice.typing_practice_be.wordtypingrecord.domain.WordTypingRecord;
+import com.typingpractice.typing_practice_be.wordtypingrecord.event.WordTypingRecordSavedEvent;
 import com.typingpractice.typing_practice_be.wordtypingrecord.query.WordTypingRecordQuery;
 import com.typingpractice.typing_practice_be.wordtypingrecord.repository.WordTypingRecordRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 public class WordTypingRecordService {
   private final WordTypingRecordRepository repository;
   private final WordTypingRecordFallbackService fallbackService;
+  private final ApplicationEventPublisher eventPublisher;
 
   public WordTypingRecord save(Long memberId, WordTypingRecordQuery query) {
     WordTypingRecord record =
@@ -41,7 +44,10 @@ public class WordTypingRecordService {
 
     fallbackService.flushIfNeeded();
 
-    // TODO: Step 5, 6에서 이벤트 발행 추가
+    // redis 증분
+    if (saved.isLoggedIn()) {
+      eventPublisher.publishEvent(WordTypingRecordSavedEvent.from(saved));
+    }
 
     return saved;
   }

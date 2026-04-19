@@ -8,6 +8,7 @@ import com.typingpractice.typing_practice_be.typingrecord.statistics.service.bat
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.batch.MemberTypoStatsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.batch.QuoteTypingStatsBatchService;
 import com.typingpractice.typing_practice_be.word.statistics.service.GlobalWordStatisticsBatchService;
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.service.WordTypingStatsBatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,6 +25,7 @@ public class StatisticsScheduler {
   private final MemberTypoStatsBatchService memberTypoStatsBatchService;
   private final DifficultyBatchService difficultyBatchService;
 
+  private final WordTypingStatsBatchService wordTypingStatsBatchService;
   private final GlobalWordStatisticsBatchService globalWordStatisticsBatchService;
 
   @Scheduled(cron = "0 0 3 * * *", zone = TimeUtils.KST_ZONE)
@@ -41,7 +43,8 @@ public class StatisticsScheduler {
   @Scheduled(cron = "0 0 4 * * *", zone = TimeUtils.KST_ZONE)
   public void runWordDailyBatch() {
     log.info("단어 전역 통계 배치 시작");
-    globalWordStatisticsBatchService.runScheduledBatch();
+    wordTypingStatsBatchService.runScheduledBatch(); // 단어별 타이핑 통계
+    globalWordStatisticsBatchService.runScheduledBatch(); // 전역 통계 (단어 특성 + 타이핑 성능)
     log.info("단어 전역 통계 배치 완료");
   }
 }
