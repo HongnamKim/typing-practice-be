@@ -53,7 +53,7 @@ public class AdminQuoteStatisticsController {
 
   @PostMapping("/member-daily/recalculate")
   public ApiResponse<Void> recalculateMemberDailyStats(
-      @ModelAttribute @Valid MemberStatsDayRequest request) {
+      @RequestBody @Valid MemberStatsDayRequest request) {
 
     memberDailyStatsBatchService.runRecalculationForDate(request.getDate());
 
