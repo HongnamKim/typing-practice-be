@@ -1,15 +1,15 @@
 package com.typingpractice.typing_practice_be.wordtypingrecord.repository;
 
 import com.typingpractice.typing_practice_be.wordtypingrecord.domain.WordTypingRecord;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
@@ -49,5 +49,14 @@ public class WordTypingRecordRepository {
         .stream()
         .map(doc -> ((Number) doc.get("memberId")).longValue())
         .toList();
+  }
+
+  public boolean existsByMemberIdBetween(Long memberId, LocalDateTime from, LocalDateTime to) {
+    long count =
+        mongoTemplate.count(
+            Query.query(
+                Criteria.where("memberId").is(memberId).and("completedAt").gte(from).lt(to)),
+            "wordTypingRecord");
+    return count > 0;
   }
 }
