@@ -3,6 +3,7 @@ package com.typingpractice.typing_practice_be.word.statistics.domain;
 import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
 import com.typingpractice.typing_practice_be.word.statistics.dto.WordProfileAggregation;
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.GlobalWordTypingPerformance;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,6 +22,9 @@ public class GlobalWordStatistics extends BaseEntity {
   private WordLanguage language;
 
   // 공통
+  private Float globalAvgWpm;
+  private Float globalAvgAcc;
+
   private float lenMean;
   private float lenStd;
 
@@ -39,6 +43,8 @@ public class GlobalWordStatistics extends BaseEntity {
   public static GlobalWordStatistics createKoreanDefault() {
     GlobalWordStatistics stats = new GlobalWordStatistics();
     stats.language = WordLanguage.KOREAN;
+    stats.globalAvgWpm = 50f;
+    stats.globalAvgAcc = 0.9f;
     stats.lenMean = 3f;
     stats.lenStd = 1.5f;
     stats.jamoMean = 0.5f;
@@ -53,6 +59,8 @@ public class GlobalWordStatistics extends BaseEntity {
   public static GlobalWordStatistics createEnglishDefault() {
     GlobalWordStatistics stats = new GlobalWordStatistics();
     stats.language = WordLanguage.ENGLISH;
+    stats.globalAvgWpm = 50f;
+    stats.globalAvgAcc = 0.9f;
     stats.lenMean = 6f;
     stats.lenStd = 2.5f;
     stats.caseMean = 0.05f;
@@ -61,7 +69,7 @@ public class GlobalWordStatistics extends BaseEntity {
   }
 
   public static GlobalWordStatistics createFromAggregation(
-      WordLanguage language, WordProfileAggregation agg) {
+      WordLanguage language, WordProfileAggregation agg, GlobalWordTypingPerformance performance) {
     GlobalWordStatistics stats = new GlobalWordStatistics();
     stats.language = language;
     stats.lenMean = agg.getLenMean();
@@ -77,6 +85,14 @@ public class GlobalWordStatistics extends BaseEntity {
     } else {
       stats.caseMean = agg.getCaseMean();
       stats.caseStd = agg.getCaseStd();
+    }
+
+    if (performance.isEmpty()) {
+      stats.globalAvgWpm = 50f;
+      stats.globalAvgAcc = 0.9f;
+    } else {
+      stats.globalAvgWpm = performance.getAvgWpm();
+      stats.globalAvgAcc = performance.getAvgAcc();
     }
 
     return stats;

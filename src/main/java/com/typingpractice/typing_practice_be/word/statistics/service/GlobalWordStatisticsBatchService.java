@@ -10,6 +10,8 @@ import com.typingpractice.typing_practice_be.word.service.difficulty.WordProfile
 import com.typingpractice.typing_practice_be.word.statistics.domain.GlobalWordStatistics;
 import com.typingpractice.typing_practice_be.word.statistics.dto.WordProfileAggregation;
 import com.typingpractice.typing_practice_be.word.statistics.repository.GlobalWordStatisticsRepository;
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.GlobalWordTypingPerformance;
+import com.typingpractice.typing_practice_be.wordtypingrecord.repository.aggregation.WordTypingAggregationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,7 @@ public class GlobalWordStatisticsBatchService {
   private final WordIdCacheService wordIdCacheService;
 
   private final WordRepository wordRepository;
+  private final WordTypingAggregationRepository wordTypingAggregationRepository;
   private final WordDifficultySeedCalculator seedCalculator;
   private final WordProfileCalculator profileCalculator;
 
@@ -51,9 +54,16 @@ public class GlobalWordStatisticsBatchService {
 
   private GlobalWordStatistics recalculateStats(WordLanguage lang) {
     WordProfileAggregation agg = statsRepository.aggregateByLanguage(lang);
-    GlobalWordStatistics next = GlobalWordStatistics.createFromAggregation(lang, agg);
+    GlobalWordTypingPerformance perf =
+        wordTypingAggregationRepository.aggregateGlobalAvgByLanguage(lang);
+    GlobalWordStatistics next = GlobalWordStatistics.createFromAggregation(lang, agg, perf);
     statsRepository.save(next);
-    log.info("[Word:{}] 전역 통계 재계산 완료 - lenMean={}", lang, next.getLenMean());
+    log.info(
+        "[Word:{}] 전역 통계 재계산 완료 - lenMean={}, avgWpm={}, avgAcc={}",
+        lang,
+        next.getLenMean(),
+        next.getGlobalAvgWpm(),
+        next.getGlobalAvgAcc());
     return next;
   }
 

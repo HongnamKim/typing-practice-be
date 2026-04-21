@@ -8,8 +8,6 @@ import com.typingpractice.typing_practice_be.typingrecord.statistics.service.bat
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.batch.MemberTypingStatsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.batch.MemberTypoStatsBatchService;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.service.batch.QuoteTypingStatsBatchService;
-import com.typingpractice.typing_practice_be.word.statistics.service.GlobalWordStatisticsBatchService;
-import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.service.WordTypingStatsBatchService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -17,16 +15,13 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/admin/stats")
-public class AdminStatisticsController {
+public class AdminQuoteStatisticsController {
   private final GlobalQuoteStatisticsBatchService globalQuoteStatisticsBatchService;
   private final QuoteTypingStatsBatchService quoteTypingStatsBatchService;
   private final MemberTypingStatsBatchService memberTypingStatsBatchService;
   private final MemberDailyStatsBatchService memberDailyStatsBatchService;
   private final MemberTypoStatsBatchService memberTypoStatsBatchService;
   private final DifficultyBatchService difficultyBatchService;
-
-  private final GlobalWordStatisticsBatchService globalWordStatisticsBatchService;
-  private final WordTypingStatsBatchService wordTypingStatsBatchService;
 
   @PostMapping("/global-quote/recalculate")
   public ApiResponse<Void> recalculate() {
@@ -58,7 +53,7 @@ public class AdminStatisticsController {
 
   @PostMapping("/member-daily/recalculate")
   public ApiResponse<Void> recalculateMemberDailyStats(
-      @ModelAttribute @Valid MemberStatsDayRequest request) {
+      @RequestBody @Valid MemberStatsDayRequest request) {
 
     memberDailyStatsBatchService.runRecalculationForDate(request.getDate());
 
@@ -68,18 +63,6 @@ public class AdminStatisticsController {
   @PostMapping("/member-typo/recalculate")
   public ApiResponse<Void> recalculateMemberTypoStats() {
     memberTypoStatsBatchService.runManualRecalculation();
-    return ApiResponse.ok(null);
-  }
-
-  @PostMapping("/global-word/recalculate")
-  public ApiResponse<Void> recalculateGlobalWordStats() {
-    globalWordStatisticsBatchService.runManualRecalculation();
-    return ApiResponse.ok(null);
-  }
-
-  @PostMapping("/word-typing/recalculate")
-  public ApiResponse<Void> recalculateWordTypingStats() {
-    wordTypingStatsBatchService.runManualRecalculation();
     return ApiResponse.ok(null);
   }
 }

@@ -1,5 +1,7 @@
-package com.typingpractice.typing_practice_be.wordtypingrecord.query.aggregation;
+package com.typingpractice.typing_practice_be.wordtypingrecord.repository.aggregation;
 
+import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.GlobalWordTypingPerformance;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.WordTypingAggregation;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
@@ -19,6 +21,31 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class WordTypingAggregationRepository {
   private final MongoTemplate mongoTemplate;
+
+  public GlobalWordTypingPerformance aggregateGlobalAvgByLanguage(WordLanguage language) {
+    Aggregation aggregation =
+        Aggregation.newAggregation(
+            Aggregation.match(
+                Criteria.where("language").is(language.name()).and("outlier").is(false)),
+            Aggregation.group().avg("wpm").as("avgWpm").avg("accuracy").as("avgAcc"));
+
+    List<Document> results =
+        mongoTemplate.aggregate(aggregation, "wordTypingRecord", Document.class).getMappedResults();
+
+    if (results.isEmpty()) {
+      return GlobalWordTypingPerformance.empty();
+    }
+
+    Document doc = results.getFirst();
+    Number wpmNum = (Number) doc.get("avgWpm");
+    Number accNum = (Number) doc.get("avgAcc");
+
+    if (wpmNum == null || accNum == null) {
+      return GlobalWordTypingPerformance.empty();
+    }
+
+    return GlobalWordTypingPerformance.of(wpmNum.floatValue(), accNum.floatValue());
+  }
 
   // outlier 제외, wordDetails unwind 후 wordId 별 집계
   public List<WordTypingAggregation> aggregateByWordIds(List<Long> wordIds) {
