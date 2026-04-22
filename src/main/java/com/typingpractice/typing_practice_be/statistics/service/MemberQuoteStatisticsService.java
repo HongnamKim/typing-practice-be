@@ -48,7 +48,7 @@ public class MemberQuoteStatisticsService {
   private final TodayTypingStatsRedisService todayTypingStatsRedisService;
   private final StringRedisTemplate redisTemplate;
 
-  private static final String COOLDOWN_KEY_PREFIX = "cooldown:refresh:";
+  private static final String COOLDOWN_KEY_PREFIX = "cooldown:quote-refresh:";
   private static final Duration COOLDOWN_DURATION = Duration.ofMinutes(1);
 
   private boolean isYesterdayBatchPending(Long memberId, QuoteLanguage language) {
@@ -193,7 +193,7 @@ public class MemberQuoteStatisticsService {
 
   private void checkCooldown(Long memberId) {
     String key = COOLDOWN_KEY_PREFIX + memberId;
-    if (redisTemplate.hasKey(key)) {
+    if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
       throw new RefreshCooldownException();
     }
   }

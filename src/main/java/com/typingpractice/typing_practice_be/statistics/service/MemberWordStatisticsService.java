@@ -1,6 +1,7 @@
 package com.typingpractice.typing_practice_be.statistics.service;
 
 import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
+import com.typingpractice.typing_practice_be.statistics.exception.RefreshCooldownException;
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
 import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberDailyWordStatsResponse;
 import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberWordTypingStatsResponse;
@@ -15,10 +16,13 @@ import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.Tod
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.repository.MemberDailyWordStatsRepository;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.repository.MemberWordTypingStatsRepository;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.service.TodayWordTypingStatsRedisService;
+
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +41,11 @@ public class MemberWordStatisticsService {
 
   // redis
   private final TodayWordTypingStatsRedisService todayWordTypingStatsRedisService;
+
+  // refresh
+  private final StringRedisTemplate redisTemplate;
+  private static final String COOLDOWN_KEY_PREFIX = "cooldown:word-refresh:";
+  private static final Duration COOLDOWN_DURATION = Duration.ofMinutes(1);
 
   private boolean isYesterdayBatchPending(Long memberId, WordLanguage language) {
     LocalDate yesterday = LocalDate.now(TimeUtils.KST).minusDays(1);
@@ -103,5 +112,27 @@ public class MemberWordStatisticsService {
     }
 
     return MemberDailyWordStatsResponse.of(days, pgList, yesterdayAgg, today, todayKst);
+  }
+
+  public MemberWordTypingStatsResponse refreshStats(Long memberId, WordLanguage language) {
+    checkCooldown(memberId);
+
+    todayWordTypingStatsRedisService.invalidateAll(memberId);
+
+    setCooldown(memberId);
+
+    return getTypingStats(memberId, language);
+  }
+
+  private void checkCooldown(Long memberId) {
+    String key = COOLDOWN_KEY_PREFIX + memberId;
+    if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
+      throw new RefreshCooldownException();
+    }
+  }
+
+  private void setCooldown(Long memberId) {
+    String key = COOLDOWN_KEY_PREFIX + memberId;
+    redisTemplate.opsForValue().set(key, "1", COOLDOWN_DURATION);
   }
 }

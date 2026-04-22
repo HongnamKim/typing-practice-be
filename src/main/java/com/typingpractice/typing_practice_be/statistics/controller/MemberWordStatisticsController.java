@@ -37,4 +37,11 @@ public class MemberWordStatisticsController {
         memberWordStatisticsService.getDailyStats(
             memberId, request.getLanguage(), request.getDays()));
   }
+
+  @PostMapping("/refresh")
+  public ApiResponse<MemberWordTypingStatsResponse> refreshStats(
+      @RequestParam WordLanguage language) {
+    Long memberId = getMemberId();
+    return ApiResponse.ok(memberWordStatisticsService.refreshStats(memberId, language));
+  }
 }
