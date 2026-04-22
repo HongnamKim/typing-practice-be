@@ -1,4 +1,4 @@
-package com.typingpractice.typing_practice_be.wordtypingrecord.dto;
+package com.typingpractice.typing_practice_be.wordtypingrecord.dto.request;
 
 import com.typingpractice.typing_practice_be.word.domain.WordDifficultyTier;
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;

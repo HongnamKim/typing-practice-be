@@ -3,8 +3,8 @@ package com.typingpractice.typing_practice_be.wordtypingrecord.query;
 import com.typingpractice.typing_practice_be.word.domain.WordDifficultyTier;
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
 import com.typingpractice.typing_practice_be.wordtypingrecord.domain.WordDetail;
-import com.typingpractice.typing_practice_be.wordtypingrecord.dto.WordDetailRequest;
-import com.typingpractice.typing_practice_be.wordtypingrecord.dto.WordTypingRecordRequest;
+import com.typingpractice.typing_practice_be.wordtypingrecord.dto.request.WordDetailRequest;
+import com.typingpractice.typing_practice_be.wordtypingrecord.dto.request.WordTypingRecordRequest;
 import lombok.Getter;
 import lombok.ToString;
 
