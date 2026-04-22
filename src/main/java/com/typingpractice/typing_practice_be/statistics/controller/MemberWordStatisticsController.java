@@ -1,15 +1,15 @@
 package com.typingpractice.typing_practice_be.statistics.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
+import com.typingpractice.typing_practice_be.statistics.dto.MemberDailyWordStatsRequest;
 import com.typingpractice.typing_practice_be.statistics.service.MemberWordStatisticsService;
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
-import com.typingpractice.typing_practice_be.wordtypingrecord.dto.MemberWordTypingStatsResponse;
+import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberDailyWordStatsResponse;
+import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberWordTypingStatsResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/members/me/word-stats")
@@ -26,5 +26,15 @@ public class MemberWordStatisticsController {
       @RequestParam WordLanguage language) {
     Long memberId = getMemberId();
     return ApiResponse.ok(memberWordStatisticsService.getTypingStats(memberId, language));
+  }
+
+  @GetMapping("/daily")
+  public ApiResponse<MemberDailyWordStatsResponse> getDailyStats(
+      @ModelAttribute @Valid MemberDailyWordStatsRequest request) {
+    Long memberId = getMemberId();
+
+    return ApiResponse.ok(
+        memberWordStatisticsService.getDailyStats(
+            memberId, request.getLanguage(), request.getDays()));
   }
 }

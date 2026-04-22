@@ -2,10 +2,14 @@ package com.typingpractice.typing_practice_be.statistics.service;
 
 import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
-import com.typingpractice.typing_practice_be.wordtypingrecord.dto.MemberWordTypingStatsResponse;
+import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberDailyWordStatsResponse;
+import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberWordTypingStatsResponse;
 import com.typingpractice.typing_practice_be.wordtypingrecord.repository.WordTypingRecordRepository;
+import com.typingpractice.typing_practice_be.wordtypingrecord.repository.aggregation.MemberDailyWordAggregationRepository;
 import com.typingpractice.typing_practice_be.wordtypingrecord.repository.aggregation.MemberWordTypingAggregationRepository;
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.domain.MemberDailyWordStats;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.domain.MemberWordTypingStats;
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.MemberDailyWordAggregation;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.MemberWordTypingAggregation;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.TodayWordTypingSnapshot;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.repository.MemberDailyWordStatsRepository;
@@ -25,6 +29,7 @@ public class MemberWordStatisticsService {
   // mongo
   private final WordTypingRecordRepository wordTypingRecordRepository;
   private final MemberWordTypingAggregationRepository memberWordTypingAggregationRepository;
+  private final MemberDailyWordAggregationRepository memberDailyWordAggregationRepository;
 
   // pg
   private final MemberWordTypingStatsRepository memberWordTypingStatsRepository;
@@ -71,5 +76,32 @@ public class MemberWordStatisticsService {
     }
 
     return MemberWordTypingStatsResponse.of(pg, yesterday, today);
+  }
+
+  public MemberDailyWordStatsResponse getDailyStats(
+      Long memberId, WordLanguage language, int days) {
+    LocalDate todayKst = LocalDate.now(TimeUtils.KST);
+
+    List<MemberDailyWordStats> pgList =
+        memberDailyWordStatsRepository.findRecentByMemberIdAndLanguage(memberId, language, days);
+
+    TodayWordTypingSnapshot today = todayWordTypingStatsRedisService.getTyping(memberId, language);
+
+    MemberDailyWordAggregation yesterdayAgg = null;
+    if (isYesterdayBatchPending(memberId, language)) {
+      LocalDate yesterday = todayKst.minusDays(1);
+      LocalDateTime yesterdayFrom = TimeUtils.startOfDayKstToUtc(yesterday);
+      LocalDateTime yesterdayTo = TimeUtils.endOfDayKstToUtc(yesterday);
+
+      List<MemberDailyWordAggregation> agg =
+          memberDailyWordAggregationRepository.aggregateByMemberIdsAndLanguageBetween(
+              List.of(memberId), language, yesterdayFrom, yesterdayTo);
+
+      if (!agg.isEmpty()) {
+        yesterdayAgg = agg.getFirst();
+      }
+    }
+
+    return MemberDailyWordStatsResponse.of(days, pgList, yesterdayAgg, today, todayKst);
   }
 }
