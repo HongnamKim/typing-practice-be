@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -60,13 +62,23 @@ public class MemberWordTypingStatsBatchService {
     for (int i = 0; i < memberIds.size(); i += CHUNK_SIZE) {
       List<Long> chunk = memberIds.subList(i, Math.min(i + CHUNK_SIZE, memberIds.size()));
 
+      Map<Long, Member> memberMap =
+          memberRepository.findAllByIds(chunk).stream()
+              .collect(Collectors.toMap(Member::getId, m -> m));
+
       List<MemberWordTypingAggregation> aggregations =
           overwrite
               ? aggregationRepository.aggregateByMemberIds(chunk)
               : aggregationRepository.aggregateByMemberIdsBetween(chunk, from, to);
 
       for (MemberWordTypingAggregation agg : aggregations) {
-        upsert(agg, overwrite);
+        Member member = memberMap.get(agg.getMemberId());
+        if (member == null) {
+          log.warn("Member 미존재, 스킵 - memberId: {}", agg.getMemberId());
+          continue;
+        }
+
+        upsert(agg, overwrite, member);
         totalProcessed++;
       }
     }
@@ -74,19 +86,13 @@ public class MemberWordTypingStatsBatchService {
     return totalProcessed;
   }
 
-  private void upsert(MemberWordTypingAggregation agg, boolean overwrite) {
+  private void upsert(MemberWordTypingAggregation agg, boolean overwrite, Member member) {
     MemberWordTypingStats stats =
         statsRepository
             .findByMemberIdAndLanguage(agg.getMemberId(), agg.getLanguage())
             .orElse(null);
 
     if (stats == null) {
-      Member member = memberRepository.findById(agg.getMemberId()).orElse(null);
-      if (member == null) {
-        log.warn("Member 미존재, 스킵 - memberId: {}", agg.getMemberId());
-        return;
-      }
-
       stats =
           MemberWordTypingStats.create(
               member,

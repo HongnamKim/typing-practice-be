@@ -5,6 +5,7 @@ import com.typingpractice.typing_practice_be.statistics.dto.MemberStatsDayReques
 import com.typingpractice.typing_practice_be.word.statistics.service.GlobalWordStatisticsBatchService;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.service.MemberDailyWordStatsBatchService;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.service.MemberWordTypingStatsBatchService;
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.service.MemberWordTypoStatsBatchService;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.service.WordTypingStatsBatchService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ public class AdminWordStatisticsController {
   private final WordTypingStatsBatchService wordTypingStatsBatchService;
   private final MemberWordTypingStatsBatchService memberWordTypingStatsBatchService;
   private final MemberDailyWordStatsBatchService memberDailyWordStatsBatchService;
+  private final MemberWordTypoStatsBatchService memberWordTypoStatsBatchService;
 
   @PostMapping("/global-word/recalculate")
   public ApiResponse<Void> recalculateGlobalWordStats() {
@@ -43,6 +45,12 @@ public class AdminWordStatisticsController {
       @RequestBody @Valid MemberStatsDayRequest request) {
     memberDailyWordStatsBatchService.runRecalculationForDate(request.getDate());
 
+    return ApiResponse.ok(null);
+  }
+
+  @PostMapping("/member-word-typo/recalculate")
+  public ApiResponse<Void> recalculateMemberWordTypoStats() {
+    memberWordTypoStatsBatchService.runManualRecalculation();
     return ApiResponse.ok(null);
   }
 }
