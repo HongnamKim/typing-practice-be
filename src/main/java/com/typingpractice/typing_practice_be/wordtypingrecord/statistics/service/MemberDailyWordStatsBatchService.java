@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -60,11 +62,22 @@ public class MemberDailyWordStatsBatchService {
     int totalProcessed = 0;
     for (int i = 0; i < memberIds.size(); i += CHUNK_SIZE) {
       List<Long> chunk = memberIds.subList(i, Math.min(i + CHUNK_SIZE, memberIds.size()));
+
+      Map<Long, Member> memberMap =
+          memberRepository.findAllByIds(chunk).stream()
+              .collect(Collectors.toMap(Member::getId, m -> m));
+
       List<MemberDailyWordAggregation> aggregations =
           aggregationRepository.aggregateByMemberIdsBetween(chunk, from, to);
 
       for (MemberDailyWordAggregation agg : aggregations) {
-        upsert(agg);
+        Member member = memberMap.get(agg.getMemberId());
+        if (member == null) {
+          log.warn("Member 미존재, 스킵 - memberId: {}", agg.getMemberId());
+          continue;
+        }
+
+        upsert(agg, member);
         totalProcessed++;
       }
     }
@@ -72,7 +85,7 @@ public class MemberDailyWordStatsBatchService {
     return totalProcessed;
   }
 
-  private void upsert(MemberDailyWordAggregation agg) {
+  private void upsert(MemberDailyWordAggregation agg, Member member) {
     LocalDate date = agg.getDateAsLocalDate();
     MemberDailyWordStats stats =
         statsRepository
@@ -80,12 +93,6 @@ public class MemberDailyWordStatsBatchService {
             .orElse(null);
 
     if (stats == null) {
-      Member member = memberRepository.findById(agg.getMemberId()).orElse(null);
-      if (member == null) {
-        log.warn("Member 미존재, 스킵 - memberId: {}", agg.getMemberId());
-        return;
-      }
-
       stats =
           MemberDailyWordStats.create(
               member,

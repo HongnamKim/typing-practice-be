@@ -10,6 +10,8 @@ public interface MemberRepository {
 
   Optional<Member> findById(Long memberId);
 
+  List<Member> findAllByIds(List<Long> memberIds);
+
   Optional<Member> findByProviderId(String providerId);
 
   Long save(Member member);
