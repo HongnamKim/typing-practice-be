@@ -11,6 +11,9 @@ import com.typingpractice.typing_practice_be.typingrecord.statistics.repository.
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -62,11 +65,21 @@ public class MemberDailyStatsBatchService {
     for (int i = 0; i < memberIds.size(); i += CHUNK_SIZE) {
       List<Long> chunk = memberIds.subList(i, Math.min(i + CHUNK_SIZE, memberIds.size()));
 
+      Map<Long, Member> memberMap =
+          memberRepository.findAllByIds(chunk).stream()
+              .collect(Collectors.toMap(Member::getId, m -> m));
+
       List<MemberDailyAggregation> aggregations =
           memberDailyAggregationRepository.aggregateByMemberIdsBetween(chunk, from, to);
 
       for (MemberDailyAggregation agg : aggregations) {
-        upsert(agg);
+        Member member = memberMap.get(agg.getMemberId());
+        if (member == null) {
+          log.warn("Member 미존재, 스킵 - memberId: {}", agg.getMemberId());
+          continue;
+        }
+
+        upsert(agg, member);
         totalProcessed++;
       }
     }
@@ -74,19 +87,14 @@ public class MemberDailyStatsBatchService {
     return totalProcessed;
   }
 
-  private void upsert(MemberDailyAggregation agg) {
+  private void upsert(MemberDailyAggregation agg, Member member) {
     LocalDate date = agg.getDateAsLocalDate();
     MemberDailyStats stats =
         memberDailyStatsRepository
-            .findByMemberIdAndDateAndLanguage(agg.getMemberId(), date, agg.getLanguage())
+            .findByMemberIdAndDateAndLanguage(member.getId(), date, agg.getLanguage())
             .orElse(null);
 
     if (stats == null) {
-      Member member = memberRepository.findById(agg.getMemberId()).orElse(null);
-      if (member == null) {
-        log.warn("Member 미존재, 스킵 - memberId: {}", agg.getMemberId());
-        return;
-      }
       stats =
           MemberDailyStats.create(
               member,

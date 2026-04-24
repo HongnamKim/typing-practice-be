@@ -14,6 +14,7 @@ import com.typingpractice.typing_practice_be.typingrecord.statistics.repository.
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -70,13 +71,22 @@ public class MemberTypoStatsBatchService {
     for (int i = 0; i < memberIds.size(); i += CHUNK_SIZE) {
       List<Long> chunk = memberIds.subList(i, Math.min(i + CHUNK_SIZE, memberIds.size()));
 
+      Map<Long, Member> memberMap =
+          memberRepository.findAllByIds(chunk).stream()
+              .collect(Collectors.toMap(Member::getId, m -> m));
+
       List<MemberTypoAggregation> aggregations =
           isManual
               ? memberTypoAggregationRepository.aggregateByMemberIds(chunk)
               : memberTypoAggregationRepository.aggregateByMemberIdsBetween(chunk, from, to);
 
       for (MemberTypoAggregation agg : aggregations) {
-        upsertDetail(agg, isManual);
+        Member member = memberMap.get(agg.getMemberId());
+        if (member == null) {
+          log.warn("Member 미존재, 스킵 - memberId: {}", agg.getMemberId());
+          continue;
+        }
+        upsertDetail(agg, isManual, member);
         totalProcessed++;
       }
 
@@ -86,35 +96,26 @@ public class MemberTypoStatsBatchService {
                   agg -> agg.getMemberId() + "_" + agg.getLanguage() + "_" + agg.getExpected()))
           .forEach(
               (key, group) -> {
-                int totalCount = group.stream().mapToInt(MemberTypoAggregation::getCount).sum();
                 MemberTypoAggregation first = group.getFirst();
+                Member member = memberMap.get(first.getMemberId());
+                if (member == null) return;
+
+                int totalCount = group.stream().mapToInt(MemberTypoAggregation::getCount).sum();
                 upsertTypoStats(
-                    first.getMemberId(),
-                    first.getLanguage(),
-                    first.getExpected(),
-                    totalCount,
-                    isManual);
+                    member, first.getLanguage(), first.getExpected(), totalCount, isManual);
               });
     }
 
     return totalProcessed;
   }
 
-  private Member findMember(Long memberId) {
-    Member member = memberRepository.findById(memberId).orElse(null);
-    if (member == null) {
-      log.warn("Member 미존재, 스킵 - memberId: {}", memberId);
-    }
-    return member;
-  }
-
-  private void upsertDetail(MemberTypoAggregation agg, boolean isManual) {
+  private void upsertDetail(MemberTypoAggregation agg, boolean isManual, Member member) {
     // 기존 정보 merge
     if (!isManual) {
       MemberTypoDetailStats stats =
           memberTypoDetailStatsRepository
               .findByMemberIdAndLanguageAndExpectedAndActual(
-                  agg.getMemberId(), agg.getLanguage(), agg.getExpected(), agg.getActual())
+                  member.getId(), agg.getLanguage(), agg.getExpected(), agg.getActual())
               .orElse(null);
 
       if (stats != null) {
@@ -129,9 +130,6 @@ public class MemberTypoStatsBatchService {
     }
 
     // 새로 생성
-    Member member = findMember(agg.getMemberId());
-    if (member == null) return;
-
     memberTypoDetailStatsRepository.save(
         MemberTypoDetailStats.create(
             member,
@@ -146,11 +144,11 @@ public class MemberTypoStatsBatchService {
   }
 
   private void upsertTypoStats(
-      Long memberId, QuoteLanguage language, String expected, int count, boolean isManual) {
+      Member member, QuoteLanguage language, String expected, int count, boolean isManual) {
     if (!isManual) {
       MemberTypoStats stats =
           memberTypoStatsRepository
-              .findByMemberIdAndLanguageAndExpected(memberId, language, expected)
+              .findByMemberIdAndLanguageAndExpected(member.getId(), language, expected)
               .orElse(null);
 
       if (stats != null) {
@@ -158,9 +156,6 @@ public class MemberTypoStatsBatchService {
         return;
       }
     }
-
-    Member member = findMember(memberId);
-    if (member == null) return;
 
     memberTypoStatsRepository.save(MemberTypoStats.create(member, language, expected, count));
   }
