@@ -6,6 +6,8 @@ import com.typingpractice.typing_practice_be.statistics.service.MemberWordStatis
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
 import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberDailyWordStatsResponse;
 import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberWordTypingStatsResponse;
+import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberWordTypoDetailStatsResponse;
+import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberWordTypoStatsResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,6 +38,21 @@ public class MemberWordStatisticsController {
     return ApiResponse.ok(
         memberWordStatisticsService.getDailyStats(
             memberId, request.getLanguage(), request.getDays()));
+  }
+
+  @GetMapping("/typos")
+  public ApiResponse<MemberWordTypoStatsResponse> getTypoStats(
+      @RequestParam WordLanguage language) {
+    Long memberId = getMemberId();
+    return ApiResponse.ok(memberWordStatisticsService.getTypoStats(memberId, language));
+  }
+
+  @GetMapping("/typos/detail")
+  public ApiResponse<MemberWordTypoDetailStatsResponse> getTypoDetailStats(
+      @RequestParam WordLanguage language, @RequestParam String expected) {
+    Long memberId = getMemberId();
+    return ApiResponse.ok(
+        memberWordStatisticsService.getTypoDetailStats(memberId, language, expected));
   }
 
   @PostMapping("/refresh")
