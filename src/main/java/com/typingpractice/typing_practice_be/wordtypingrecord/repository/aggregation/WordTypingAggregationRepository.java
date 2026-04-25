@@ -2,7 +2,7 @@ package com.typingpractice.typing_practice_be.wordtypingrecord.repository.aggreg
 
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.GlobalWordTypingPerformance;
-import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.WordTypingAggregation;
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.aggregation.WordTypingAggregation;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;

@@ -1,4 +1,4 @@
-package com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto;
+package com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.aggregation;
 
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
 import lombok.Getter;

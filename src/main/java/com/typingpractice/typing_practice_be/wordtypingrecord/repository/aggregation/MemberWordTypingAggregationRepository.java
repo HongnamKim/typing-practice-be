@@ -1,7 +1,7 @@
 package com.typingpractice.typing_practice_be.wordtypingrecord.repository.aggregation;
 
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
-import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.MemberWordTypingAggregation;
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.aggregation.MemberWordTypingAggregation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
