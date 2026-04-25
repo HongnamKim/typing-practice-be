@@ -1,7 +1,7 @@
 package com.typingpractice.typing_practice_be.wordtypingrecord.dto.response;
 
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.domain.MemberDailyWordStats;
-import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.MemberDailyWordAggregation;
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.aggregation.MemberDailyWordAggregation;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.TodayWordTypingSnapshot;
 import lombok.AccessLevel;
 import lombok.Getter;

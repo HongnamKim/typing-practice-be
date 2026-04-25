@@ -16,8 +16,8 @@ public class WordTypingRecordEventListener {
   public void handleWordTypingRecordSaved(WordTypingRecordSavedEvent event) {
     try {
       todayWordTypingStatsRedisService.incrementTyping(event);
+      todayWordTypingStatsRedisService.incrementTypoAndDetail(event);
 
-      // TodayWordTypingStatsRedisService.incrementTypoAndDetail
       // AdaptiveServingRedisService.updateWordEstimation
     } catch (Exception e) {
       log.error("Redis 오늘 단어 통계 증분 실패 - memberId: {}", event.getMemberId());

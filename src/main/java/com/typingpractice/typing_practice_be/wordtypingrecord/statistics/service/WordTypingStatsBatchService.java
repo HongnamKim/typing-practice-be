@@ -6,7 +6,7 @@ import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
 import com.typingpractice.typing_practice_be.word.repository.WordRepository;
 import com.typingpractice.typing_practice_be.wordtypingrecord.repository.aggregation.WordTypingAggregationRepository;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.domain.WordTypingStats;
-import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.WordTypingAggregation;
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.aggregation.WordTypingAggregation;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.repository.WordTypingStatsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

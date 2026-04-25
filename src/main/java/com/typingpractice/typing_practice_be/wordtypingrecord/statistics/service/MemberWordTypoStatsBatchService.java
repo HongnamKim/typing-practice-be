@@ -8,7 +8,7 @@ import com.typingpractice.typing_practice_be.wordtypingrecord.repository.WordTyp
 import com.typingpractice.typing_practice_be.wordtypingrecord.repository.aggregation.MemberWordTypoAggregationRepository;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.domain.MemberWordTypoDetailStats;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.domain.MemberWordTypoStats;
-import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.MemberWordTypoAggregation;
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.dto.aggregation.MemberWordTypoAggregation;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.repository.MemberWordTypoDetailStatsRepository;
 import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.repository.MemberWordTypoStatsRepository;
 import lombok.RequiredArgsConstructor;
