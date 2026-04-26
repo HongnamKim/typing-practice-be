@@ -1,4 +1,4 @@
-package com.typingpractice.typing_practice_be.word.dto;
+package com.typingpractice.typing_practice_be.word.dto.request;
 
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
 import jakarta.validation.constraints.Size;

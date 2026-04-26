@@ -2,8 +2,8 @@ package com.typingpractice.typing_practice_be.word.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.word.domain.Word;
-import com.typingpractice.typing_practice_be.word.dto.WordRequest;
-import com.typingpractice.typing_practice_be.word.dto.WordResponse;
+import com.typingpractice.typing_practice_be.word.dto.request.WordRequest;
+import com.typingpractice.typing_practice_be.word.dto.response.WordResponse;
 import com.typingpractice.typing_practice_be.word.service.WordService;
 import jakarta.validation.Valid;
 import java.util.List;
