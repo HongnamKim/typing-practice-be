@@ -1,4 +1,4 @@
-package com.typingpractice.typing_practice_be.word.dto;
+package com.typingpractice.typing_practice_be.word.dto.response;
 
 import com.typingpractice.typing_practice_be.word.domain.Word;
 import lombok.Getter;

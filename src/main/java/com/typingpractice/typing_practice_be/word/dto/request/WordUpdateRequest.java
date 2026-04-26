@@ -1,4 +1,4 @@
-package com.typingpractice.typing_practice_be.word.dto;
+package com.typingpractice.typing_practice_be.word.dto.request;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

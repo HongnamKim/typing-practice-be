@@ -2,7 +2,9 @@ package com.typingpractice.typing_practice_be.word.repository;
 
 import com.typingpractice.typing_practice_be.word.domain.Word;
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
+import com.typingpractice.typing_practice_be.word.query.WordPaginationQuery;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -68,5 +70,35 @@ public class WordRepository {
             Long.class)
         .setParameter("language", language)
         .getResultList();
+  }
+
+  public Optional<Word> findByIdWithTypingStats(Long wordId) {
+    return em.createQuery(
+            "select w from Word w left join fetch w.typingStats where w.id = :wordId", Word.class)
+        .setParameter("wordId", wordId)
+        .getResultStream()
+        .findFirst();
+  }
+
+  public List<Word> findAll(WordPaginationQuery query) {
+    int page = query.getPage();
+    int size = query.getSize();
+
+    String jpql = "select w from Word w left join fetch w.typingStats";
+
+    if (query.getLanguage() != null) {
+      jpql += " where w.language = :language";
+    }
+
+    jpql += " order by w." + query.getOrderBy() + " " + query.getSortDirection();
+
+    TypedQuery<Word> typedQuery =
+        em.createQuery(jpql, Word.class).setFirstResult((page - 1) * size).setMaxResults(size + 1);
+
+    if (query.getLanguage() != null) {
+      typedQuery.setParameter("language", query.getLanguage());
+    }
+
+    return typedQuery.getResultList();
   }
 }
