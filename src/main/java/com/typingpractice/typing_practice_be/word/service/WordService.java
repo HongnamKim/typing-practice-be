@@ -1,10 +1,12 @@
 package com.typingpractice.typing_practice_be.word.service;
 
+import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.word.domain.Word;
 import com.typingpractice.typing_practice_be.word.domain.WordDifficultyTier;
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
 import com.typingpractice.typing_practice_be.word.domain.WordProfile;
 import com.typingpractice.typing_practice_be.word.exception.WordNotFoundException;
+import com.typingpractice.typing_practice_be.word.query.WordPaginationQuery;
 import com.typingpractice.typing_practice_be.word.repository.WordRepository;
 import java.util.*;
 
@@ -41,6 +43,19 @@ public class WordService {
     Collections.shuffle(fetched);
 
     return fetched;
+  }
+
+  public PageResult<Word> findAllForAdmin(WordPaginationQuery query) {
+    List<Word> words = wordRepository.findAll(query);
+
+    boolean hasNext = words.size() > query.getSize();
+    List<Word> content = hasNext ? words.subList(0, query.getSize()) : words;
+
+    return new PageResult<>(content, query.getPage(), query.getSize(), hasNext);
+  }
+
+  public Word findByIdWithTypingStats(Long wordId) {
+    return wordRepository.findByIdWithTypingStats(wordId).orElseThrow(WordNotFoundException::new);
   }
 
   @Transactional
