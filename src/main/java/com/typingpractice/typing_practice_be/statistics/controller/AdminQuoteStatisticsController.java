@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/admin/stats")
-public class AdminStatisticsController {
+public class AdminQuoteStatisticsController {
   private final GlobalQuoteStatisticsBatchService globalQuoteStatisticsBatchService;
   private final QuoteTypingStatsBatchService quoteTypingStatsBatchService;
   private final MemberTypingStatsBatchService memberTypingStatsBatchService;
@@ -53,7 +53,7 @@ public class AdminStatisticsController {
 
   @PostMapping("/member-daily/recalculate")
   public ApiResponse<Void> recalculateMemberDailyStats(
-      @ModelAttribute @Valid MemberStatsDayRequest request) {
+      @RequestBody @Valid MemberStatsDayRequest request) {
 
     memberDailyStatsBatchService.runRecalculationForDate(request.getDate());
 

@@ -48,10 +48,10 @@ public class SecurityConfig {
             auth ->
                 auth
                     // 인증 불필요
-                    // .requestMatchers("/swagger-ui/**", "/api-docs/**")
-                    // .permitAll()
-                    // .requestMatchers("/auth/test")
-                    // .permitAll()
+                    .requestMatchers("/swagger-ui/**", "/api-docs/**")
+                    .permitAll()
+                    .requestMatchers("/auth/test")
+                    .permitAll()
                     //
                     .requestMatchers("/auth/google")
                     .permitAll()
@@ -59,9 +59,13 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/quotes")
                     .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/words")
+                    .permitAll()
                     .requestMatchers("/error")
                     .permitAll()
                     .requestMatchers(HttpMethod.POST, "/typing-records")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.POST, "/word-typing-records")
                     .permitAll()
                     .requestMatchers("/actuator/prometheus")
                     .permitAll()
