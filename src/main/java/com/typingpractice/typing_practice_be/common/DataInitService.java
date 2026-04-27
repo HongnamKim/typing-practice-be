@@ -13,6 +13,8 @@ import com.typingpractice.typing_practice_be.report.domain.ReportReason;
 import com.typingpractice.typing_practice_be.report.repository.ReportRepository;
 import com.typingpractice.typing_practice_be.quote.statistics.domain.GlobalQuoteStatistics;
 import com.typingpractice.typing_practice_be.quote.statistics.repository.GlobalQuoteStatisticsRepository;
+import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
+import com.typingpractice.typing_practice_be.word.service.WordService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -30,6 +32,7 @@ import java.util.List;
 public class DataInitService implements CommandLineRunner {
   private final MemberRepository memberRepository;
   private final QuoteRepository quoteRepository;
+  private final WordService wordService;
   private final ReportRepository reportRepository;
   private final GlobalQuoteStatisticsRepository globalQuoteStatisticsRepository;
 
@@ -40,6 +43,7 @@ public class DataInitService implements CommandLineRunner {
     initAdmin();
     List<Member> members = initMembers();
     List<Quote> quotes = initQuotes(members);
+    initWords();
     //    initReports(members, quotes);
     //
     //    log.info("초기 데이터 생성 완료");
@@ -102,6 +106,36 @@ public class DataInitService implements CommandLineRunner {
     log.info("문장 {}개 생성 완료", quotes.size());
 
     return quotes;
+  }
+
+  private void initWords() {
+    List<String> koreanWords =
+        List.of("가", "안녕", "개발자", "프로그램", "컴퓨터", "뒤쫓다", "괜찮아요", "꽃잎", "한국어", "타이핑연습");
+
+    List<String> englishWords =
+        List.of(
+            "hi",
+            "code",
+            "hello",
+            "world",
+            "keyboard",
+            "programming",
+            "JavaScript",
+            "TypeScript",
+            "SQL",
+            "HTML");
+
+    int created = 0;
+    for (String word : koreanWords) {
+      wordService.createWord(word, WordLanguage.KOREAN);
+      created++;
+    }
+    for (String word : englishWords) {
+      wordService.createWord(word, WordLanguage.ENGLISH);
+      created++;
+    }
+
+    log.info("단어 {}개 생성 완료", created);
   }
 
   private void initReports(List<Member> members, List<Quote> quotes) {

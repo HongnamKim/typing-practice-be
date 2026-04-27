@@ -14,6 +14,9 @@ import com.typingpractice.typing_practice_be.typingrecord.statistics.repository.
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -68,13 +71,22 @@ public class MemberTypingStatsBatchService {
     for (int i = 0; i < memberIds.size(); i += CHUNK_SIZE) {
       List<Long> chunk = memberIds.subList(i, Math.min(i + CHUNK_SIZE, memberIds.size()));
 
+      Map<Long, Member> memberMap =
+          memberRepository.findAllByIds(chunk).stream()
+              .collect(Collectors.toMap(Member::getId, m -> m));
+
       List<MemberTypingAggregation> aggregations =
           overwrite
               ? typingAggregationRepository.aggregateByMemberIds(chunk)
               : typingAggregationRepository.aggregateByMemberIdsBetween(chunk, from, to);
 
       for (MemberTypingAggregation agg : aggregations) {
-        upsert(agg.getMemberId(), agg, overwrite, from, to);
+        Member member = memberMap.get(agg.getMemberId());
+        if (member == null) {
+          log.warn("Member 미존재, 스킵 - memberId: {}", agg.getMemberId());
+          continue;
+        }
+        upsert(agg, overwrite, from, to, member);
         totalProcessed++;
       }
     }
@@ -83,22 +95,18 @@ public class MemberTypingStatsBatchService {
   }
 
   private void upsert(
-      Long memberId,
       MemberTypingAggregation agg,
       boolean overwrite,
       LocalDateTime from,
-      LocalDateTime to) {
+      LocalDateTime to,
+      Member member) {
+    Long memberId = member.getId();
     MemberTypingStats stats =
         memberTypingStatsRepository
             .findByMemberIdAndLanguage(memberId, agg.getLanguage())
             .orElse(null);
 
     if (stats == null) {
-      Member member = memberRepository.findById(memberId).orElse(null);
-      if (member == null) {
-        log.warn("Member 미존재, 스킵 - memberId: {}", memberId);
-        return;
-      }
 
       stats =
           MemberTypingStats.create(
