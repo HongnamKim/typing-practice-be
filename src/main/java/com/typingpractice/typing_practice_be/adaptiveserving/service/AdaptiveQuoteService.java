@@ -23,11 +23,11 @@ public class AdaptiveQuoteService {
   private final QuoteIdCacheService quoteIdCacheService;
   private final QuoteRepository quoteRepository;
 
-  private static final int EASY_RATIO = 2;
-  private static final int FIT_RATIO = 5;
-  private static final int HARD_RATIO = 3;
+  private static final int EASY_RATIO = 1;
+  private static final int FIT_RATIO = 7;
+  private static final int HARD_RATIO = 2;
   private static final float MIN_HALF_WIDTH = 3f;
-  private static final float RANDOM_RATIO = 0.2f;
+  private static final float RANDOM_RATIO = 0.05f;
 
   public List<AdaptiveQuoteResponse> getAdaptiveQuotes(
       Long memberId, QuoteLanguage language, int count, List<Long> excludeIds) {
