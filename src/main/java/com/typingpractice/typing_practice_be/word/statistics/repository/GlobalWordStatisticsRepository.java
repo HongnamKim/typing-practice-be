@@ -19,9 +19,10 @@ public class GlobalWordStatisticsRepository {
 
   public Optional<GlobalWordStatistics> findByLanguage(WordLanguage language) {
     return em.createQuery(
-            "select g from GlobalWordStatistics g where g.language = :language",
+            "select g from GlobalWordStatistics g where g.language = :language order by g.createdAt DESC",
             GlobalWordStatistics.class)
         .setParameter("language", language)
+        .setMaxResults(1)
         .getResultStream()
         .findFirst();
   }
