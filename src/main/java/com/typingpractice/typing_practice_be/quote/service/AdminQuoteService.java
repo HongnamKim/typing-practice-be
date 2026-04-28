@@ -2,6 +2,7 @@ package com.typingpractice.typing_practice_be.quote.service;
 
 import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminQuoteService {
   private final QuoteRepository quoteRepository;
   private final ReportRepository reportRepository;
+  private final QuoteIdCacheService quoteIdCacheService;
 
   @Transactional
   public Quote approvePublish(Long quoteId) {
@@ -75,7 +77,12 @@ public class AdminQuoteService {
 
     reports.forEach(report -> report.process(true));
 
+    Long ownerId = targetQuote.getMember().getId();
+    QuoteLanguage language = targetQuote.getLanguage();
+
     quoteRepository.deleteQuote(targetQuote);
+
+    quoteIdCacheService.invalidateMemberIds(ownerId, language);
   }
 
   @Transactional
