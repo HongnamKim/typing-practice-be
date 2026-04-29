@@ -392,4 +392,37 @@ public class QuoteRepository {
         .setParameter("language", language)
         .getSingleResult();
   }
+
+  public List<Quote> findDeletedQuotes(QuotePaginationQuery query) {
+    int page = query.getPage();
+    int size = query.getSize();
+
+    return em.createNativeQuery(
+            "SELECT * FROM quote WHERE deleted = true "
+                + "ORDER BY deleted_at DESC LIMIT :limit OFFSET :offset",
+            Quote.class)
+        .setParameter("limit", size + 1)
+        .setParameter("offset", (page - 1) * size)
+        .getResultList();
+  }
+
+  public Optional<Quote> findDeletedQuoteById(Long quoteId) {
+    List<Quote> results =
+        em.createNativeQuery(
+                "select * from quote where quote_id = :quoteId and deleted = true limit 1",
+                Quote.class)
+            .setParameter("quoteId", quoteId)
+            .getResultList();
+
+    return results.isEmpty() ? Optional.empty() : Optional.of(results.getFirst());
+  }
+
+  public void permanentDeleteQuote(Long quoteId) {
+    em.createNativeQuery("delete from quote_typing_stats where quote_id = :quoteId")
+        .setParameter("quoteId", quoteId)
+        .executeUpdate();
+    em.createNativeQuery("delete from quote where quote_id = :quoteId")
+        .setParameter("quoteId", quoteId)
+        .executeUpdate();
+  }
 }
