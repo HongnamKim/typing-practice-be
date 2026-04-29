@@ -3,6 +3,8 @@ package com.typingpractice.typing_practice_be.typingrecord.repository;
 import com.typingpractice.typing_practice_be.adaptiveserving.dto.AdaptiveServingRecord;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.typingrecord.domain.TypingRecord;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.springframework.data.domain.Sort;
@@ -11,9 +13,6 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
@@ -114,5 +113,11 @@ public class TypingRecordRepository {
         .include("cpm", "accuracy", "quoteDifficulty", "avgCpmSnapshot", "avgAccSnapshot");
 
     return mongoTemplate.find(query, AdaptiveServingRecord.class, "typingRecord");
+  }
+
+  public long deleteByQuoteId(Long quoteId) {
+    return mongoTemplate
+        .remove(Query.query(Criteria.where("quoteId").is(quoteId)), "typingRecord")
+        .getDeletedCount();
   }
 }

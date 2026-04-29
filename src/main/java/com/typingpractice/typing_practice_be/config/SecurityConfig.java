@@ -8,6 +8,7 @@ import com.typingpractice.typing_practice_be.common.security.CustomAuthenticatio
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -20,6 +21,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -31,6 +33,7 @@ public class SecurityConfig {
   private final AuthService authService;
   private final CustomAuthenticationEntryPoint authenticationEntryPoint;
   private final CustomAccessDeniedHandler accessDeniedHandler;
+  private final Environment environment;
 
   @Bean
   public JwtAuthenticationFilter jwtAuthenticationFilter(
@@ -40,48 +43,51 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    boolean isLocal = Arrays.asList(environment.getActiveProfiles()).contains("local");
+
     http.cors(Customizer.withDefaults())
         .csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 안 씀
         .authorizeHttpRequests(
-            auth ->
-                auth
-                    // 인증 불필요
-                    .requestMatchers("/swagger-ui/**", "/api-docs/**")
+            auth -> {
+              if (isLocal) {
+                // 인증 불필요
+                auth.requestMatchers("/swagger-ui/**", "/api-docs/**")
                     .permitAll()
                     .requestMatchers("/auth/test")
-                    .permitAll()
-                    //
-                    .requestMatchers("/auth/google")
-                    .permitAll()
-                    .requestMatchers("/auth/refresh")
-                    .permitAll()
-                    .requestMatchers(HttpMethod.GET, "/quotes")
-                    .permitAll()
-                    .requestMatchers(HttpMethod.GET, "/words")
-                    .permitAll()
-                    .requestMatchers("/error")
-                    .permitAll()
-                    .requestMatchers(HttpMethod.POST, "/typing-records")
-                    .permitAll()
-                    .requestMatchers(HttpMethod.POST, "/word-typing-records")
-                    .permitAll()
-                    .requestMatchers("/actuator/prometheus")
-                    .permitAll()
-                    // 관리자 전용
-                    .requestMatchers("/admin/**")
-                    .hasRole("ADMIN")
+                    .permitAll();
+              }
+              auth.requestMatchers("/auth/google")
+                  .permitAll()
+                  .requestMatchers("/auth/refresh")
+                  .permitAll()
+                  .requestMatchers(HttpMethod.GET, "/quotes")
+                  .permitAll()
+                  .requestMatchers(HttpMethod.GET, "/words")
+                  .permitAll()
+                  .requestMatchers("/error")
+                  .permitAll()
+                  .requestMatchers(HttpMethod.POST, "/typing-records")
+                  .permitAll()
+                  .requestMatchers(HttpMethod.POST, "/word-typing-records")
+                  .permitAll()
+                  .requestMatchers("/actuator/prometheus")
+                  .permitAll()
+                  // 관리자 전용
+                  .requestMatchers("/admin/**")
+                  .hasRole("ADMIN")
 
-                    // BANNED 제외 (USER, ADMIN만)
-                    .requestMatchers(HttpMethod.POST, "/quotes/public")
-                    .hasAnyRole("USER", "ADMIN")
-                    .requestMatchers(HttpMethod.POST, "/quotes/*/publish")
-                    .hasAnyRole("USER", "ADMIN")
-                    .requestMatchers(HttpMethod.POST, "/reports")
-                    .hasAnyRole("USER", "ADMIN")
-                    .anyRequest()
-                    .authenticated())
+                  // BANNED 제외 (USER, ADMIN만)
+                  .requestMatchers(HttpMethod.POST, "/quotes/public")
+                  .hasAnyRole("USER", "ADMIN")
+                  .requestMatchers(HttpMethod.POST, "/quotes/*/publish")
+                  .hasAnyRole("USER", "ADMIN")
+                  .requestMatchers(HttpMethod.POST, "/reports")
+                  .hasAnyRole("USER", "ADMIN")
+                  .anyRequest()
+                  .authenticated();
+            })
         .exceptionHandling(
             ex ->
                 ex.authenticationEntryPoint(authenticationEntryPoint)
