@@ -4,7 +4,6 @@ import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.quote.config.SimilarityThresholdProperties;
 import com.typingpractice.typing_practice_be.quote.domain.*;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteIdWithDifficulty;
-import com.typingpractice.typing_practice_be.quote.query.PublicQuoteQuery;
 import com.typingpractice.typing_practice_be.quote.query.QuotePaginationQuery;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -136,7 +135,7 @@ public class QuoteRepository {
     return typedQuery.getResultList();
   }
 
-  public List<Quote> findPublicQuotes(PublicQuoteQuery query) {
+  /*public List<Quote> findPublicQuotes(PublicQuoteQuery query) {
     // 랜덤 순서
     em.createNativeQuery("SELECT SETSEED(:seed)")
         .setParameter("seed", query.getSeed())
@@ -190,7 +189,7 @@ public class QuoteRepository {
 
       return typedQuery.getResultList();
     }
-  }
+  }*/
 
   public boolean existsBySentenceHash(String sentenceHash, Long memberId) {
     Long count =
@@ -336,7 +335,8 @@ public class QuoteRepository {
     int page = query.getPage();
     int size = query.getSize();
 
-    String jpql = "select q from Quote q join q.member m where m.id = :memberId";
+    String jpql =
+        "select q from Quote q join q.member m left join fetch q.typingStats where m.id = :memberId";
 
     if (query.getStatus() != null && query.getType() != null) {
       jpql += " and q.status = :status and q.type = :type";
@@ -372,7 +372,7 @@ public class QuoteRepository {
   public List<Quote> findPageByLanguageAndIdRange(
       QuoteLanguage language, Long cursorId, Long maxId, int size) {
     return em.createQuery(
-            "select q from Quote q where q.language = :language and q.id > :cursorId and q.id <= :maxId order by q.id ASC",
+            "select q from Quote q left join fetch q.typingStats where q.language = :language and q.id > :cursorId and q.id <= :maxId order by q.id ASC",
             Quote.class)
         .setParameter("language", language)
         .setParameter("cursorId", cursorId)

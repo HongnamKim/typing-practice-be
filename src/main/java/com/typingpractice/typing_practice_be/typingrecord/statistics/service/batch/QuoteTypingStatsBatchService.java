@@ -88,8 +88,8 @@ public class QuoteTypingStatsBatchService {
           Integer totalAttemptCount = totalAttemptsCount.get(quote.getId());
           if (agg == null) continue; // 통계값이 없는 경우
 
-          QuoteTypingStats stats =
-              quoteTypingStatsRepository.findByQuoteId(quote.getId()).orElse(null);
+          QuoteTypingStats stats = quote.getTypingStats();
+          // quoteTypingStatsRepository.findByQuoteId(quote.getId()).orElse(null);
 
           if (stats == null) {
             // 기존 타이핑 통계가 없으면 생성
