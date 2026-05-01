@@ -35,7 +35,11 @@ public class Quote extends BaseEntity {
 
   @Embedded private QuoteProfile profile;
 
-  @OneToOne(mappedBy = "quote", fetch = FetchType.LAZY)
+  @OneToOne(
+      mappedBy = "quote",
+      fetch = FetchType.LAZY,
+      cascade = CascadeType.REMOVE,
+      orphanRemoval = true)
   private QuoteTypingStats typingStats;
 
   private String sentence;
