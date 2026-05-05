@@ -57,8 +57,8 @@ public class AdminAnnouncementService {
         .orElseThrow(AnnouncementNotFoundException::new);
   }
 
-  public List<AnnouncementDetail> findPinned() {
-    return announcementRepository.findAllPinned().stream().map(AnnouncementDetail::from).toList();
+  public List<AnnouncementSummary> findPinned() {
+    return announcementRepository.findAllPinned().stream().map(AnnouncementSummary::from).toList();
   }
 
   /** 어드민: 일반 공지 커서 페이지네이션 (게시 여부 무관). */

@@ -5,6 +5,7 @@ import com.typingpractice.typing_practice_be.notice.announcement.domain.Announce
 import com.typingpractice.typing_practice_be.notice.announcement.dto.AnnouncementCursor;
 import com.typingpractice.typing_practice_be.notice.announcement.dto.AnnouncementDetail;
 import com.typingpractice.typing_practice_be.notice.announcement.dto.AnnouncementSummary;
+import com.typingpractice.typing_practice_be.notice.announcement.exception.AnnouncementNotFoundException;
 import com.typingpractice.typing_practice_be.notice.announcement.repository.AnnouncementRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class AnnouncementService {
   private final AnnouncementRepository announcementRepository;
+
+  public AnnouncementDetail findOne(Long id) {
+    Announcement announcement =
+        announcementRepository.findById(id).orElseThrow(AnnouncementNotFoundException::new);
+
+    if (!announcement.isPublished()) {
+      throw new AnnouncementNotFoundException();
+    }
+
+    return AnnouncementDetail.from(announcement);
+  }
 
   /** 팝업용: 최신 게시 공지 1건 (없으면 null) */
   public AnnouncementDetail findLatest() {
