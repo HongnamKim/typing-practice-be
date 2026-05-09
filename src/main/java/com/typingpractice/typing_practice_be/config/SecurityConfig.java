@@ -68,6 +68,8 @@ public class SecurityConfig {
                   .permitAll()
                   .requestMatchers(HttpMethod.GET, "/announcements", "/announcements/**")
                   .permitAll()
+                  .requestMatchers(HttpMethod.GET, "/update-notes", "/update-notes/**")
+                  .permitAll()
                   .requestMatchers("/error")
                   .permitAll()
                   .requestMatchers(HttpMethod.POST, "/typing-records")
