@@ -42,4 +42,9 @@ public class TimeUtils {
         .withZoneSameInstant(ZoneOffset.UTC)
         .toLocalDateTime();
   }
+
+  // KST LocalDateTime을 UTC LocalDateTime으로
+  public static LocalDateTime kstToUtc(LocalDateTime kstDateTime) {
+    return kstDateTime.atZone(KST).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
+  }
 }

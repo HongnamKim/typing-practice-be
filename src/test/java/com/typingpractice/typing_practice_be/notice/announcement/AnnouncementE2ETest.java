@@ -9,6 +9,7 @@ import com.typingpractice.typing_practice_be.notice.announcement.dto.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.typingpractice.typing_practice_be.notice.dto.LocalizedTextRequest;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
