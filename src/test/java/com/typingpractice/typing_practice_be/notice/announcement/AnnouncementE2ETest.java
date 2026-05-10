@@ -17,8 +17,7 @@ import org.springframework.http.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 public class AnnouncementE2ETest extends BaseE2ETest {
-  private static final ParameterizedTypeReference<ApiResponse<AnnouncementIdResponse>> ID_RESPONSE =
-      new ParameterizedTypeReference<>() {};
+
   private static final ParameterizedTypeReference<ApiResponse<AnnouncementDetail>> DETAIL_RESPONSE =
       new ParameterizedTypeReference<>() {};
   private static final ParameterizedTypeReference<ApiResponse<AnnouncementListResponse>>
@@ -52,12 +51,12 @@ public class AnnouncementE2ETest extends BaseE2ETest {
             published,
             pinned);
 
-    ResponseEntity<ApiResponse<AnnouncementIdResponse>> response =
+    ResponseEntity<ApiResponse<AnnouncementDetail>> response =
         restTemplate.exchange(
             "/admin/announcements",
             HttpMethod.POST,
             new HttpEntity<>(request, adminHeaders),
-            ID_RESPONSE);
+            DETAIL_RESPONSE);
 
     assert response.getBody() != null;
     return response.getBody().data().id();

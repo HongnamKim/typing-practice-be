@@ -17,7 +17,8 @@ public class AdminAnnouncementService {
   private final AnnouncementRepository announcementRepository;
 
   @Transactional
-  public Long create(CreateAnnouncementRequest request) {
+  public Announcement create(CreateAnnouncementRequest request) {
+
     Announcement announcement =
         Announcement.create(
             request.postedAt(),
@@ -26,11 +27,11 @@ public class AdminAnnouncementService {
             request.published(),
             request.pinned());
 
-    return announcementRepository.save(announcement).getId();
+    return announcementRepository.save(announcement);
   }
 
   @Transactional
-  public void update(Long id, UpdateAnnouncementRequest request) {
+  public Announcement update(Long id, UpdateAnnouncementRequest request) {
     Announcement announcement =
         announcementRepository.findById(id).orElseThrow(AnnouncementNotFoundException::new);
 
@@ -40,6 +41,8 @@ public class AdminAnnouncementService {
         request.contentAsValue(),
         request.published(),
         request.pinned());
+
+    return announcement;
   }
 
   @Transactional

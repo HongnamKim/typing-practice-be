@@ -76,9 +76,9 @@ public class AdminAnnouncementServiceTest {
                 return saved;
               });
 
-      Long id = adminAnnouncementService.create(request);
+      Announcement announcement = adminAnnouncementService.create(request);
 
-      assertThat(id).isEqualTo(1L);
+      assertThat(announcement.getId()).isEqualTo(1L);
       verify(announcementRepository).save(any(Announcement.class));
     }
   }

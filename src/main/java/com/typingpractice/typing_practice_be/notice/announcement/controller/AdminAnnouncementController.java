@@ -2,6 +2,7 @@ package com.typingpractice.typing_practice_be.notice.announcement.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.dto.CursorPage;
+import com.typingpractice.typing_practice_be.notice.announcement.domain.Announcement;
 import com.typingpractice.typing_practice_be.notice.announcement.dto.*;
 import com.typingpractice.typing_practice_be.notice.announcement.service.AdminAnnouncementService;
 import jakarta.validation.Valid;
@@ -16,17 +17,16 @@ public class AdminAnnouncementController {
   private final AdminAnnouncementService adminAnnouncementService;
 
   @PostMapping
-  public ApiResponse<AnnouncementIdResponse> postAnnouncement(
+  public ApiResponse<AnnouncementDetail> postAnnouncement(
       @RequestBody @Valid CreateAnnouncementRequest request) {
-    Long id = adminAnnouncementService.create(request);
-    return ApiResponse.ok(new AnnouncementIdResponse(id));
+    return ApiResponse.ok(AnnouncementDetail.from(adminAnnouncementService.create(request)));
   }
 
   @PatchMapping("/{id}")
-  public ApiResponse<Void> patchAnnouncement(
+  public ApiResponse<AnnouncementDetail> patchAnnouncement(
       @PathVariable Long id, @RequestBody @Valid UpdateAnnouncementRequest request) {
-    adminAnnouncementService.update(id, request);
-    return ApiResponse.ok(null);
+    Announcement update = adminAnnouncementService.update(id, request);
+    return ApiResponse.ok(AnnouncementDetail.from(update));
   }
 
   @DeleteMapping("/{id}")

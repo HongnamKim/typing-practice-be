@@ -24,7 +24,7 @@ public class AdminUpdateNoteService {
   private final UpdateNoteRepository updateNoteRepository;
 
   @Transactional
-  public Long create(CreateUpdateNoteRequest request) {
+  public UpdateNote create(CreateUpdateNoteRequest request) {
     if (updateNoteRepository.existsByVersion(request.version(), null)) {
       throw new UpdateNoteVersionConflictException();
     }
@@ -38,11 +38,11 @@ public class AdminUpdateNoteService {
             request.newFeaturesAsValue(),
             request.improvementsAsValue(),
             request.published());
-    return updateNoteRepository.save(note).getId();
+    return updateNoteRepository.save(note);
   }
 
   @Transactional
-  public void update(Long id, UpdateUpdateNoteRequest request) {
+  public UpdateNote update(Long id, UpdateUpdateNoteRequest request) {
     UpdateNote note =
         updateNoteRepository.findById(id).orElseThrow(UpdateNoteNotFoundException::new);
 
@@ -59,6 +59,8 @@ public class AdminUpdateNoteService {
         request.newFeaturesAsValue(),
         request.improvementsAsValue(),
         request.published());
+
+    return note;
   }
 
   @Transactional

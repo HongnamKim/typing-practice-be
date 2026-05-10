@@ -2,6 +2,7 @@ package com.typingpractice.typing_practice_be.notice.update.controller;
 
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.dto.CursorPage;
+import com.typingpractice.typing_practice_be.notice.update.domain.UpdateNote;
 import com.typingpractice.typing_practice_be.notice.update.dto.*;
 import com.typingpractice.typing_practice_be.notice.update.service.AdminUpdateNoteService;
 import jakarta.validation.Valid;
@@ -15,17 +16,17 @@ public class AdminUpdateNoteController {
   private final AdminUpdateNoteService adminUpdateNoteService;
 
   @PostMapping
-  public ApiResponse<UpdateNoteIdResponse> postUpdateNote(
+  public ApiResponse<UpdateNoteResponse> postUpdateNote(
       @RequestBody @Valid CreateUpdateNoteRequest request) {
-    Long id = adminUpdateNoteService.create(request);
-    return ApiResponse.ok(new UpdateNoteIdResponse(id));
+    UpdateNote note = adminUpdateNoteService.create(request);
+    return ApiResponse.ok(UpdateNoteResponse.from(note));
   }
 
   @PatchMapping("/{id}")
-  public ApiResponse<Void> patchUpdateNote(
+  public ApiResponse<UpdateNoteResponse> patchUpdateNote(
       @PathVariable Long id, @RequestBody @Valid UpdateUpdateNoteRequest request) {
-    adminUpdateNoteService.update(id, request);
-    return ApiResponse.ok(null);
+    UpdateNote note = adminUpdateNoteService.update(id, request);
+    return ApiResponse.ok(UpdateNoteResponse.from(note));
   }
 
   @DeleteMapping("/{id}")
