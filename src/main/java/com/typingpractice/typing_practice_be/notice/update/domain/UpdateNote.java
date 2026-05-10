@@ -2,10 +2,7 @@ package com.typingpractice.typing_practice_be.notice.update.domain;
 
 import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
 import com.typingpractice.typing_practice_be.notice.domain.LocalizedText;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,6 +18,8 @@ import java.util.List;
 
 @Entity
 @Getter
+@Table(
+    uniqueConstraints = @UniqueConstraint(name = "uq_update_note_version", columnNames = "version"))
 @SQLRestriction("deleted = false")
 @SQLDelete(
     sql = "UPDATE update_note SET deleted = true, deleted_at = NOW() WHERE update_note_id = ?")
@@ -31,7 +30,7 @@ public class UpdateNote extends BaseEntity {
   @Column(name = "update_note_id")
   private Long id;
 
-  @Column(nullable = false, length = 32, unique = true)
+  @Column(nullable = false, length = 32)
   private String version;
 
   @Column(columnDefinition = "timestamp with time zone", nullable = false)
