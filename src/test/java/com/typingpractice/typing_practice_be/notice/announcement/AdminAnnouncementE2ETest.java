@@ -20,8 +20,7 @@ import org.springframework.http.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 public class AdminAnnouncementE2ETest extends BaseE2ETest {
-  private static final ParameterizedTypeReference<ApiResponse<AnnouncementIdResponse>> ID_RESPONSE =
-      new ParameterizedTypeReference<>() {};
+
   private static final ParameterizedTypeReference<ApiResponse<AnnouncementDetail>> DETAIL_RESPONSE =
       new ParameterizedTypeReference<>() {};
   private static final ParameterizedTypeReference<ApiResponse<AnnouncementListResponse>>
@@ -55,12 +54,12 @@ public class AdminAnnouncementE2ETest extends BaseE2ETest {
             published,
             pinned);
 
-    ResponseEntity<ApiResponse<AnnouncementIdResponse>> response =
+    ResponseEntity<ApiResponse<AnnouncementDetail>> response =
         restTemplate.exchange(
             "/admin/announcements",
             HttpMethod.POST,
             new HttpEntity<>(request, adminHeaders),
-            ID_RESPONSE);
+            DETAIL_RESPONSE);
 
     assert response.getBody() != null;
     return response.getBody().data().id();
@@ -89,12 +88,12 @@ public class AdminAnnouncementE2ETest extends BaseE2ETest {
               true,
               false);
 
-      ResponseEntity<ApiResponse<AnnouncementIdResponse>> response =
+      ResponseEntity<ApiResponse<AnnouncementDetail>> response =
           restTemplate.exchange(
               "/admin/announcements",
               HttpMethod.POST,
               new HttpEntity<>(request, adminHeaders),
-              ID_RESPONSE);
+              DETAIL_RESPONSE);
 
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
       assert response.getBody() != null;
@@ -115,12 +114,12 @@ public class AdminAnnouncementE2ETest extends BaseE2ETest {
               true,
               false);
 
-      ResponseEntity<ApiResponse<AnnouncementIdResponse>> response =
+      ResponseEntity<ApiResponse<AnnouncementDetail>> response =
           restTemplate.exchange(
               "/admin/announcements",
               HttpMethod.POST,
               new HttpEntity<>(request, adminHeaders),
-              ID_RESPONSE);
+              DETAIL_RESPONSE);
 
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -138,12 +137,12 @@ public class AdminAnnouncementE2ETest extends BaseE2ETest {
               true,
               false);
 
-      ResponseEntity<ApiResponse<AnnouncementIdResponse>> response =
+      ResponseEntity<ApiResponse<AnnouncementDetail>> response =
           restTemplate.exchange(
               "/admin/announcements",
               HttpMethod.POST,
               new HttpEntity<>(request, adminHeaders),
-              ID_RESPONSE);
+              DETAIL_RESPONSE);
 
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -161,12 +160,12 @@ public class AdminAnnouncementE2ETest extends BaseE2ETest {
               true,
               false);
 
-      ResponseEntity<ApiResponse<AnnouncementIdResponse>> response =
+      ResponseEntity<ApiResponse<AnnouncementDetail>> response =
           restTemplate.exchange(
               "/admin/announcements",
               HttpMethod.POST,
               new HttpEntity<>(request, headers),
-              ID_RESPONSE);
+              DETAIL_RESPONSE);
 
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
@@ -182,11 +181,19 @@ public class AdminAnnouncementE2ETest extends BaseE2ETest {
               true,
               false);
 
-      ResponseEntity<ApiResponse<AnnouncementIdResponse>> response =
+      ResponseEntity<ApiResponse<AnnouncementDetail>> response =
           restTemplate.exchange(
-              "/admin/announcements", HttpMethod.POST, new HttpEntity<>(request), ID_RESPONSE);
+              "/admin/announcements", HttpMethod.POST, new HttpEntity<>(request), DETAIL_RESPONSE);
 
-      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+      assertThat(
+              restTemplate
+                  .exchange(
+                      "/admin/announcements",
+                      HttpMethod.POST,
+                      new HttpEntity<>(request),
+                      DETAIL_RESPONSE)
+                  .getStatusCode())
+          .isEqualTo(HttpStatus.UNAUTHORIZED);
     }
   }
 
@@ -620,6 +627,7 @@ public class AdminAnnouncementE2ETest extends BaseE2ETest {
     @DisplayName("성공 - 미게시 공지도 조회 (어드민)")
     void successUnpublished() {
       Long id = createAnnouncement(LocalDateTime.now(), "미게시", false, false);
+      System.out.println("id = " + id);
 
       String adminToken = getAccessToken(ADMIN_PROVIDER_ID);
       HttpHeaders adminHeaders = createAuthHeader(adminToken);
