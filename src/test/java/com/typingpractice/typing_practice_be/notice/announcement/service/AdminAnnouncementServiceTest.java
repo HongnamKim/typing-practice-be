@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.typingpractice.typing_practice_be.common.dto.CursorPage;
+import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.notice.announcement.domain.Announcement;
 import com.typingpractice.typing_practice_be.notice.announcement.dto.*;
 import com.typingpractice.typing_practice_be.notice.announcement.exception.AnnouncementNotFoundException;
@@ -79,6 +80,7 @@ public class AdminAnnouncementServiceTest {
       Announcement announcement = adminAnnouncementService.create(request);
 
       assertThat(announcement.getId()).isEqualTo(1L);
+      assertThat(announcement.getPostedAt()).isEqualTo(TimeUtils.kstToUtc(BASE_TIME));
       verify(announcementRepository).save(any(Announcement.class));
     }
   }
@@ -103,7 +105,7 @@ public class AdminAnnouncementServiceTest {
 
       adminAnnouncementService.update(1L, request);
 
-      assertThat(existing.getPostedAt()).isEqualTo(newTime);
+      assertThat(existing.getPostedAt()).isEqualTo(TimeUtils.kstToUtc(newTime));
       assertThat(existing.getTitle().ko()).isEqualTo("새 제목");
       assertThat(existing.getContent().ko()).isEqualTo("새 내용");
       assertThat(existing.isPublished()).isFalse();
@@ -122,7 +124,7 @@ public class AdminAnnouncementServiceTest {
 
       adminAnnouncementService.update(1L, request);
 
-      assertThat(existing.getPostedAt()).isEqualTo(newTime);
+      assertThat(existing.getPostedAt()).isEqualTo(TimeUtils.kstToUtc(newTime));
       assertThat(existing.getTitle().ko()).isEqualTo("제목"); // 미변경
       assertThat(existing.getContent().ko()).isEqualTo("내용"); // 미변경
       assertThat(existing.isPublished()).isTrue(); // 미변경

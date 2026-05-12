@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import com.typingpractice.typing_practice_be.BaseE2ETest;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.dto.CursorPage;
+import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.notice.announcement.dto.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -68,10 +69,11 @@ public class AnnouncementE2ETest extends BaseE2ETest {
     @Test
     @DisplayName("성공 - 최신 게시 공지 반환")
     void success() {
-      LocalDateTime base = LocalDateTime.now().minusHours(5);
+      LocalDateTime base = LocalDateTime.of(2026, 5, 1, 10, 0);
       createAnnouncement(base, "오래된", true, false);
       createAnnouncement(base.plusHours(1), "중간", true, false);
-      Long latestId = createAnnouncement(base.plusHours(2), "최신", true, false);
+      LocalDateTime latestKst = base.plusHours(2);
+      Long latestId = createAnnouncement(latestKst, "최신", true, false);
 
       ResponseEntity<ApiResponse<AnnouncementDetail>> response =
           restTemplate.exchange("/announcements/latest", HttpMethod.GET, null, DETAIL_RESPONSE);
@@ -82,6 +84,7 @@ public class AnnouncementE2ETest extends BaseE2ETest {
       assertThat(detail).isNotNull();
       assertThat(detail.id()).isEqualTo(latestId);
       assertThat(detail.title().ko()).isEqualTo("최신");
+      assertThat(detail.postedAt()).isEqualTo(TimeUtils.kstToUtc(latestKst));
     }
 
     @Test
@@ -217,6 +220,20 @@ public class AnnouncementE2ETest extends BaseE2ETest {
     }
 
     @Test
+    @DisplayName("응답의 postedAt이 UTC 형식")
+    void postedAtIsUtc() {
+      LocalDateTime kstPostedAt = LocalDateTime.of(2026, 5, 9, 15, 0);
+      createAnnouncement(kstPostedAt, "공지", true, false);
+
+      ResponseEntity<ApiResponse<CursorPage<AnnouncementSummary, AnnouncementCursor>>> response =
+          restTemplate.exchange("/announcements", HttpMethod.GET, null, PAGE_RESPONSE);
+
+      assert response.getBody() != null;
+      AnnouncementSummary first = response.getBody().data().getContent().getFirst();
+      assertThat(first.postedAt()).isEqualTo(TimeUtils.kstToUtc(kstPostedAt));
+    }
+
+    @Test
     @DisplayName("cursor 한쪽만 - 400")
     void badRequestWhenCursorIncomplete() {
       ResponseEntity<ApiResponse<CursorPage<AnnouncementSummary, AnnouncementCursor>>> response =
@@ -239,9 +256,10 @@ public class AnnouncementE2ETest extends BaseE2ETest {
   @DisplayName("GET /announcements/{id} - 사용자 단건 조회")
   class GetById {
     @Test
-    @DisplayName("성공 - 게시 공지")
+    @DisplayName("성공 - 게시 공지 (KST→UTC 응답)")
     void successPublished() {
-      Long id = createAnnouncement(LocalDateTime.now(), "게시", true, false);
+      LocalDateTime kstPostedAt = LocalDateTime.of(2026, 5, 9, 15, 0);
+      Long id = createAnnouncement(kstPostedAt, "게시", true, false);
 
       ResponseEntity<ApiResponse<AnnouncementDetail>> response =
           restTemplate.exchange("/announcements/" + id, HttpMethod.GET, null, DETAIL_RESPONSE);
@@ -252,6 +270,7 @@ public class AnnouncementE2ETest extends BaseE2ETest {
       assertThat(detail.id()).isEqualTo(id);
       assertThat(detail.title().ko()).isEqualTo("게시");
       assertThat(detail.content().ko()).isEqualTo("내용");
+      assertThat(detail.postedAt()).isEqualTo(TimeUtils.kstToUtc(kstPostedAt));
       assertThat(detail.published()).isTrue();
     }
 
