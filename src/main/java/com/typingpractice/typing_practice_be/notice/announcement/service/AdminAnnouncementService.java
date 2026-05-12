@@ -1,10 +1,12 @@
 package com.typingpractice.typing_practice_be.notice.announcement.service;
 
 import com.typingpractice.typing_practice_be.common.dto.CursorPage;
+import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.notice.announcement.domain.Announcement;
 import com.typingpractice.typing_practice_be.notice.announcement.dto.*;
 import com.typingpractice.typing_practice_be.notice.announcement.exception.AnnouncementNotFoundException;
 import com.typingpractice.typing_practice_be.notice.announcement.repository.AnnouncementRepository;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,10 +20,11 @@ public class AdminAnnouncementService {
 
   @Transactional
   public Announcement create(CreateAnnouncementRequest request) {
+    LocalDateTime postedAtUtc = TimeUtils.kstToUtc(request.postedAt());
 
     Announcement announcement =
         Announcement.create(
-            request.postedAt(),
+            postedAtUtc,
             request.titleAsValue(),
             request.contentAsValue(),
             request.published(),
@@ -35,8 +38,11 @@ public class AdminAnnouncementService {
     Announcement announcement =
         announcementRepository.findById(id).orElseThrow(AnnouncementNotFoundException::new);
 
+    LocalDateTime postedAtUtc =
+        request.postedAt() == null ? null : TimeUtils.kstToUtc(request.postedAt());
+
     announcement.update(
-        request.postedAt(),
+        postedAtUtc,
         request.titleAsValue(),
         request.contentAsValue(),
         request.published(),

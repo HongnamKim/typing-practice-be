@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import com.typingpractice.typing_practice_be.BaseE2ETest;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.common.dto.CursorPage;
+import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.notice.announcement.dto.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -80,9 +81,10 @@ public class AdminAnnouncementE2ETest extends BaseE2ETest {
     void success() {
       HttpHeaders adminHeaders = getAdminHeaders();
 
+      LocalDateTime kstPostedAt = LocalDateTime.of(2026, 5, 9, 15, 0);
       CreateAnnouncementRequest request =
           new CreateAnnouncementRequest(
-              LocalDateTime.now(),
+              kstPostedAt,
               new LocalizedTextRequest("저작권 안내", "Copyright Notice", null),
               new LocalizedTextRequest("내용", "content", null),
               true,
@@ -97,8 +99,10 @@ public class AdminAnnouncementE2ETest extends BaseE2ETest {
 
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
       assert response.getBody() != null;
+      AnnouncementDetail data = response.getBody().data();
       assertThat(response.getBody().success()).isTrue();
-      assertThat(response.getBody().data().id()).isNotNull();
+      assertThat(data.id()).isNotNull();
+      assertThat(data.postedAt()).isEqualTo(TimeUtils.kstToUtc(kstPostedAt));
     }
 
     @Test()
@@ -236,6 +240,7 @@ public class AdminAnnouncementE2ETest extends BaseE2ETest {
 
       assert getResponse.getBody() != null;
       AnnouncementDetail detail = getResponse.getBody().data();
+      assertThat(detail.postedAt()).isEqualTo(TimeUtils.kstToUtc(newPostedAt));
       assertThat(detail.title().ko()).isEqualTo("바뀐 제목");
       assertThat(detail.content().ko()).isEqualTo("바뀐 내용");
       assertThat(detail.published()).isFalse();
@@ -252,24 +257,16 @@ public class AdminAnnouncementE2ETest extends BaseE2ETest {
       UpdateAnnouncementRequest request =
           new UpdateAnnouncementRequest(null, null, null, null, true);
 
-      ResponseEntity<ApiResponse<Void>> response =
+      ResponseEntity<ApiResponse<AnnouncementDetail>> response =
           restTemplate.exchange(
               "/admin/announcements/" + id,
               HttpMethod.PATCH,
               new HttpEntity<>(request, adminHeaders),
-              VOID_RESPONSE);
-
-      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-      ResponseEntity<ApiResponse<AnnouncementDetail>> getResponse =
-          restTemplate.exchange(
-              "/admin/announcements/" + id,
-              HttpMethod.GET,
-              new HttpEntity<>(adminHeaders),
               DETAIL_RESPONSE);
 
-      assert getResponse.getBody() != null;
-      AnnouncementDetail detail = getResponse.getBody().data();
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+      assert response.getBody() != null;
+      AnnouncementDetail detail = response.getBody().data();
       assertThat(detail.title().ko()).isEqualTo("원래 제목"); // 미변경
       assertThat(detail.published()).isTrue(); // 미변경
       assertThat(detail.pinned()).isTrue(); // 변경
@@ -489,6 +486,25 @@ public class AdminAnnouncementE2ETest extends BaseE2ETest {
     }
 
     @Test
+    @DisplayName("응답의 postedAt이 UTC 형식")
+    void postedAtIsUtc() {
+      LocalDateTime kstPostedAt = LocalDateTime.of(2026, 5, 9, 15, 0);
+      createAnnouncement(kstPostedAt, "공지", true, false);
+
+      HttpHeaders adminHeaders = getAdminHeaders();
+      ResponseEntity<ApiResponse<CursorPage<AnnouncementSummary, AnnouncementCursor>>> response =
+          restTemplate.exchange(
+              "/admin/announcements",
+              HttpMethod.GET,
+              new HttpEntity<>(adminHeaders),
+              PAGE_RESPONSE);
+
+      assert response.getBody() != null;
+      AnnouncementSummary first = response.getBody().data().getContent().getFirst();
+      assertThat(first.postedAt()).isEqualTo(TimeUtils.kstToUtc(kstPostedAt));
+    }
+
+    @Test
     @DisplayName("cursor 한쪽만 - 400")
     void badRequestWhenCursorIncomplete() {
       HttpHeaders adminHeaders = getAdminHeaders();
@@ -603,7 +619,8 @@ public class AdminAnnouncementE2ETest extends BaseE2ETest {
     @Test
     @DisplayName("성공 - 게시 공지")
     void successPublished() {
-      Long id = createAnnouncement(LocalDateTime.now(), "게시", true, false);
+      LocalDateTime kstPostedAt = LocalDateTime.of(2026, 5, 9, 15, 0);
+      Long id = createAnnouncement(kstPostedAt, "게시", true, false);
 
       String adminToken = getAccessToken(ADMIN_PROVIDER_ID);
       HttpHeaders adminHeaders = createAuthHeader(adminToken);
@@ -620,6 +637,7 @@ public class AdminAnnouncementE2ETest extends BaseE2ETest {
       AnnouncementDetail detail = response.getBody().data();
       assertThat(detail.id()).isEqualTo(id);
       assertThat(detail.title().ko()).isEqualTo("게시");
+      assertThat(detail.postedAt()).isEqualTo(TimeUtils.kstToUtc(kstPostedAt));
       assertThat(detail.published()).isTrue();
     }
 
