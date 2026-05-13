@@ -44,7 +44,11 @@ public enum ErrorCode {
   REPORT_NOT_PROCESSABLE(HttpStatus.BAD_REQUEST, "처리할 수 없는 신고 내역입니다."),
 
   DAILY_REPORT_LIMIT(HttpStatus.CONFLICT, "하루 신고 제한 횟수에 도달했습니다."),
-  DAILY_QUOTE_UPLOAD_LIMIT(HttpStatus.CONFLICT, "하루 업로드 제한 횟수에 도달했습니다.");
+  DAILY_QUOTE_UPLOAD_LIMIT(HttpStatus.CONFLICT, "하루 업로드 제한 횟수에 도달했습니다."),
+
+  ANNOUNCEMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "공지사항을 찾을 수 없습니다."),
+  UPDATE_NOTE_NOT_FOUND(HttpStatus.NOT_FOUND, "업데이트 노트를 찾을 수 없습니다."),
+  UPDATE_NOTE_VERSION_CONFLICT(HttpStatus.CONFLICT, "이미 존재하는 버전입니다.");
 
   private final HttpStatus status;
   private final String message;
