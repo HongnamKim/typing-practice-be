@@ -2,6 +2,7 @@ package com.typingpractice.typing_practice_be.quote.service;
 
 import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
 import com.typingpractice.typing_practice_be.quote.exception.QuoteNotFoundException;
@@ -9,10 +10,10 @@ import com.typingpractice.typing_practice_be.quote.exception.QuoteNotProcessable
 import com.typingpractice.typing_practice_be.quote.query.QuotePaginationQuery;
 import com.typingpractice.typing_practice_be.quote.query.QuoteUpdateQuery;
 import com.typingpractice.typing_practice_be.quote.repository.QuoteRepository;
-import java.util.List;
-
 import com.typingpractice.typing_practice_be.report.domain.Report;
 import com.typingpractice.typing_practice_be.report.repository.ReportRepository;
+import com.typingpractice.typing_practice_be.typingrecord.repository.TypingRecordRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminQuoteService {
   private final QuoteRepository quoteRepository;
   private final ReportRepository reportRepository;
+  private final QuoteIdCacheService quoteIdCacheService;
+  private final TypingRecordRepository typingRecordRepository;
 
   @Transactional
   public Quote approvePublish(Long quoteId) {
@@ -75,7 +78,12 @@ public class AdminQuoteService {
 
     reports.forEach(report -> report.process(true));
 
+    Long ownerId = targetQuote.getMember().getId();
+    QuoteLanguage language = targetQuote.getLanguage();
+
     quoteRepository.deleteQuote(targetQuote);
+
+    quoteIdCacheService.invalidateMemberIds(ownerId, language);
   }
 
   @Transactional
@@ -113,5 +121,28 @@ public class AdminQuoteService {
     quote.updateStatus(QuoteStatus.HIDDEN);
 
     return quote;
+  }
+
+  public PageResult<Quote> findDeletedQuotes(QuotePaginationQuery query) {
+    List<Quote> deletedQuotes = quoteRepository.findDeletedQuotes(query);
+    boolean hasNext = deletedQuotes.size() > query.getSize();
+    List<Quote> content = hasNext ? deletedQuotes.subList(0, query.getSize()) : deletedQuotes;
+
+    return new PageResult<>(content, query.getPage(), query.getSize(), hasNext);
+  }
+
+  @Transactional
+  public void permanentDeleteQuote(Long quoteId) {
+    Quote quote =
+        quoteRepository.findDeletedQuoteById(quoteId).orElseThrow(QuoteNotFoundException::new);
+
+    Long ownerId = quote.getMember().getId();
+    QuoteLanguage language = quote.getLanguage();
+
+    typingRecordRepository.deleteByQuoteId(quoteId);
+
+    quoteRepository.permanentDeleteQuote(quoteId);
+
+    quoteIdCacheService.invalidateMemberIds(ownerId, language);
   }
 }

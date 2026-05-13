@@ -14,10 +14,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 // @AdminOnly
+@RequestMapping("/admin/quotes")
 public class AdminQuoteController {
   private final AdminQuoteService adminQuoteService;
 
-  @GetMapping("/admin/quotes")
+  @GetMapping()
   public ApiResponse<AdminQuotePaginationResponse> getQuotes(
       @ModelAttribute @Valid QuotePaginationRequest request) {
 
@@ -28,7 +29,7 @@ public class AdminQuoteController {
     return ApiResponse.ok(AdminQuotePaginationResponse.from(result));
   }
 
-  @GetMapping("/admin/quotes/{quoteId}")
+  @GetMapping("/{quoteId}")
   public ApiResponse<AdminQuoteResponse> getQuoteById(@PathVariable Long quoteId) {
     Quote quote = adminQuoteService.findQuoteByIdWithTypingStats(quoteId);
 
@@ -36,7 +37,7 @@ public class AdminQuoteController {
   }
 
   // 승인
-  @PostMapping("/admin/quotes/{quoteId}/approve")
+  @PostMapping("/{quoteId}/approve")
   public ApiResponse<QuoteResponse> approvePendingQuote(@PathVariable Long quoteId) {
 
     Quote quote = adminQuoteService.approvePublish(quoteId);
@@ -45,7 +46,7 @@ public class AdminQuoteController {
   }
 
   // 거부
-  @PostMapping("/admin/quotes/{quoteId}/reject")
+  @PostMapping("/{quoteId}/reject")
   public ApiResponse<QuoteResponse> rejectPendingQuote(@PathVariable Long quoteId) {
 
     Quote quote = adminQuoteService.rejectPublish(quoteId);
@@ -54,7 +55,7 @@ public class AdminQuoteController {
   }
 
   // 공개 문장 수정
-  @PatchMapping("/admin/quotes/{quoteId}")
+  @PatchMapping("/{quoteId}")
   public ApiResponse<QuoteResponse> patchQuote(
       @PathVariable Long quoteId, @RequestBody QuoteUpdateRequest request) {
 
@@ -66,7 +67,7 @@ public class AdminQuoteController {
   }
 
   // 삭제
-  @DeleteMapping("/admin/quotes/{quoteId}")
+  @DeleteMapping("/{quoteId}")
   public ApiResponse<Void> deleteQuote(@PathVariable Long quoteId) {
 
     adminQuoteService.deleteQuote(quoteId);
@@ -74,7 +75,7 @@ public class AdminQuoteController {
     return ApiResponse.ok(null);
   }
 
-  @PatchMapping("/admin/quotes/{quoteId}/hide")
+  @PatchMapping("/{quoteId}/hide")
   public ApiResponse<QuoteResponse> hideQuote(@PathVariable Long quoteId) {
     Quote hideQuote = adminQuoteService.hideQuote(quoteId);
 
@@ -82,11 +83,28 @@ public class AdminQuoteController {
   }
 
   // 숨김 해제
-  @PostMapping("/admin/quotes/{quoteId}/restore")
+  @PostMapping("/{quoteId}/restore")
   public ApiResponse<QuoteResponse> restoreHiddenQuotes(@PathVariable Long quoteId) {
 
     Quote quote = adminQuoteService.cancelHidden(quoteId);
 
     return ApiResponse.ok(QuoteResponse.from(quote));
+  }
+
+  @GetMapping("/deleted")
+  public ApiResponse<DeletedQuotePaginationResponse> getDeletedQuotes(
+      @ModelAttribute @Valid QuotePaginationRequest request) {
+    QuotePaginationQuery query = QuotePaginationQuery.from(request);
+
+    PageResult<Quote> result = adminQuoteService.findDeletedQuotes(query);
+
+    return ApiResponse.ok(DeletedQuotePaginationResponse.from(result));
+  }
+
+  @DeleteMapping("/{quoteId}/permanent")
+  public ApiResponse<Void> permanentDeleteQuote(@PathVariable Long quoteId) {
+    adminQuoteService.permanentDeleteQuote(quoteId);
+
+    return ApiResponse.ok(null);
   }
 }

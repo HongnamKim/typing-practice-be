@@ -7,9 +7,15 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Getter
+@SQLRestriction("deleted = false")
+@SQLDelete(
+    sql =
+        "UPDATE quote_typing_stats SET deleted = true, deleted_at = NOW() where quote_typing_stats_id = ?")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class QuoteTypingStats extends BaseEntity {
   @Id
