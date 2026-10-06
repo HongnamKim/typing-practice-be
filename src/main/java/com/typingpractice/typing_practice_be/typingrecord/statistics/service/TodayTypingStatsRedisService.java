@@ -35,6 +35,9 @@ public class TodayTypingStatsRedisService {
   private static final String TYPO_KEY_PREFIX = "today:typo:";
   private static final String TYPO_DETAIL_KEY_PREFIX = "today:typo-detail:";
 
+  // 오늘 오타가 없을 때 Hash 에 저장하는 센티널 필드 (빈 Hash 는 Redis 에 존재할 수 없음)
+  private static final String EMPTY_MARKER_FIELD = "_empty";
+
   private String typingKey(Long memberId, QuoteLanguage language) {
     // today:typing:1234:KOREAN
     return TYPING_KEY_PREFIX + memberId + ":" + language;
@@ -145,6 +148,7 @@ public class TodayTypingStatsRedisService {
     if (!entries.isEmpty()) {
       Map<String, TodayTypoDetailEntry> map = new HashMap<>();
       for (Map.Entry<Object, Object> e : entries.entrySet()) {
+        if (EMPTY_MARKER_FIELD.equals(e.getKey())) continue;
         map.put(
             (String) e.getKey(), deserialize((String) e.getValue(), TodayTypoDetailEntry.class));
       }
@@ -240,7 +244,9 @@ public class TodayTypingStatsRedisService {
             List.of(memberId), language, from, to);
 
     if (results.isEmpty()) {
-      return TodayTypingSnapshot.empty();
+      TodayTypingSnapshot empty = TodayTypingSnapshot.empty();
+      setSnapshot(typingKey(memberId, language), empty);
+      return empty;
     }
 
     MemberTypingAggregation agg = results.getFirst();
@@ -266,7 +272,9 @@ public class TodayTypingStatsRedisService {
         memberTypoAggregationRepository.aggregateByMemberIdsBetween(List.of(memberId), from, to);
 
     if (results.isEmpty()) {
-      return TodayTypoSnapshot.empty();
+      TodayTypoSnapshot empty = TodayTypoSnapshot.empty();
+      setTypoSnapshot(typoKey(memberId), empty);
+      return empty;
     }
 
     Map<String, Integer> typoMap = new HashMap<>();
@@ -292,6 +300,9 @@ public class TodayTypingStatsRedisService {
         memberTypoAggregationRepository.aggregateByMemberIdsBetween(List.of(memberId), from, to);
 
     if (results.isEmpty()) {
+      String hashKey = typoDetailKey(memberId);
+      redisTemplate.opsForHash().put(hashKey, EMPTY_MARKER_FIELD, "");
+      ensureTtl(hashKey);
       return TodayTypoDetailSnapshot.empty();
     }
 
