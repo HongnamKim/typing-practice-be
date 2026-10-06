@@ -41,6 +41,9 @@ public class TodayWordTypingStatsRedisService {
   private static final String TYPO_KEY_PREFIX = "today:word-typo:";
   private static final String TYPO_DETAIL_KEY_PREFIX = "today:word-typo-detail:";
 
+  // 오늘 오타가 없을 때 Hash 에 저장하는 센티널 필드 (빈 Hash 는 Redis 에 존재할 수 없음)
+  private static final String EMPTY_MARKER_FIELD = "_empty";
+
   private String typingKey(Long memberId, WordLanguage language) {
     return TYPING_KEY_PREFIX + memberId + ":" + language;
   }
@@ -160,6 +163,7 @@ public class TodayWordTypingStatsRedisService {
     if (!entries.isEmpty()) {
       Map<String, TodayWordTypoDetailEntry> map = new HashMap<>();
       for (Map.Entry<Object, Object> e : entries.entrySet()) {
+        if (EMPTY_MARKER_FIELD.equals(e.getKey())) continue;
         map.put(
             (String) e.getKey(),
             deserialize((String) e.getValue(), TodayWordTypoDetailEntry.class));
@@ -241,7 +245,9 @@ public class TodayWordTypingStatsRedisService {
             List.of(memberId), language, from, to);
 
     if (results.isEmpty()) {
-      return TodayWordTypingSnapshot.empty();
+      TodayWordTypingSnapshot empty = TodayWordTypingSnapshot.empty();
+      setSnapshot(typingKey(memberId, language), empty);
+      return empty;
     }
 
     MemberWordTypingAggregation agg = results.getFirst();
@@ -267,7 +273,9 @@ public class TodayWordTypingStatsRedisService {
         typoAggregationRepository.aggregateByMemberIdsBetween(List.of(memberId), from, to);
 
     if (results.isEmpty()) {
-      return TodayWordTypoSnapshot.empty();
+      TodayWordTypoSnapshot empty = TodayWordTypoSnapshot.empty();
+      setTypoSnapshot(typoKey(memberId), empty);
+      return empty;
     }
 
     Map<String, Integer> typoMap = new HashMap<>();
@@ -290,6 +298,9 @@ public class TodayWordTypingStatsRedisService {
         typoAggregationRepository.aggregateByMemberIdsBetween(List.of(memberId), from, to);
 
     if (results.isEmpty()) {
+      String hashKey = typoDetailKey(memberId);
+      redisTemplate.opsForHash().put(hashKey, EMPTY_MARKER_FIELD, "");
+      ensureTtl(hashKey);
       return TodayWordTypoDetailSnapshot.empty();
     }
 
