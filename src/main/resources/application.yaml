@@ -4,6 +4,11 @@ spring:
   application:
     name: typing-practice-be
 
+  data:
+    mongodb:
+      # @CompoundIndex 선언을 앱 시작 시 생성 (Atlas 에는 동일 이름으로 이미 존재, 로컬/신규 환경 재현용)
+      auto-index-creation: true
+
   jpa:
     properties:
       hibernate:
