@@ -3,6 +3,7 @@ package com.typingpractice.typing_practice_be.statistics.service;
 import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.statistics.exception.RefreshCooldownException;
+import com.typingpractice.typing_practice_be.statistics.service.YesterdayBatchStatusCache.Mode;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberDailyStatsResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypingStatsResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypoDetailStatsResponse;
@@ -46,25 +47,35 @@ public class MemberQuoteStatisticsService {
   private final MemberTypoDetailStatsRepository memberTypoDetailStatsRepository;
 
   private final TodayTypingStatsRedisService todayTypingStatsRedisService;
+  private final YesterdayBatchStatusCache yesterdayBatchStatusCache;
   private final StringRedisTemplate redisTemplate;
 
   private static final String COOLDOWN_KEY_PREFIX = "cooldown:quote-refresh:";
   private static final Duration COOLDOWN_DURATION = Duration.ofMinutes(1);
 
   private boolean isYesterdayBatchPending(Long memberId, QuoteLanguage language) {
+    if (yesterdayBatchStatusCache.isDone(Mode.QUOTE, memberId, language)) {
+      return false;
+    }
+
     LocalDate yesterday = LocalDate.now(TimeUtils.KST).minusDays(1);
 
     // PostgreSQL 에 어제 DailyStats 있으면 배치 완료
     if (memberDailyStatsRepository
         .findByMemberIdAndDateAndLanguage(memberId, yesterday, language)
         .isPresent()) {
+      yesterdayBatchStatusCache.markDone(Mode.QUOTE, memberId, language);
       return false;
     }
 
     // MongoDB에 어제 기록 있으면 배치 미완료
     LocalDateTime from = TimeUtils.startOfDayKstToUtc(yesterday);
     LocalDateTime to = TimeUtils.endOfDayKstToUtc(yesterday);
-    return typingRecordRepository.existsByMemberIdBetween(memberId, from, to);
+    boolean pending = typingRecordRepository.existsByMemberIdBetween(memberId, from, to);
+    if (!pending) {
+      yesterdayBatchStatusCache.markDone(Mode.QUOTE, memberId, language);
+    }
+    return pending;
   }
 
   public MemberTypingStatsResponse getTypingStats(Long memberId, QuoteLanguage language) {
@@ -185,6 +196,7 @@ public class MemberQuoteStatisticsService {
 
     todayTypingStatsRedisService.invalidateTypo(memberId);
     todayTypingStatsRedisService.invalidateTypoDetail(memberId);
+    yesterdayBatchStatusCache.clear(Mode.QUOTE, memberId, QuoteLanguage.values());
 
     setCooldown(memberId);
 

@@ -2,6 +2,7 @@ package com.typingpractice.typing_practice_be.statistics.service;
 
 import com.typingpractice.typing_practice_be.common.utils.TimeUtils;
 import com.typingpractice.typing_practice_be.statistics.exception.RefreshCooldownException;
+import com.typingpractice.typing_practice_be.statistics.service.YesterdayBatchStatusCache.Mode;
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
 import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberDailyWordStatsResponse;
 import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberWordTypingStatsResponse;
@@ -54,6 +55,7 @@ public class MemberWordStatisticsService {
 
   // redis
   private final TodayWordTypingStatsRedisService todayWordTypingStatsRedisService;
+  private final YesterdayBatchStatusCache yesterdayBatchStatusCache;
 
   // refresh
   private final StringRedisTemplate redisTemplate;
@@ -61,19 +63,28 @@ public class MemberWordStatisticsService {
   private static final Duration COOLDOWN_DURATION = Duration.ofMinutes(1);
 
   private boolean isYesterdayBatchPending(Long memberId, WordLanguage language) {
+    if (yesterdayBatchStatusCache.isDone(Mode.WORD, memberId, language)) {
+      return false;
+    }
+
     LocalDate yesterday = LocalDate.now(TimeUtils.KST).minusDays(1);
 
     // DailyStats 가 있으면 배치 처리 완료
     if (memberDailyWordStatsRepository
         .findByMemberIdAndDateAndLanguage(memberId, yesterday, language)
         .isPresent()) {
+      yesterdayBatchStatusCache.markDone(Mode.WORD, memberId, language);
       return false;
     }
 
     LocalDateTime from = TimeUtils.startOfDayKstToUtc(yesterday);
     LocalDateTime to = TimeUtils.endOfDayKstToUtc(yesterday);
     // 어제 타이핑 기록이 있으면 배치 미완료 없으면 대상 아님
-    return wordTypingRecordRepository.existsByMemberIdBetween(memberId, from, to);
+    boolean pending = wordTypingRecordRepository.existsByMemberIdBetween(memberId, from, to);
+    if (!pending) {
+      yesterdayBatchStatusCache.markDone(Mode.WORD, memberId, language);
+    }
+    return pending;
   }
 
   public MemberWordTypingStatsResponse getTypingStats(Long memberId, WordLanguage language) {
@@ -180,6 +191,7 @@ public class MemberWordStatisticsService {
     checkCooldown(memberId);
 
     todayWordTypingStatsRedisService.invalidateAll(memberId);
+    yesterdayBatchStatusCache.clear(Mode.WORD, memberId, WordLanguage.values());
 
     setCooldown(memberId);
 
