@@ -8,12 +8,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Document(collection = "typingRecord")
+@CompoundIndex(name = "memberId_1_completedAt_1", def = "{'memberId': 1, 'completedAt': 1}")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString
