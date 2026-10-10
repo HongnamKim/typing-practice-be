@@ -50,6 +50,18 @@ public class MemberWordTypoDetailStatsRepository {
         .getResultList();
   }
 
+  public List<MemberWordTypoDetailStats> findByMemberIdAndLanguage(
+      Long memberId, WordLanguage language) {
+    return em.createQuery(
+            "select s from MemberWordTypoDetailStats s "
+                + "where s.member.id = :memberId "
+                + "and s.language = :language",
+            MemberWordTypoDetailStats.class)
+        .setParameter("memberId", memberId)
+        .setParameter("language", language)
+        .getResultList();
+  }
+
   public void deleteAllInBatch() {
     em.createQuery("delete from MemberWordTypoDetailStats").executeUpdate();
   }
