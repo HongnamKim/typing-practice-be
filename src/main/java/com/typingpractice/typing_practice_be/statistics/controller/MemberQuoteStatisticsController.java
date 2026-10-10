@@ -6,8 +6,8 @@ import com.typingpractice.typing_practice_be.statistics.dto.MemberDailyStatsRequ
 import com.typingpractice.typing_practice_be.statistics.service.MemberQuoteStatisticsService;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberDailyStatsResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypingStatsResponse;
-import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypoDetailAllResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypoDetailStatsResponse;
+import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypoStatsAllResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypoStatsResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -50,11 +50,11 @@ public class MemberQuoteStatisticsController {
         memberQuoteStatisticsService.getTypoDetailStats(memberId, language, expected));
   }
 
-  @GetMapping("/typos/detail/all")
-  public ApiResponse<MemberTypoDetailAllResponse> getAllTypoDetailStats(
+  @GetMapping("/typos/all")
+  public ApiResponse<MemberTypoStatsAllResponse> getAllTypoStats(
       @RequestParam QuoteLanguage language) {
     Long memberId = getAuthenticatedMemberId();
-    return ApiResponse.ok(memberQuoteStatisticsService.getAllTypoDetailStats(memberId, language));
+    return ApiResponse.ok(memberQuoteStatisticsService.getAllTypoStats(memberId, language));
   }
 
   @PostMapping("/refresh")
