@@ -6,6 +6,7 @@ import com.typingpractice.typing_practice_be.statistics.exception.RefreshCooldow
 import com.typingpractice.typing_practice_be.statistics.service.YesterdayBatchStatusCache.Mode;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberDailyStatsResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypingStatsResponse;
+import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypoDetailAllResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypoDetailStatsResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypoStatsResponse;
 import com.typingpractice.typing_practice_be.typingrecord.repository.MemberDailyAggregationRepository;
@@ -185,6 +186,30 @@ public class MemberQuoteStatisticsService {
     return MemberTypoDetailStatsResponse.of(
         language, expected, pgList, yesterdayList, todayFiltered);
     // return MemberTypoDetailStatsResponse.of(language, expected, pgList, todayFiltered);
+  }
+
+  public MemberTypoDetailAllResponse getAllTypoDetailStats(Long memberId, QuoteLanguage language) {
+    List<MemberTypoDetailStats> pgList =
+        memberTypoDetailStatsRepository.findByMemberIdAndLanguage(memberId, language);
+
+    TodayTypoDetailSnapshot today =
+        todayTypingStatsRedisService.getTypoDetailByLanguage(memberId, language);
+
+    List<MemberTypoAggregation> yesterdayList = List.of();
+    if (isYesterdayBatchPending(memberId, language)) {
+      LocalDate yesterday = LocalDate.now(TimeUtils.KST).minusDays(1);
+      LocalDateTime from = TimeUtils.startOfDayKstToUtc(yesterday);
+      LocalDateTime to = TimeUtils.endOfDayKstToUtc(yesterday);
+
+      yesterdayList =
+          memberTypoAggregationRepository
+              .aggregateByMemberIdsBetween(List.of(memberId), from, to)
+              .stream()
+              .filter(agg -> agg.getLanguage() == language)
+              .toList();
+    }
+
+    return MemberTypoDetailAllResponse.of(language, pgList, yesterdayList, today);
   }
 
   public MemberTypingStatsResponse refreshStats(Long memberId, QuoteLanguage language) {

@@ -6,6 +6,7 @@ import com.typingpractice.typing_practice_be.statistics.service.YesterdayBatchSt
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
 import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberDailyWordStatsResponse;
 import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberWordTypingStatsResponse;
+import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberWordTypoDetailAllResponse;
 import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberWordTypoDetailStatsResponse;
 import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberWordTypoStatsResponse;
 import com.typingpractice.typing_practice_be.wordtypingrecord.repository.WordTypingRecordRepository;
@@ -185,6 +186,31 @@ public class MemberWordStatisticsService {
 
     return MemberWordTypoDetailStatsResponse.of(
         language, expected, pgList, yesterdayList, todayFiltered);
+  }
+
+  public MemberWordTypoDetailAllResponse getAllTypoDetailStats(
+      Long memberId, WordLanguage language) {
+    List<MemberWordTypoDetailStats> pgList =
+        memberWordTypoDetailStatsRepository.findByMemberIdAndLanguage(memberId, language);
+
+    TodayWordTypoDetailSnapshot today =
+        todayWordTypingStatsRedisService.getTypoDetailByLanguage(memberId, language);
+
+    List<MemberWordTypoAggregation> yesterdayList = List.of();
+    if (isYesterdayBatchPending(memberId, language)) {
+      LocalDate yesterday = LocalDate.now(TimeUtils.KST).minusDays(1);
+      LocalDateTime from = TimeUtils.startOfDayKstToUtc(yesterday);
+      LocalDateTime to = TimeUtils.endOfDayKstToUtc(yesterday);
+
+      yesterdayList =
+          memberWordTypoAggregationRepository
+              .aggregateByMemberIdsBetween(List.of(memberId), from, to)
+              .stream()
+              .filter(agg -> agg.getLanguage() == language)
+              .toList();
+    }
+
+    return MemberWordTypoDetailAllResponse.of(language, pgList, yesterdayList, today);
   }
 
   public MemberWordTypingStatsResponse refreshStats(Long memberId, WordLanguage language) {
