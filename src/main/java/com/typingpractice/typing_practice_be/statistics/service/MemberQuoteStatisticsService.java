@@ -6,8 +6,8 @@ import com.typingpractice.typing_practice_be.statistics.exception.RefreshCooldow
 import com.typingpractice.typing_practice_be.statistics.service.YesterdayBatchStatusCache.Mode;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberDailyStatsResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypingStatsResponse;
-import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypoDetailAllResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypoDetailStatsResponse;
+import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypoStatsAllResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypoStatsResponse;
 import com.typingpractice.typing_practice_be.typingrecord.repository.MemberDailyAggregationRepository;
 import com.typingpractice.typing_practice_be.typingrecord.repository.MemberTypingAggregationRepository;
@@ -142,7 +142,7 @@ public class MemberQuoteStatisticsService {
 
   public MemberTypoStatsResponse getTypoStats(Long memberId, QuoteLanguage language) {
     List<MemberTypoStats> pgList =
-        memberTypoStatsRepository.findTop10ByMemberIdAndLanguage(memberId, language);
+        memberTypoStatsRepository.findByMemberIdAndLanguage(memberId, language);
 
     TodayTypoSnapshot today = todayTypingStatsRedisService.getTypoByLanguage(memberId, language);
 
@@ -153,7 +153,11 @@ public class MemberQuoteStatisticsService {
       LocalDateTime to = TimeUtils.endOfDayKstToUtc(yesterday);
 
       yesterdayList =
-          memberTypoAggregationRepository.aggregateByMemberIdsBetween(List.of(memberId), from, to);
+          memberTypoAggregationRepository
+              .aggregateByMemberIdsBetween(List.of(memberId), from, to)
+              .stream()
+              .filter(agg -> agg.getLanguage() == language)
+              .toList();
     }
 
     return MemberTypoStatsResponse.of(language, pgList, yesterdayList, today);
@@ -180,7 +184,7 @@ public class MemberQuoteStatisticsService {
           memberTypoAggregationRepository
               .aggregateByMemberIdsBetween(List.of(memberId), from, to)
               .stream()
-              .filter(agg -> agg.getExpected().equals(expected))
+              .filter(agg -> agg.getLanguage() == language && agg.getExpected().equals(expected))
               .toList();
     }
     return MemberTypoDetailStatsResponse.of(
@@ -188,12 +192,11 @@ public class MemberQuoteStatisticsService {
     // return MemberTypoDetailStatsResponse.of(language, expected, pgList, todayFiltered);
   }
 
-  public MemberTypoDetailAllResponse getAllTypoDetailStats(Long memberId, QuoteLanguage language) {
-    List<MemberTypoDetailStats> pgList =
-        memberTypoDetailStatsRepository.findByMemberIdAndLanguage(memberId, language);
+  public MemberTypoStatsAllResponse getAllTypoStats(Long memberId, QuoteLanguage language) {
+    List<MemberTypoStats> pgList =
+        memberTypoStatsRepository.findByMemberIdAndLanguage(memberId, language);
 
-    TodayTypoDetailSnapshot today =
-        todayTypingStatsRedisService.getTypoDetailByLanguage(memberId, language);
+    TodayTypoSnapshot today = todayTypingStatsRedisService.getTypoByLanguage(memberId, language);
 
     List<MemberTypoAggregation> yesterdayList = List.of();
     if (isYesterdayBatchPending(memberId, language)) {
@@ -209,7 +212,7 @@ public class MemberQuoteStatisticsService {
               .toList();
     }
 
-    return MemberTypoDetailAllResponse.of(language, pgList, yesterdayList, today);
+    return MemberTypoStatsAllResponse.of(language, pgList, yesterdayList, today);
   }
 
   public MemberTypingStatsResponse refreshStats(Long memberId, QuoteLanguage language) {

@@ -33,17 +33,14 @@ public class MemberTypoStatsRepository {
         .findFirst();
   }
 
-  public List<MemberTypoStats> findTop10ByMemberIdAndLanguage(
-      Long memberId, QuoteLanguage language) {
+  public List<MemberTypoStats> findByMemberIdAndLanguage(Long memberId, QuoteLanguage language) {
     return em.createQuery(
             "select s from MemberTypoStats s "
                 + "where s.member.id = :memberId "
-                + "and s.language = :language "
-                + "order by s.typoCount desc",
+                + "and s.language = :language",
             MemberTypoStats.class)
         .setParameter("memberId", memberId)
         .setParameter("language", language)
-        .setMaxResults(10)
         .getResultList();
   }
 
