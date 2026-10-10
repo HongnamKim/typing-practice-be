@@ -129,4 +129,22 @@ class TodayTypingStatsRedisServiceTest {
     assertThat(result.getDetailMap()).containsOnlyKeys(field);
     assertThat(result.getDetailMap().get(field).getCount()).isEqualTo(3);
   }
+
+  @Test
+  @DisplayName("getTypoDetailByLanguage: 정답 글자와 관계없이 요청한 언어의 항목만 반환한다")
+  void getTypoDetailByLanguage_returnsOnlyRequestedLanguage() throws Exception {
+    String entryJson = objectMapper.writeValueAsString(TodayTypoDetailEntry.create(1, 0, 0, 0, 1));
+    when(redisTemplate.opsForHash()).thenReturn(hashOps);
+    when(hashOps.entries(TYPO_DETAIL_KEY))
+        .thenReturn(
+            Map.of(
+                "KOREAN:ㄱ:ㄴ", entryJson,
+                "KOREAN: :", entryJson,
+                "ENGLISH: :x", entryJson));
+
+    TodayTypoDetailSnapshot result =
+        service.getTypoDetailByLanguage(MEMBER_ID, QuoteLanguage.KOREAN);
+
+    assertThat(result.getDetailMap()).containsOnlyKeys("KOREAN:ㄱ:ㄴ", "KOREAN: :");
+  }
 }
