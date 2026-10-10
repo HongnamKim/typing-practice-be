@@ -6,8 +6,8 @@ import com.typingpractice.typing_practice_be.statistics.service.MemberWordStatis
 import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
 import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberDailyWordStatsResponse;
 import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberWordTypingStatsResponse;
-import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberWordTypoDetailAllResponse;
 import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberWordTypoDetailStatsResponse;
+import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberWordTypoStatsAllResponse;
 import com.typingpractice.typing_practice_be.wordtypingrecord.dto.response.MemberWordTypoStatsResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -56,11 +56,11 @@ public class MemberWordStatisticsController {
         memberWordStatisticsService.getTypoDetailStats(memberId, language, expected));
   }
 
-  @GetMapping("/typos/detail/all")
-  public ApiResponse<MemberWordTypoDetailAllResponse> getAllTypoDetailStats(
+  @GetMapping("/typos/all")
+  public ApiResponse<MemberWordTypoStatsAllResponse> getAllTypoStats(
       @RequestParam WordLanguage language) {
     Long memberId = getMemberId();
-    return ApiResponse.ok(memberWordStatisticsService.getAllTypoDetailStats(memberId, language));
+    return ApiResponse.ok(memberWordStatisticsService.getAllTypoStats(memberId, language));
   }
 
   @PostMapping("/refresh")
