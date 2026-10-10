@@ -6,6 +6,7 @@ import com.typingpractice.typing_practice_be.statistics.dto.MemberDailyStatsRequ
 import com.typingpractice.typing_practice_be.statistics.service.MemberQuoteStatisticsService;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberDailyStatsResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypingStatsResponse;
+import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypoDetailAllResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypoDetailStatsResponse;
 import com.typingpractice.typing_practice_be.typingrecord.dto.response.MemberTypoStatsResponse;
 import jakarta.validation.Valid;
@@ -47,6 +48,13 @@ public class MemberQuoteStatisticsController {
     Long memberId = getAuthenticatedMemberId();
     return ApiResponse.ok(
         memberQuoteStatisticsService.getTypoDetailStats(memberId, language, expected));
+  }
+
+  @GetMapping("/typos/detail/all")
+  public ApiResponse<MemberTypoDetailAllResponse> getAllTypoDetailStats(
+      @RequestParam QuoteLanguage language) {
+    Long memberId = getAuthenticatedMemberId();
+    return ApiResponse.ok(memberQuoteStatisticsService.getAllTypoDetailStats(memberId, language));
   }
 
   @PostMapping("/refresh")
