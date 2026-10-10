@@ -190,21 +190,6 @@ public class TodayWordTypingStatsRedisService {
     return TodayWordTypoDetailSnapshot.create(filtered);
   }
 
-  public TodayWordTypoDetailSnapshot getTypoDetailByLanguage(Long memberId, WordLanguage language) {
-    TodayWordTypoDetailSnapshot snapshot = getTypoDetail(memberId);
-    String prefix = language + ":";
-
-    Map<String, TodayWordTypoDetailEntry> filtered = new HashMap<>();
-
-    for (Map.Entry<String, TodayWordTypoDetailEntry> entry : snapshot.getDetailMap().entrySet()) {
-      if (entry.getKey().startsWith(prefix)) {
-        filtered.put(entry.getKey(), entry.getValue());
-      }
-    }
-
-    return TodayWordTypoDetailSnapshot.create(filtered);
-  }
-
   private TodayWordTypingSnapshot getSnapshotOrEmpty(String key) {
     String json = redisTemplate.opsForValue().get(key);
     if (json != null) {
