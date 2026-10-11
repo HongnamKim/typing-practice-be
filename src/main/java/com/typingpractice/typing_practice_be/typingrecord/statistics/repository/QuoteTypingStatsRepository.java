@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.typingrecord.statistics.repository;
 
+import com.typingpractice.typing_practice_be.typingrecord.statistics.dto.PerfDistribution;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
@@ -49,6 +50,36 @@ public class QuoteTypingStatsRepository {
 
     return GlobalTypingPerformance.of(
         ((Number) row[0]).floatValue(), ((Number) row[1]).floatValue());
+  }
+
+  /**
+   * 공개·활성 문장 중 유효 시도 minValidAttempts 이상인 문장들의 perfRaw 평균·표준편차.
+   * perfRaw = (1 - avgCpm/globalAvgCpm) + (1 - avgAcc/globalAvgAcc)
+   */
+  public PerfDistribution aggregatePerfDistributionByLanguage(
+      QuoteLanguage language, float globalAvgCpm, float globalAvgAcc, int minValidAttempts) {
+    Object[] row =
+        (Object[])
+            em.createNativeQuery(
+                    """
+                    SELECT COUNT(*), COALESCE(AVG(p), 0), COALESCE(STDDEV_POP(p), 0) FROM (
+                      SELECT (1 - s.avg_cpm / :globalAvgCpm) + (1 - s.avg_acc / :globalAvgAcc) AS p
+                      FROM quote_typing_stats s JOIN quote q ON q.quote_id = s.quote_id
+                      WHERE s.language = :language AND s.deleted = false
+                        AND s.valid_attempts_count >= :minAttempts
+                        AND q.deleted = false AND q.type = 'PUBLIC' AND q.status = 'ACTIVE'
+                    ) t
+                    """)
+                .setParameter("globalAvgCpm", globalAvgCpm)
+                .setParameter("globalAvgAcc", globalAvgAcc)
+                .setParameter("language", language.name())
+                .setParameter("minAttempts", minValidAttempts)
+                .getSingleResult();
+
+    return PerfDistribution.of(
+        ((Number) row[0]).longValue(),
+        ((Number) row[1]).floatValue(),
+        ((Number) row[2]).floatValue());
   }
 
   public List<QuoteTypingStats> findByLanguageWithQuote(

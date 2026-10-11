@@ -151,14 +151,10 @@ public class MemberTypingStatsBatchService {
       mu = properties.getDefaultMu();
       sigma = properties.getDefaultSigma();
     } else { // 기존 mu, sigma
-      mu =
-          stats.getEstimatedDifficulty() != 0
-              ? stats.getEstimatedDifficulty()
-              : properties.getDefaultMu();
-      sigma =
-          stats.getEstimatedUncertainty() != 0
-              ? stats.getEstimatedUncertainty()
-              : properties.getDefaultSigma();
+      // 추정치 존재 판정은 σ 로 한다 (μ 0 은 클램프로 생기는 유효값)
+      boolean hasEstimate = stats.getEstimatedUncertainty() != 0;
+      mu = hasEstimate ? stats.getEstimatedDifficulty() : properties.getDefaultMu();
+      sigma = hasEstimate ? stats.getEstimatedUncertainty() : properties.getDefaultSigma();
     }
 
     for (AdaptiveServingRecord record : records) {
@@ -168,7 +164,7 @@ public class MemberTypingStatsBatchService {
               record.getAccuracy(),
               record.getAvgCpmSnapshot(),
               record.getAvgAccSnapshot());
-      float x = calculator.calcObservation(record.getQuoteDifficulty(), perf);
+      float x = calculator.calcObservation(perf);
       float[] updated = calculator.update(mu, sigma, x);
       mu = updated[0];
       sigma = updated[1];

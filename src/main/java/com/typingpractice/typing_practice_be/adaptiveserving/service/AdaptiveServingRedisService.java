@@ -1,5 +1,8 @@
 package com.typingpractice.typing_practice_be.adaptiveserving.service;
 
+import org.springframework.data.redis.core.ScanOptions;
+import org.springframework.data.redis.core.Cursor;
+import java.util.ArrayList;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.typingpractice.typing_practice_be.adaptiveserving.config.AdaptiveServingProperties;
@@ -57,14 +60,10 @@ public class AdaptiveServingRedisService {
     MemberTypingStats stats =
         memberTypingStatsRepository.findByMemberIdAndLanguage(memberId, language).orElse(null);
 
-    float mu =
-        (stats != null && stats.getEstimatedDifficulty() != 0)
-            ? stats.getEstimatedDifficulty()
-            : properties.getDefaultMu();
-    float sigma =
-        (stats != null && stats.getEstimatedUncertainty() != 0)
-            ? stats.getEstimatedUncertainty()
-            : properties.getDefaultSigma();
+    // 추정치 존재 판정은 σ 로 한다. μ 는 클램프로 정확히 0 이 될 수 있는 유효값이고, σ 는 한 번이라도 갱신되면 0 이 아니다
+    boolean hasEstimate = stats != null && stats.getEstimatedUncertainty() != 0;
+    float mu = hasEstimate ? stats.getEstimatedDifficulty() : properties.getDefaultMu();
+    float sigma = hasEstimate ? stats.getEstimatedUncertainty() : properties.getDefaultSigma();
 
     LocalDateTime todayStart = TimeUtils.startOfDayKstToUtc(LocalDate.now(TimeUtils.KST));
     LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
@@ -77,7 +76,7 @@ public class AdaptiveServingRedisService {
           calculator.calcPerfNormalized(
               record.getCpm(), record.getAccuracy(),
               record.getAvgCpmSnapshot(), record.getAvgAccSnapshot());
-      float x = calculator.calcObservation(record.getQuoteDifficulty(), perf);
+      float x = calculator.calcObservation(perf);
       float[] updated = calculator.update(mu, sigma, x);
       mu = updated[0];
       sigma = updated[1];
@@ -103,7 +102,7 @@ public class AdaptiveServingRedisService {
             event.getAvgCpmSnapshot(),
             event.getAvgAccSnapshot());
 
-    float x = calculator.calcObservation(event.getDifficulty(), perfNormalized);
+    float x = calculator.calcObservation(perfNormalized);
     float[] updated = calculator.update(current.getMu(), current.getSigma(), x);
 
     AdaptiveServingEstimation newEstimation = AdaptiveServingEstimation.of(updated[0], updated[1]);
@@ -118,6 +117,25 @@ public class AdaptiveServingRedisService {
 
   public void deleteEstimation(Long memberId, QuoteLanguage language) {
     redisTemplate.delete(key(memberId, language));
+  }
+
+  /**
+   * 모든 회원·언어의 Redis 추정치를 삭제한다. 전체 재계산 뒤 호출해 PostgreSQL 의 새 μ 가 즉시 쓰이게 한다.
+   * KEYS 대신 SCAN 으로 키를 모아 한 번에 delete 한다. 접두어 adaptive: 는 이 서비스만 쓴다.
+   */
+  public long deleteAllEstimations() {
+    List<String> keys = new ArrayList<>();
+    try (Cursor<String> cursor =
+        redisTemplate.scan(ScanOptions.scanOptions().match(KEY_PREFIX + "*").count(500).build())) {
+      while (cursor.hasNext()) {
+        keys.add(cursor.next());
+      }
+    }
+    if (keys.isEmpty()) return 0;
+
+    Long deleted = redisTemplate.delete(keys);
+    log.info("[AdaptiveServing] Redis 추정치 일괄 삭제 - {}건", deleted);
+    return deleted != null ? deleted : 0;
   }
 
   private String serialize(AdaptiveServingEstimation estimation) {
