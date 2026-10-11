@@ -26,35 +26,37 @@ public class AdaptiveQuoteService {
   private static final int EASY_RATIO = 1;
   private static final int FIT_RATIO = 7;
   private static final int HARD_RATIO = 2;
-  private static final float MIN_HALF_WIDTH = 3f;
+  // 적정 구간 = 난이도순 정렬에서 mu 의 백분위를 중심으로 전체 공개 문장의 40%
+  private static final float FIT_RATIO_OF_CORPUS = 0.4f;
   private static final float RANDOM_RATIO = 0.05f;
 
   public List<AdaptiveQuoteResponse> getAdaptiveQuotes(
       Long memberId, QuoteLanguage language, int count, List<Long> excludeIds) {
     AdaptiveServingEstimation estimation = redisService.getEstimation(memberId, language);
     float mu = estimation.getMu();
-    float sigma = estimation.getSigma();
 
     List<QuoteIdWithDifficulty> allQuotes = quoteIdCacheService.getPublicQuotes(language);
 
+    // 난이도순 정렬 후 mu 의 백분위 기준으로 적정 구간 [fitStart, fitEnd) 산출
+    List<QuoteIdWithDifficulty> sorted = new ArrayList<>(allQuotes);
+    sorted.sort(Comparator.comparingDouble(QuoteIdWithDifficulty::getDifficulty));
+    int n = sorted.size();
+    int rank = 0;
+    while (rank < n && sorted.get(rank).getDifficulty() < mu) rank++;
+    float half = FIT_RATIO_OF_CORPUS / 2;
+    float percentile = n == 0 ? 0.5f : (float) rank / n;
+    percentile = Math.max(half, Math.min(1 - half, percentile)); // 구간이 코퍼스 밖으로 나가지 않도록 클램프
+    int fitStart = Math.round(n * (percentile - half));
+    int fitEnd = Math.round(n * (percentile + half));
+
     // 이미 친 문장 제외
     Set<Long> excludeSet = excludeIds != null ? new HashSet<>(excludeIds) : Set.of();
-    float halfWidth = Math.max(0.5f * sigma, MIN_HALF_WIDTH);
-    float easyMax = mu - halfWidth;
-    float hardMin = mu + halfWidth;
 
     List<QuoteIdWithDifficulty> easyPool = new ArrayList<>();
     List<QuoteIdWithDifficulty> fitPool = new ArrayList<>();
     List<QuoteIdWithDifficulty> hardPool = new ArrayList<>();
 
-    for (QuoteIdWithDifficulty q : allQuotes) {
-      if (excludeSet.contains(q.getId())) continue;
-
-      float d = q.getDifficulty();
-      if (d < easyMax) easyPool.add(q);
-      else if (d > hardMin) hardPool.add(q);
-      else fitPool.add(q);
-    }
+    fillPools(sorted, fitStart, fitEnd, excludeSet, easyPool, fitPool, hardPool);
 
     Set<Long> picked = new HashSet<>(excludeSet);
 
@@ -64,12 +66,7 @@ public class AdaptiveQuoteService {
       fitPool.clear();
       hardPool.clear();
       picked.clear();
-      for (QuoteIdWithDifficulty q : allQuotes) {
-        float d = q.getDifficulty();
-        if (d < easyMax) easyPool.add(q);
-        else if (d > hardMin) hardPool.add(q);
-        else fitPool.add(q);
-      }
+      fillPools(sorted, fitStart, fitEnd, Set.of(), easyPool, fitPool, hardPool);
     }
 
     // RANDOM / ADAPTIVE 슬롯 수 계산
@@ -108,6 +105,25 @@ public class AdaptiveQuoteService {
                 AdaptiveQuoteResponse.from(
                     q, randomIdSet.contains(q.getId()) ? ServingType.RANDOM : ServingType.ADAPTIVE))
         .toList();
+  }
+
+  /** 정렬된 문장을 적정 구간 인덱스 기준으로 easy / fit / hard 풀에 나눠 담는다 (exclude 제외) */
+  private void fillPools(
+      List<QuoteIdWithDifficulty> sorted,
+      int fitStart,
+      int fitEnd,
+      Set<Long> exclude,
+      List<QuoteIdWithDifficulty> easyPool,
+      List<QuoteIdWithDifficulty> fitPool,
+      List<QuoteIdWithDifficulty> hardPool) {
+    for (int i = 0; i < sorted.size(); i++) {
+      QuoteIdWithDifficulty q = sorted.get(i);
+      if (exclude.contains(q.getId())) continue;
+
+      if (i < fitStart) easyPool.add(q);
+      else if (i >= fitEnd) hardPool.add(q);
+      else fitPool.add(q);
+    }
   }
 
   private List<Long> pickRandomIds(
