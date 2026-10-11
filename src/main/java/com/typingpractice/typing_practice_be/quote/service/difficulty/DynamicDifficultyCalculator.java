@@ -9,10 +9,9 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class DynamicDifficultyCalculator {
-  private static final float PERF_COEFFICIENT = 1.5f;
-
   private final DifficultyProperties difficultyProperties;
 
+  /** 설계서 3-3: perfRaw 를 코퍼스 기준으로 표준화한 뒤 mapZ 로 매핑, seed 와 n/(n+k) 블렌딩 */
   public float calculate(
       QuoteTypingStats stats, GlobalQuoteStatistics globalStats, float difficultySeed) {
     int n = stats.getValidAttemptsCount();
@@ -20,17 +19,16 @@ public class DynamicDifficultyCalculator {
 
     float cpmDrop = 1 - stats.getAvgCpm() / globalStats.getGlobalAvgCpm();
     float accDrop = 1 - stats.getAvgAcc() / globalStats.getGlobalAvgAcc();
+    float perfRaw = cpmDrop + accDrop;
 
-    float perf = clip(PERF_COEFFICIENT * (cpmDrop + accDrop), -1f, 1f);
-    float perfNormalized = (perf + 1f) / 2f;
+    float zPerf =
+        DifficultyScale.standardize(
+            perfRaw, globalStats.getPerfMeanOrDefault(), globalStats.getPerfStdOrDefault());
+    float perfNormalized = DifficultyScale.mapZ(zPerf);
 
     float difficulty =
         ((float) n / (n + k)) * perfNormalized + ((float) k / (n + k)) * (difficultySeed / 100f);
 
     return Math.round(100_000 * difficulty) / 1000f;
-  }
-
-  private float clip(float value, float min, float max) {
-    return Math.max(min, Math.min(max, value));
   }
 }

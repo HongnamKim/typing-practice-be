@@ -1,5 +1,8 @@
 package com.typingpractice.typing_practice_be.quote.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
+
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteProfile;
 import com.typingpractice.typing_practice_be.quote.service.difficulty.DifficultySeedCalculator;
@@ -8,210 +11,227 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.*;
-
 public class DifficultySeedCalculatorTest {
-	private final DifficultySeedCalculator calculator = new DifficultySeedCalculator();
+  private final DifficultySeedCalculator calculator = new DifficultySeedCalculator();
 
-	@Nested
-	@DisplayName("한국어 난이도 계산")
-	class KoreanDifficulty {
+  // createKoreanDefault 의 평균값: len 30, punc 0.05, space 0.18, digit 0.0005, jamo 0.5, diphthong 0.08, shiftJamo 0.05
+  private QuoteProfile koreanAverage() {
+    return createKoreanProfile(30, 0.05f, 0.18f, 0.0005f, 0.5f, 0.08f, 0.05f);
+  }
 
-		@Test
-		@DisplayName("평균과 동일한 문장 - 모든 z점수 0, seed 0")
-		void averageSentence() {
-			GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
-			QuoteProfile profile = createKoreanProfile(30, 0.05f, 0.18f, 0.01f, 0.5f, 0.08f, 0.05f);
+  // 길이만 평균 + 1σ (lenStd 10), 나머지는 평균 → rawSeed = W_LEN(0.20) × 1 = 0.2
+  private QuoteProfile koreanLengthPlusOneSigma() {
+    return createKoreanProfile(40, 0.05f, 0.18f, 0.0005f, 0.5f, 0.08f, 0.05f);
+  }
 
-			float seed = calculator.calculate(profile, stats, QuoteLanguage.KOREAN);
+  @Nested
+  @DisplayName("rawSeed (표준화 전 가중합)")
+  class Raw {
+    @Test
+    @DisplayName("평균 문장은 0")
+    void averageIsZero() {
+      GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
 
-			assertThat(seed).isEqualTo(0f);
-		}
+      float raw = calculator.calculateRaw(koreanAverage(), stats, QuoteLanguage.KOREAN);
 
-		@Test
-		@DisplayName("모든 값이 평균보다 높은 문장 - 높은 seed")
-		void hardSentence() {
-			GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
-			// 평균보다 1σ 이상 높은 값들
-			QuoteProfile profile = createKoreanProfile(50, 0.10f, 0.08f, 0.05f, 0.8f, 0.15f, 0.10f);
-			// spaceRate는 낮을수록 어려움 → 0.08은 평균(0.18)보다 낮으므로 어려움↑
+      assertThat(raw).isCloseTo(0f, within(1e-6f));
+    }
 
-			float seed = calculator.calculate(profile, stats, QuoteLanguage.KOREAN);
+    @Test
+    @DisplayName("길이만 +1σ 이면 가중치 0.2")
+    void lengthPlusOneSigma() {
+      GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
 
-			assertThat(seed).isGreaterThan(50f);
-		}
+      float raw = calculator.calculateRaw(koreanLengthPlusOneSigma(), stats, QuoteLanguage.KOREAN);
 
-		@Test
-		@DisplayName("모든 값이 평균보다 낮은 문장 - seed 0")
-		void easySentence() {
-			GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
-			QuoteProfile profile = createKoreanProfile(10, 0.01f, 0.30f, 0.0f, 0.1f, 0.01f, 0.01f);
+      assertThat(raw).isCloseTo(0.2f, within(1e-6f));
+    }
 
-			float seed = calculator.calculate(profile, stats, QuoteLanguage.KOREAN);
+    @Test
+    @DisplayName("특성 z 는 ±2 로 잘려 극단값 하나가 가중합을 지배하지 않는다 (길이 z=17 → 0.2 × 2)")
+    void featureClamp() {
+      GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
+      QuoteProfile profile = createKoreanProfile(200, 0.05f, 0.18f, 0.0005f, 0.5f, 0.08f, 0.05f);
 
-			assertThat(seed).isEqualTo(0f);
-		}
+      float raw = calculator.calculateRaw(profile, stats, QuoteLanguage.KOREAN);
 
-		@Test
-		@DisplayName("seed는 0~100 범위")
-		void seedRange() {
-			GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
-			// 극단적으로 높은 값
-			QuoteProfile profile = createKoreanProfile(200, 0.50f, 0.01f, 0.30f, 1.5f, 0.50f, 0.50f);
+      assertThat(raw).isCloseTo(0.4f, within(1e-6f));
+    }
 
-			float seed = calculator.calculate(profile, stats, QuoteLanguage.KOREAN);
+    @Test
+    @DisplayName("σ = 0 인 특성은 z = 0 (중립)")
+    void sigmaZeroIsNeutral() {
+      GlobalQuoteStatistics zeroStats = createZeroStdStats();
+      QuoteProfile profile = createKoreanProfile(50, 0.10f, 0.10f, 0.05f, 0.8f, 0.15f, 0.10f);
 
-			assertThat(seed).isBetween(0f, 100f);
-		}
-	}
+      float raw = calculator.calculateRaw(profile, zeroStats, QuoteLanguage.KOREAN);
 
-	@Nested
-	@DisplayName("영어 난이도 계산")
-	class EnglishDifficulty {
+      assertThat(raw).isEqualTo(0f);
+    }
+  }
 
-		@Test
-		@DisplayName("평균과 동일한 문장 - seed 0")
-		void averageSentence() {
-			GlobalQuoteStatistics stats = GlobalQuoteStatistics.createEnglishDefault();
-			QuoteProfile profile = createEnglishProfile(40, 0.04f, 0.18f, 0.01f, 0.05f, 4.5f);
+  @Nested
+  @DisplayName("한국어 seed")
+  class KoreanSeed {
+    @Test
+    @DisplayName("평균 문장 → 50")
+    void averageSentence() {
+      GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
 
-			float seed = calculator.calculate(profile, stats, QuoteLanguage.ENGLISH);
+      float seed = calculator.calculate(koreanAverage(), stats, QuoteLanguage.KOREAN);
 
-			assertThat(seed).isEqualTo(0f);
-		}
+      assertThat(seed).isEqualTo(50f);
+    }
 
-		@Test
-		@DisplayName("모든 값이 평균보다 높은 문장 - 높은 seed")
-		void hardSentence() {
-			GlobalQuoteStatistics stats = GlobalQuoteStatistics.createEnglishDefault();
-			QuoteProfile profile = createEnglishProfile(80, 0.10f, 0.08f, 0.05f, 0.15f, 8.0f);
+    @Test
+    @DisplayName("통계 없을 때(기본값) 길이 +1σ → 55 (현행 산식 100·(0.5 + 0.2/4) 와 동일)")
+    void defaultStdMatchesLegacy() {
+      GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
 
-			float seed = calculator.calculate(profile, stats, QuoteLanguage.ENGLISH);
+      float seed = calculator.calculate(koreanLengthPlusOneSigma(), stats, QuoteLanguage.KOREAN);
 
-			assertThat(seed).isGreaterThan(50f);
-		}
+      assertThat(seed).isEqualTo(55f);
+    }
 
-		@Test
-		@DisplayName("seed는 0~100 범위")
-		void seedRange() {
-			GlobalQuoteStatistics stats = GlobalQuoteStatistics.createEnglishDefault();
-			QuoteProfile profile = createEnglishProfile(200, 0.50f, 0.01f, 0.30f, 0.50f, 15.0f);
+    @Test
+    @DisplayName("seedStd 가 작으면 같은 rawSeed 가 50 에서 더 멀어진다 (std 0.1 → z 2 → 90)")
+    void standardizationWidens() {
+      GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
+      stats.updateSeedDistribution(0f, 0.1f);
 
-			float seed = calculator.calculate(profile, stats, QuoteLanguage.ENGLISH);
+      float seed = calculator.calculate(koreanLengthPlusOneSigma(), stats, QuoteLanguage.KOREAN);
 
-			assertThat(seed).isBetween(0f, 100f);
-		}
-	}
+      assertThat(seed).isEqualTo(90f);
+    }
 
-	@Nested
-	@DisplayName("σ = 0 처리")
-	class SigmaZero {
+    @Test
+    @DisplayName("seedMean 이 양수면 같은 문장이 더 쉬운 쪽으로 이동한다 (mean 0.2 → 평균 문장 50 미만)")
+    void meanShift() {
+      GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
+      stats.updateSeedDistribution(0.2f, 0.8f);
 
-		@Test
-		@DisplayName("σ가 0인 항목의 score는 0")
-		void sigmaZeroReturnsZero() {
-			GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
-			// digitStd를 0으로 설정하면 score_digit = 0이 되어야 함
-			// createKoreanDefault의 digitStd는 0.02f이므로 별도 stats가 필요
+      float seed = calculator.calculate(koreanAverage(), stats, QuoteLanguage.KOREAN);
 
-			// 모든 std를 0으로 설정한 통계
-			GlobalQuoteStatistics zeroStats = createZeroStdStats(QuoteLanguage.KOREAN);
-			QuoteProfile profile = createKoreanProfile(50, 0.10f, 0.10f, 0.05f, 0.8f, 0.15f, 0.10f);
+      assertThat(seed).isEqualTo(45f);
+    }
 
-			float seed = calculator.calculate(profile, zeroStats, QuoteLanguage.KOREAN);
+    @Test
+    @DisplayName("모든 특성이 +2σ 이상이면 정확히 100 (NaN 없음), 쉬운 쪽 극단은 0 이상 15 미만")
+    void range() {
+      GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
+      // spaceRate 는 낮을수록 어려움 → 어려운 쪽은 0, 쉬운 쪽은 큰 값
+      QuoteProfile hardest = createKoreanProfile(1000, 1.0f, 0.0f, 1.0f, 10.0f, 1.0f, 1.0f);
+      // 비율 특성(punc, digit, diphthong, shiftJamo)은 0 아래로 내려갈 수 없어 평균이 작은 특성은
+      // -2σ 에 못 미친다 (punc: (0-0.05)/0.03 = -1.67). rawSeed ≈ -1.57 → z -1.97 → 약 11
+      QuoteProfile easiest = createKoreanProfile(0, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 
-			assertThat(seed).isEqualTo(0f);
-		}
-	}
+      assertThat(calculator.calculate(hardest, stats, QuoteLanguage.KOREAN)).isEqualTo(100f);
+      assertThat(calculator.calculate(easiest, stats, QuoteLanguage.KOREAN)).isBetween(0f, 15f);
+    }
 
-	@Nested
-	@DisplayName("가중치 합계 검증")
-	class WeightValidation {
+    @Test
+    @DisplayName("σ = 0 통계로는 모든 문장이 50")
+    void sigmaZeroGivesFifty() {
+      GlobalQuoteStatistics zeroStats = createZeroStdStats();
+      QuoteProfile profile = createKoreanProfile(50, 0.10f, 0.10f, 0.05f, 0.8f, 0.15f, 0.10f);
 
-		@Test
-		@DisplayName("한국어 - 모든 score가 1이면 seed = 100")
-		void koreanMaxSeed() {
-			GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
-			// 모든 값을 평균 + 10σ 이상으로 설정 → 모든 score = 1.0
-			QuoteProfile profile = createKoreanProfile(1000, 1.0f, 0.0f, 1.0f, 10.0f, 1.0f, 1.0f);
+      float seed = calculator.calculate(profile, zeroStats, QuoteLanguage.KOREAN);
 
-			float seed = calculator.calculate(profile, stats, QuoteLanguage.KOREAN);
+      assertThat(seed).isEqualTo(50f);
+    }
+  }
 
-			assertThat(seed).isEqualTo(100f);
-		}
+  @Nested
+  @DisplayName("영어 seed")
+  class EnglishSeed {
+    // createEnglishDefault 의 평균값: len 40, punc 0.04, space 0.18, digit 0.01, case 0.05, wordLen 4.5
+    @Test
+    @DisplayName("평균 문장 → 50")
+    void averageSentence() {
+      GlobalQuoteStatistics stats = GlobalQuoteStatistics.createEnglishDefault();
+      QuoteProfile profile = createEnglishProfile(40, 0.04f, 0.18f, 0.01f, 0.05f, 4.5f);
 
-		@Test
-		@DisplayName("영어 - 모든 score가 1이면 seed = 100")
-		void englishMaxSeed() {
-			GlobalQuoteStatistics stats = GlobalQuoteStatistics.createEnglishDefault();
-			QuoteProfile profile = createEnglishProfile(1000, 1.0f, 0.0f, 1.0f, 1.0f, 100.0f);
+      float seed = calculator.calculate(profile, stats, QuoteLanguage.ENGLISH);
 
-			float seed = calculator.calculate(profile, stats, QuoteLanguage.ENGLISH);
+      assertThat(seed).isEqualTo(50f);
+    }
 
-			assertThat(seed).isEqualTo(100f);
-		}
-	}
+    @Test
+    @DisplayName("모든 값이 평균보다 높은 문장 → 50 초과")
+    void hardSentence() {
+      GlobalQuoteStatistics stats = GlobalQuoteStatistics.createEnglishDefault();
+      QuoteProfile profile = createEnglishProfile(80, 0.10f, 0.08f, 0.05f, 0.15f, 8.0f);
 
-	// === 헬퍼 메서드 ===
+      float seed = calculator.calculate(profile, stats, QuoteLanguage.ENGLISH);
 
-	private QuoteProfile createKoreanProfile(
-					int length,
-					float puncRate,
-					float spaceRate,
-					float digitRate,
-					float jamoComplex,
-					float diphthongRate,
-					float shiftJamoRate) {
-		QuoteProfile profile = QuoteProfile.create();
-		profile.setLength(length);
-		profile.setPuncRate(puncRate);
-		profile.setSpaceRate(spaceRate);
-		profile.setDigitRate(digitRate);
-		profile.setJamoComplex(jamoComplex);
-		profile.setDiphthongRate(diphthongRate);
-		profile.setShiftJamoRate(shiftJamoRate);
-		return profile;
-	}
+      assertThat(seed).isGreaterThan(50f);
+    }
 
-	private QuoteProfile createEnglishProfile(
-					int length,
-					float puncRate,
-					float spaceRate,
-					float digitRate,
-					float caseFlipRate,
-					float avgWordLen) {
-		QuoteProfile profile = QuoteProfile.create();
-		profile.setLength(length);
-		profile.setPuncRate(puncRate);
-		profile.setSpaceRate(spaceRate);
-		profile.setDigitRate(digitRate);
-		profile.setCaseFlipRate(caseFlipRate);
-		profile.setAvgWordLen(avgWordLen);
-		return profile;
-	}
+    @Test
+    @DisplayName("모든 특성이 +2σ 이상이면 100")
+    void maxSeed() {
+      GlobalQuoteStatistics stats = GlobalQuoteStatistics.createEnglishDefault();
+      QuoteProfile profile = createEnglishProfile(1000, 1.0f, 0.0f, 1.0f, 1.0f, 100.0f);
 
-	private GlobalQuoteStatistics createZeroStdStats(QuoteLanguage language) {
-		// 모든 std = 0인 통계 → 모든 score = 0
-		// GlobalQuoteStatistics에 접근하려면 팩토리 메서드나 테스트용 생성 방법 필요
-		// 현재 필드가 private이므로 리플렉션 사용
-		GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
-		try {
-			setField(stats, "lenStd", 0f);
-			setField(stats, "puncStd", 0f);
-			setField(stats, "spaceStd", 0f);
-			setField(stats, "digitStd", 0f);
-			setField(stats, "jamoStd", 0f);
-			setField(stats, "diphthongStd", 0f);
-			setField(stats, "shiftJamoStd", 0f);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-		return stats;
-	}
+      float seed = calculator.calculate(profile, stats, QuoteLanguage.ENGLISH);
 
-	private void setField(Object obj, String fieldName, Object value) throws Exception {
-		java.lang.reflect.Field field = obj.getClass().getDeclaredField(fieldName);
-		field.setAccessible(true);
-		field.set(obj, value);
-	}
+      assertThat(seed).isEqualTo(100f);
+    }
+  }
+
+  // === 헬퍼 메서드 ===
+
+  private QuoteProfile createKoreanProfile(
+      int length,
+      float puncRate,
+      float spaceRate,
+      float digitRate,
+      float jamoComplex,
+      float diphthongRate,
+      float shiftJamoRate) {
+    QuoteProfile profile = QuoteProfile.create();
+    profile.setLength(length);
+    profile.setPuncRate(puncRate);
+    profile.setSpaceRate(spaceRate);
+    profile.setDigitRate(digitRate);
+    profile.setJamoComplex(jamoComplex);
+    profile.setDiphthongRate(diphthongRate);
+    profile.setShiftJamoRate(shiftJamoRate);
+    return profile;
+  }
+
+  private QuoteProfile createEnglishProfile(
+      int length,
+      float puncRate,
+      float spaceRate,
+      float digitRate,
+      float caseFlipRate,
+      float avgWordLen) {
+    QuoteProfile profile = QuoteProfile.create();
+    profile.setLength(length);
+    profile.setPuncRate(puncRate);
+    profile.setSpaceRate(spaceRate);
+    profile.setDigitRate(digitRate);
+    profile.setCaseFlipRate(caseFlipRate);
+    profile.setAvgWordLen(avgWordLen);
+    return profile;
+  }
+
+  /** 모든 특성 σ = 0 인 한국어 통계 (필드가 private 이라 리플렉션 사용) */
+  private GlobalQuoteStatistics createZeroStdStats() {
+    GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
+    try {
+      for (String field :
+          new String[] {
+            "lenStd", "puncStd", "spaceStd", "digitStd", "jamoStd", "diphthongStd", "shiftJamoStd"
+          }) {
+        java.lang.reflect.Field f = GlobalQuoteStatistics.class.getDeclaredField(field);
+        f.setAccessible(true);
+        f.set(stats, 0f);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    return stats;
+  }
 }
