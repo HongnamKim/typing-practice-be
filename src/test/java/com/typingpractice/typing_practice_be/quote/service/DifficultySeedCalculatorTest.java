@@ -3,6 +3,7 @@ package com.typingpractice.typing_practice_be.quote.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
+import com.typingpractice.typing_practice_be.quote.config.DifficultyPropertiesFixture;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteProfile;
 import com.typingpractice.typing_practice_be.quote.service.difficulty.DifficultySeedCalculator;
@@ -12,14 +13,16 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 public class DifficultySeedCalculatorTest {
-  private final DifficultySeedCalculator calculator = new DifficultySeedCalculator();
+  // 가중치는 application.yaml(quote.difficulty.seed-weights)과 같은 값: 한국어 len .35 punc 0 space .10 digit .20 jamo 0 diph 0 shift .35
+  private final DifficultySeedCalculator calculator =
+      new DifficultySeedCalculator(DifficultyPropertiesFixture.defaults());
 
   // createKoreanDefault 의 평균값: len 30, punc 0.05, space 0.18, digit 0.0005, jamo 0.5, diphthong 0.08, shiftJamo 0.05
   private QuoteProfile koreanAverage() {
     return createKoreanProfile(30, 0.05f, 0.18f, 0.0005f, 0.5f, 0.08f, 0.05f);
   }
 
-  // 길이만 평균 + 1σ (lenStd 10), 나머지는 평균 → rawSeed = W_LEN(0.20) × 1 = 0.2
+  // 길이만 평균 + 1σ (lenStd 10), 나머지는 평균 → rawSeed = len 가중치(0.35) × 1 = 0.35
   private QuoteProfile koreanLengthPlusOneSigma() {
     return createKoreanProfile(40, 0.05f, 0.18f, 0.0005f, 0.5f, 0.08f, 0.05f);
   }
@@ -38,24 +41,24 @@ public class DifficultySeedCalculatorTest {
     }
 
     @Test
-    @DisplayName("길이만 +1σ 이면 가중치 0.2")
+    @DisplayName("길이만 +1σ 이면 길이 가중치 0.35")
     void lengthPlusOneSigma() {
       GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
 
       float raw = calculator.calculateRaw(koreanLengthPlusOneSigma(), stats, QuoteLanguage.KOREAN);
 
-      assertThat(raw).isCloseTo(0.2f, within(1e-6f));
+      assertThat(raw).isCloseTo(0.35f, within(1e-6f));
     }
 
     @Test
-    @DisplayName("특성 z 는 ±2 로 잘려 극단값 하나가 가중합을 지배하지 않는다 (길이 z=17 → 0.2 × 2)")
+    @DisplayName("특성 z 는 ±2 로 잘려 극단값 하나가 가중합을 지배하지 않는다 (길이 z=17 → 0.35 × 2)")
     void featureClamp() {
       GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
       QuoteProfile profile = createKoreanProfile(200, 0.05f, 0.18f, 0.0005f, 0.5f, 0.08f, 0.05f);
 
       float raw = calculator.calculateRaw(profile, stats, QuoteLanguage.KOREAN);
 
-      assertThat(raw).isCloseTo(0.4f, within(1e-6f));
+      assertThat(raw).isCloseTo(0.7f, within(1e-6f));
     }
 
     @Test
@@ -67,6 +70,17 @@ public class DifficultySeedCalculatorTest {
       float raw = calculator.calculateRaw(profile, zeroStats, QuoteLanguage.KOREAN);
 
       assertThat(raw).isEqualTo(0f);
+    }
+
+    @Test
+    @DisplayName("가중치 0 인 특성(문장부호·받침·겹모음)은 극단값이어도 rawSeed 에 영향이 없다")
+    void zeroWeightFeaturesAreIgnored() {
+      GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
+      QuoteProfile profile = createKoreanProfile(30, 1.0f, 0.18f, 0.0005f, 10.0f, 1.0f, 0.05f);
+
+      float raw = calculator.calculateRaw(profile, stats, QuoteLanguage.KOREAN);
+
+      assertThat(raw).isCloseTo(0f, within(1e-6f));
     }
   }
 
@@ -84,20 +98,20 @@ public class DifficultySeedCalculatorTest {
     }
 
     @Test
-    @DisplayName("통계 없을 때(기본값) 길이 +1σ → 55 (현행 산식 100·(0.5 + 0.2/4) 와 동일)")
+    @DisplayName("통계 없을 때(기본값) 길이 +1σ → 59 (100·(0.5 + 0.35/4) = 58.75)")
     void defaultStdMatchesLegacy() {
       GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
 
       float seed = calculator.calculate(koreanLengthPlusOneSigma(), stats, QuoteLanguage.KOREAN);
 
-      assertThat(seed).isEqualTo(55f);
+      assertThat(seed).isEqualTo(59f);
     }
 
     @Test
-    @DisplayName("seedStd 가 작으면 같은 rawSeed 가 50 에서 더 멀어진다 (std 0.1 → z 2 → 90)")
+    @DisplayName("seedStd 가 작으면 같은 rawSeed 가 50 에서 더 멀어진다 (std 0.175 → z 2 → 90)")
     void standardizationWidens() {
       GlobalQuoteStatistics stats = GlobalQuoteStatistics.createKoreanDefault();
-      stats.updateSeedDistribution(0f, 0.1f);
+      stats.updateSeedDistribution(0f, 0.175f);
 
       float seed = calculator.calculate(koreanLengthPlusOneSigma(), stats, QuoteLanguage.KOREAN);
 
