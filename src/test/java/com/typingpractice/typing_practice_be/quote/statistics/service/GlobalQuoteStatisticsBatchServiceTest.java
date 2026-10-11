@@ -11,7 +11,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.typingpractice.typing_practice_be.quote.config.DifficultyProperties;
+import com.typingpractice.typing_practice_be.quote.config.DifficultyPropertiesFixture;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteProfile;
@@ -55,10 +55,10 @@ class GlobalQuoteStatisticsBatchServiceTest {
             statsRepository,
             statsService,
             quoteRepository,
-            new DifficultySeedCalculator(),
+            new DifficultySeedCalculator(DifficultyPropertiesFixture.defaults()),
             new QuoteProfileCalculator(),
             quoteTypingStatsRepository,
-            new DifficultyProperties(K));
+            DifficultyPropertiesFixture.defaults());
   }
 
   // createKoreanDefault / createEnglishDefault 와 같은 평균·σ → 5% 임계값을 넘지 않는 집계
@@ -78,7 +78,7 @@ class GlobalQuoteStatisticsBatchServiceTest {
         });
   }
 
-  /** 길이 외 모든 특성이 한국어 기본 평균인 공개·활성 문장. rawSeed = 0.2 × (length − 30)/10 */
+  /** 길이 외 모든 특성이 한국어 기본 평균인 공개·활성 문장. rawSeed = 0.35 × (length − 30)/10 */
   private Quote publicQuote(long id, int length) {
     QuoteProfile profile = QuoteProfile.create();
     profile.setLength(length);
@@ -134,7 +134,7 @@ class GlobalQuoteStatisticsBatchServiceTest {
     // given
     stubCommonAggregations(PerfDistribution.of(500, 0.001f, 0.08f));
     List<Quote> quotes = List.of(publicQuote(1, 20), publicQuote(2, 30), publicQuote(3, 40));
-    // rawSeed = -0.2, 0, +0.2 → mean 0, std sqrt(0.08/3) = 0.1633
+    // rawSeed = -0.35, 0, +0.35 (len 가중치 0.35) → mean 0, std sqrt(0.245/3) = 0.2858
     when(quoteRepository.findMaxIdByLanguage(QuoteLanguage.KOREAN)).thenReturn(3L);
     when(quoteRepository.findMaxIdByLanguage(QuoteLanguage.ENGLISH)).thenReturn(null);
     when(quoteRepository.findPageByLanguageAndIdRange(
@@ -150,11 +150,11 @@ class GlobalQuoteStatisticsBatchServiceTest {
     // then
     GlobalQuoteStatistics korean = savedKorean();
     assertThat(korean.getSeedMeanOrDefault()).isCloseTo(0f, within(1e-4f));
-    assertThat(korean.getSeedStdOrDefault()).isCloseTo(0.1633f, within(1e-3f));
+    assertThat(korean.getSeedStdOrDefault()).isCloseTo(0.2858f, within(1e-3f));
     assertThat(korean.getPerfMeanOrDefault()).isEqualTo(0.001f);
     assertThat(korean.getPerfStdOrDefault()).isEqualTo(0.08f);
 
-    // 평균 문장 50, ±1σ 길이는 표준화돼 50 에서 멀어진다 (raw 0.2 / 0.1633 = z 1.22 → 74)
+    // 평균 문장 50, ±1σ 길이는 표준화돼 50 에서 멀어진다 (raw 0.35 / 0.2858 = z 1.22 → 74)
     assertThat(quotes.get(1).getProfile().getDifficultySeed()).isEqualTo(50f);
     assertThat(quotes.get(2).getProfile().getDifficultySeed()).isGreaterThanOrEqualTo(70f);
     assertThat(quotes.get(0).getProfile().getDifficultySeed()).isLessThanOrEqualTo(30f);
@@ -257,7 +257,7 @@ class GlobalQuoteStatisticsBatchServiceTest {
 
     // then — 특성 평균은 변하지 않았지만 seed 통계가 비어 있어 재계산된다
     GlobalQuoteStatistics korean = savedKorean();
-    assertThat(korean.getSeedStdOrDefault()).isCloseTo(0.1633f, within(1e-3f));
+    assertThat(korean.getSeedStdOrDefault()).isCloseTo(0.2858f, within(1e-3f));
     assertThat(quotes.get(2).getProfile().getDifficultySeed()).isGreaterThanOrEqualTo(70f);
   }
 }
