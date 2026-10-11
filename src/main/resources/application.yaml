@@ -33,10 +33,10 @@ quote:
     english: 0.5
 
 adaptive-serving:
-  beta: 60
-  sigma-obs: 15
+  beta: 43
+  sigma-obs: 11
   perf-coefficient: 1.5
   sigma-process: 2
   surprise-threshold: 2
   default-mu: 50
-  default-sigma: 25
+  default-sigma: 20
