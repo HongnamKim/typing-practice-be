@@ -28,6 +28,22 @@ google:
 quote:
   difficulty:
     cold-start-k: 20
+    seed-weights: # 정적 seed 특성 가중치. 언어별 합 1.0 (기동 시 검증). 근거: Obsidian 적응형 서빙 개선/9. seed 가중치 적합성 분석
+      korean:
+        len: 0.35
+        punc: 0.0
+        space: 0.10
+        digit: 0.20
+        jamo: 0.0
+        diphthong: 0.0
+        shift-jamo: 0.35
+      english:
+        len: 0.20
+        punc: 0.15
+        space: 0.10
+        digit: 0.15
+        case-flip: 0.25
+        word-len: 0.15
   similarity-threshold:
     korean: 0.5
     english: 0.5

@@ -1,26 +1,16 @@
 package com.typingpractice.typing_practice_be.quote.service.difficulty;
 
+import com.typingpractice.typing_practice_be.quote.config.DifficultyProperties;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteProfile;
 import com.typingpractice.typing_practice_be.quote.statistics.domain.GlobalQuoteStatistics;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class DifficultySeedCalculator {
-  // 공통 가중치
-  private static final float W_LEN = 0.20f;
-  private static final float W_PUNC = 0.15f;
-  private static final float W_SPACE = 0.10f;
-  private static final float W_DIGIT = 0.15f;
-
-  // 한국어 전용 가중치
-  private static final float W_JAMO = 0.15f;
-  private static final float W_DIPHTHONG = 0.10f;
-  private static final float W_SHIFT_JAMO = 0.15f;
-
-  // 영어 전용 가중치
-  private static final float W_CASE = 0.25f;
-  private static final float W_WORD_LEN = 0.15f;
+  private final DifficultyProperties properties; // 가중치는 application.yaml quote.difficulty.seed-weights
 
   /**
    * 표준화 전 가중합 rawSeed = Σ wᵢ · zᵢ (zᵢ 는 ±2 클램프, σ = 0 이면 0). 평균 문장 = 0, 범위 [-2, 2].
@@ -30,28 +20,30 @@ public class DifficultySeedCalculator {
       QuoteProfile profile, GlobalQuoteStatistics stats, QuoteLanguage language) {
     float sum = 0f;
 
-    // 공통
-    sum += W_LEN * zScore(profile.getLength(), stats.getLenMean(), stats.getLenStd());
-    sum += W_PUNC * zScore(profile.getPuncRate(), stats.getPuncMean(), stats.getPuncStd());
-    sum +=
-        W_SPACE * zScoreInverse(profile.getSpaceRate(), stats.getSpaceMean(), stats.getSpaceStd());
-    sum += W_DIGIT * zScore(profile.getDigitRate(), stats.getDigitMean(), stats.getDigitStd());
-
     if (language == QuoteLanguage.KOREAN) {
-      sum += W_JAMO * zScore(profile.getJamoComplex(), stats.getJamoMean(), stats.getJamoStd());
+      DifficultyProperties.KoreanWeights w = properties.getSeedWeights().korean();
+      sum += w.len() * zScore(profile.getLength(), stats.getLenMean(), stats.getLenStd());
+      sum += w.punc() * zScore(profile.getPuncRate(), stats.getPuncMean(), stats.getPuncStd());
       sum +=
-          W_DIPHTHONG
-              * zScore(
-                  profile.getDiphthongRate(), stats.getDiphthongMean(), stats.getDiphthongStd());
+          w.space() * zScoreInverse(profile.getSpaceRate(), stats.getSpaceMean(), stats.getSpaceStd());
+      sum += w.digit() * zScore(profile.getDigitRate(), stats.getDigitMean(), stats.getDigitStd());
+      sum += w.jamo() * zScore(profile.getJamoComplex(), stats.getJamoMean(), stats.getJamoStd());
       sum +=
-          W_SHIFT_JAMO
-              * zScore(
-                  profile.getShiftJamoRate(), stats.getShiftJamoMean(), stats.getShiftJamoStd());
+          w.diphthong()
+              * zScore(profile.getDiphthongRate(), stats.getDiphthongMean(), stats.getDiphthongStd());
+      sum +=
+          w.shiftJamo()
+              * zScore(profile.getShiftJamoRate(), stats.getShiftJamoMean(), stats.getShiftJamoStd());
     } else {
-      sum += W_CASE * zScore(profile.getCaseFlipRate(), stats.getCaseMean(), stats.getCaseStd());
+      DifficultyProperties.EnglishWeights w = properties.getSeedWeights().english();
+      sum += w.len() * zScore(profile.getLength(), stats.getLenMean(), stats.getLenStd());
+      sum += w.punc() * zScore(profile.getPuncRate(), stats.getPuncMean(), stats.getPuncStd());
       sum +=
-          W_WORD_LEN
-              * zScore(profile.getAvgWordLen(), stats.getWordLenMean(), stats.getWordLenStd());
+          w.space() * zScoreInverse(profile.getSpaceRate(), stats.getSpaceMean(), stats.getSpaceStd());
+      sum += w.digit() * zScore(profile.getDigitRate(), stats.getDigitMean(), stats.getDigitStd());
+      sum += w.caseFlip() * zScore(profile.getCaseFlipRate(), stats.getCaseMean(), stats.getCaseStd());
+      sum +=
+          w.wordLen() * zScore(profile.getAvgWordLen(), stats.getWordLenMean(), stats.getWordLenStd());
     }
 
     return sum;

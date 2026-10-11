@@ -3,7 +3,7 @@ package com.typingpractice.typing_practice_be.quote.service.difficulty;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
-import com.typingpractice.typing_practice_be.quote.config.DifficultyProperties;
+import com.typingpractice.typing_practice_be.quote.config.DifficultyPropertiesFixture;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.statistics.domain.GlobalQuoteStatistics;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.QuoteTypingStats;
@@ -15,7 +15,7 @@ class DynamicDifficultyCalculatorTest {
   private static final int MANY = 1000; // n ≫ k → 동적 항 비중 1000/1020
 
   private final DynamicDifficultyCalculator calculator =
-      new DynamicDifficultyCalculator(new DifficultyProperties(K));
+      new DynamicDifficultyCalculator(DifficultyPropertiesFixture.defaults());
 
   // createKoreanDefault: globalAvgCpm 300, globalAvgAcc 0.95
   private QuoteTypingStats stats(int validAttempts, float avgCpm, float avgAcc) {
