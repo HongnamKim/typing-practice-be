@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.statistics.controller;
 
+import com.typingpractice.typing_practice_be.adaptiveserving.service.AdaptiveServingRedisService;
 import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.quote.service.difficulty.DifficultyBatchService;
 import com.typingpractice.typing_practice_be.quote.statistics.service.GlobalQuoteStatisticsBatchService;
@@ -22,6 +23,7 @@ public class AdminQuoteStatisticsController {
   private final MemberDailyStatsBatchService memberDailyStatsBatchService;
   private final MemberTypoStatsBatchService memberTypoStatsBatchService;
   private final DifficultyBatchService difficultyBatchService;
+  private final AdaptiveServingRedisService adaptiveServingRedisService;
 
   @PostMapping("/global-quote/recalculate")
   public ApiResponse<Void> recalculate() {
@@ -45,9 +47,9 @@ public class AdminQuoteStatisticsController {
 
   @PostMapping("/member-typing/recalculate")
   public ApiResponse<Void> recalculateMemberTypingStats() {
-
     memberTypingStatsBatchService.runManualRecalculation();
-
+    // PostgreSQL 은 새 μ 인데 Redis 에 옛 μ 가 다음날 04:00 TTL 까지 남아 서빙되지 않도록 비운다
+    adaptiveServingRedisService.deleteAllEstimations();
     return ApiResponse.ok(null);
   }
 

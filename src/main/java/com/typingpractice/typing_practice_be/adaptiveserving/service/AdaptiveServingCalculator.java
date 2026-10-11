@@ -28,9 +28,13 @@ public class AdaptiveServingCalculator {
     return clip(properties.getPerfCoefficient() * (cpmGain + accGain), -1f, 1f);
   }
 
-  /** 관측값 X 를 산출 이 사용자의 적정 난이도는 이 정도일 것이다라는 추정치 */
-  public float calcObservation(float difficulty, float perfNormalized) {
-    return difficulty + properties.getBeta() * perfNormalized;
+  /**
+   * 관측값 x. 코퍼스 중앙(default-mu)을 기준점으로 상대 성능을 난이도 축에 올린다 (B안 설계서 3절).
+   * 서빙된 문장 난이도는 쓰지 않는다 — perf 가 이미 문장 평균 대비 상대값이라 d 를 더하면 서빙 위치가
+   * 다음 추정에 그대로 반영되어 μ 가 끝없이 밀린다.
+   */
+  public float calcObservation(float perfNormalized) {
+    return properties.getDefaultMu() + properties.getBeta() * perfNormalized;
   }
 
   public float[] update(float mu, float sigma, float x) {
@@ -54,6 +58,7 @@ public class AdaptiveServingCalculator {
     float sigmaObsSq = sigmaObs * sigmaObs;
     float K = sigmaSq / (sigmaSq + sigmaObsSq);
     float newMu = mu + K * (x - mu);
+    newMu = clip(newMu, 0f, 100f); // perf ±1 이면 x 가 0~100 을 벗어날 수 있다
     float newSigmaSq = 1f / (1f / sigmaSq + 1f / sigmaObsSq);
     float newSigma = (float) Math.sqrt(newSigmaSq);
 
