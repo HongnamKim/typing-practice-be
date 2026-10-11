@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.quote.statistics.domain;
 
+import com.typingpractice.typing_practice_be.quote.service.difficulty.DifficultyScale;
 import com.typingpractice.typing_practice_be.common.domain.BaseEntity;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.statistics.dto.QuoteProfileAggregation;
@@ -61,6 +62,12 @@ public class GlobalQuoteStatistics extends BaseEntity {
 
   private Float wordLenMean;
   private Float wordLenStd;
+
+  // 난이도 표준화 통계 (설계서 4-1). null 이면 DifficultyScale 기본값 사용 → 표준화 전 산식과 동일
+  private Float seedMean; // rawSeed 코퍼스 평균
+  private Float seedStd; // rawSeed 코퍼스 표준편차
+  private Float perfMean; // perfRaw 코퍼스 평균
+  private Float perfStd; // perfRaw 코퍼스 표준편차
 
   public static GlobalQuoteStatistics createKoreanDefault() {
     GlobalQuoteStatistics stats = new GlobalQuoteStatistics();
@@ -150,6 +157,48 @@ public class GlobalQuoteStatistics extends BaseEntity {
   public void updateGlobalTypingPerformance(float globalAvgCpm, float globalAvgAcc) {
     this.globalAvgCpm = globalAvgCpm;
     this.globalAvgAcc = globalAvgAcc;
+  }
+
+  public void updateSeedDistribution(float mean, float std) {
+    this.seedMean = mean;
+    this.seedStd = std;
+  }
+
+  public void updatePerfDistribution(float mean, float std) {
+    this.perfMean = mean;
+    this.perfStd = std;
+  }
+
+  /** seed 재계산을 건너뛴 날, 전날 행의 seed 통계를 이어받는다 */
+  public void copySeedDistributionFrom(GlobalQuoteStatistics other) {
+    if (other == null) return;
+    this.seedMean = other.seedMean;
+    this.seedStd = other.seedStd;
+  }
+
+  /** seed 표준화 통계가 쓸 수 있는 상태인지 (배치가 재계산 필요 여부 판단에 사용) */
+  public boolean hasSeedDistribution() {
+    return seedMean != null && seedStd != null && seedStd > 0f;
+  }
+
+  private boolean hasPerfDistribution() {
+    return perfMean != null && perfStd != null && perfStd > 0f;
+  }
+
+  public float getSeedMeanOrDefault() {
+    return hasSeedDistribution() ? seedMean : DifficultyScale.DEFAULT_SEED_MEAN;
+  }
+
+  public float getSeedStdOrDefault() {
+    return hasSeedDistribution() ? seedStd : DifficultyScale.DEFAULT_SEED_STD;
+  }
+
+  public float getPerfMeanOrDefault() {
+    return hasPerfDistribution() ? perfMean : DifficultyScale.DEFAULT_PERF_MEAN;
+  }
+
+  public float getPerfStdOrDefault() {
+    return hasPerfDistribution() ? perfStd : DifficultyScale.DEFAULT_PERF_STD;
   }
 
   private static float toFloat(Object value) {
