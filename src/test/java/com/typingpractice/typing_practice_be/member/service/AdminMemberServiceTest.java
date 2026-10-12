@@ -10,6 +10,7 @@ import com.typingpractice.typing_practice_be.member.domain.MemberOrderBy;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.dto.admin.MemberBanRequest;
 import com.typingpractice.typing_practice_be.member.dto.admin.MemberPaginationRequest;
+import com.typingpractice.typing_practice_be.member.dto.admin.MemberWithLastPracticedAt;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotProcessableException;
 import com.typingpractice.typing_practice_be.member.query.MemberBanQuery;
@@ -58,9 +59,13 @@ class AdminMemberServiceTest {
       Member member2 = createMember(MemberRole.USER);
       MemberPaginationQuery query = createPaginationQuery();
 
-      when(memberRepository.findAll(query)).thenReturn(List.of(member1, member2));
+      when(memberRepository.findAll(query))
+          .thenReturn(
+              List.of(
+                  new MemberWithLastPracticedAt(member1, null),
+                  new MemberWithLastPracticedAt(member2, null)));
       // when
-      PageResult<Member> result = adminMemberService.findAllMembers(query);
+      PageResult<MemberWithLastPracticedAt> result = adminMemberService.findAllMembers(query);
 
       // then
       assertThat(result.getContent()).hasSize(2);

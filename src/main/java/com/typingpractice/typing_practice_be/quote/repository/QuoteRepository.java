@@ -36,7 +36,8 @@ public class QuoteRepository {
 
   public Optional<Quote> findByIdWithTypingStats(Long quoteId) {
     return em.createQuery(
-            "select q from Quote q left join fetch q.typingStats where q.id = :quoteId",
+            "select q from Quote q left join fetch q.typingStats left join fetch q.member "
+                + "where q.id = :quoteId",
             Quote.class)
         .setParameter("quoteId", quoteId)
         .getResultStream()
@@ -109,7 +110,7 @@ public class QuoteRepository {
     int page = query.getPage();
     int size = query.getSize();
 
-    String jpql = "select q from Quote q left join fetch q.typingStats";
+    String jpql = "select q from Quote q left join fetch q.typingStats left join fetch q.member";
 
     if (query.getStatus() != null && query.getType() != null) {
       jpql += " where q.status = :status and q.type = :type";

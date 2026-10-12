@@ -1,5 +1,6 @@
 package com.typingpractice.typing_practice_be.quote.dto;
 
+import com.typingpractice.typing_practice_be.member.dto.MemberResponse;
 import com.typingpractice.typing_practice_be.quote.domain.Quote;
 import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.QuoteTypingStats;
 import lombok.AccessLevel;
@@ -9,11 +10,16 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AdminQuoteResponse extends QuoteResponse {
+  private MemberResponse member; // 업로더. 탈퇴(soft delete)한 회원이면 null
   private TypingStatsInfo typingStats;
 
   public static AdminQuoteResponse from(Quote quote) {
     AdminQuoteResponse response = new AdminQuoteResponse();
     response.fillFrom(quote);
+
+    if (quote.getMember() != null) {
+      response.member = MemberResponse.from(quote.getMember());
+    }
 
     if (quote.getTypingStats() != null) {
       response.typingStats = TypingStatsInfo.from(quote.getTypingStats());
