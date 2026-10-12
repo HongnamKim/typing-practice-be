@@ -3,9 +3,18 @@ package com.typingpractice.typing_practice_be.member;
 import static org.assertj.core.api.Assertions.*;
 
 import com.typingpractice.typing_practice_be.auth.dto.TestLoginRequest;
+import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
 import com.typingpractice.typing_practice_be.member.dto.admin.MemberBanRequest;
 import com.typingpractice.typing_practice_be.member.dto.admin.MemberUpdateRoleRequest;
+import com.typingpractice.typing_practice_be.member.repository.MemberRepository;
+import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.domain.MemberTypingStats;
+import com.typingpractice.typing_practice_be.typingrecord.statistics.repository.MemberTypingStatsRepository;
+import com.typingpractice.typing_practice_be.word.domain.WordLanguage;
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.domain.MemberWordTypingStats;
+import com.typingpractice.typing_practice_be.wordtypingrecord.statistics.repository.MemberWordTypingStatsRepository;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -15,13 +24,55 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class AdminMemberE2ETest {
   @Autowired private TestRestTemplate restTemplate;
+  @Autowired private MemberRepository memberRepository;
+  @Autowired private MemberTypingStatsRepository memberTypingStatsRepository;
+  @Autowired private MemberWordTypingStatsRepository memberWordTypingStatsRepository;
+  @Autowired private TransactionTemplate transactionTemplate;
 
   private static final String ADMIN_PROVIDER_ID = "0";
   private static final String USER_PROVIDER_ID = "1";
+
+  // 최근 타이핑 시각 시드: 유저1 = 문장 KOREAN 10-01 / ENGLISH 10-05, 유저2 = 단어 KOREAN 10-08, 유저3 = 없음
+  private static final LocalDateTime USER1_LAST = LocalDateTime.of(2026, 10, 5, 10, 0);
+  private static final LocalDateTime USER2_LAST = LocalDateTime.of(2026, 10, 8, 10, 0);
+
+  // 레포지토리가 getResultStream 을 쓰므로 트랜잭션 안에서 조회
+  private Member findByProviderId(String providerId) {
+    return transactionTemplate.execute(
+        status -> memberRepository.findByProviderId(providerId).orElseThrow());
+  }
+
+  private void seedLastPracticedAt() {
+    transactionTemplate.executeWithoutResult(
+        status -> {
+          Member user1 = findByProviderId("1");
+          Member user2 = findByProviderId("2");
+
+          if (memberTypingStatsRepository
+              .findByMemberIdAndLanguage(user1.getId(), QuoteLanguage.KOREAN)
+              .isEmpty()) {
+            memberTypingStatsRepository.save(
+                MemberTypingStats.create(
+                    user1, QuoteLanguage.KOREAN, 1, 300f, 0.9f, 300, 1f, 0,
+                    LocalDateTime.of(2026, 10, 1, 10, 0)));
+            memberTypingStatsRepository.save(
+                MemberTypingStats.create(
+                    user1, QuoteLanguage.ENGLISH, 1, 300f, 0.9f, 300, 1f, 0, USER1_LAST));
+          }
+          if (memberWordTypingStatsRepository
+              .findByMemberIdAndLanguage(user2.getId(), WordLanguage.KOREAN)
+              .isEmpty()) {
+            memberWordTypingStatsRepository.save(
+                MemberWordTypingStats.create(
+                    user2, WordLanguage.KOREAN, 1, 10, 60f, 0.9f, 60f, 1f, USER2_LAST));
+          }
+        });
+  }
 
   private String getAccessToken(String providerId) {
     TestLoginRequest request = TestLoginRequest.create(providerId);
@@ -128,6 +179,83 @@ public class AdminMemberE2ETest {
         String next = (String) content.get(i + 1).get("nickname");
         assertThat(current.compareTo(next)).isLessThanOrEqualTo(0);
       }
+    }
+
+    @Test
+    @DisplayName("성공 - 최근 타이핑 시각(lastPracticedAt) 포함")
+    void successIncludesLastPracticedAt() {
+      // given
+      seedLastPracticedAt();
+      Long user1Id = findByProviderId("1").getId();
+      Long user2Id = findByProviderId("2").getId();
+      Long user3Id = findByProviderId("3").getId();
+      HttpHeaders headers = createAuthHeader(getAccessToken(ADMIN_PROVIDER_ID));
+
+      // when
+      ResponseEntity<Map> response =
+          restTemplate.exchange(
+              "/admin/members?size=100", HttpMethod.GET, new HttpEntity<>(headers), Map.class);
+
+      // then
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+      Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
+      List<Map<String, Object>> content = (List<Map<String, Object>>) data.get("content");
+
+      Map<Long, Map<String, Object>> byId = new java.util.HashMap<>();
+      content.forEach(m -> byId.put(((Number) m.get("id")).longValue(), m));
+
+      assertThat(byId.get(user1Id)).containsKey("lastPracticedAt");
+      assertThat(LocalDateTime.parse((String) byId.get(user1Id).get("lastPracticedAt")))
+          .isEqualTo(USER1_LAST);
+      assertThat(LocalDateTime.parse((String) byId.get(user2Id).get("lastPracticedAt")))
+          .isEqualTo(USER2_LAST);
+      assertThat(byId.get(user3Id)).containsKey("lastPracticedAt");
+      assertThat(byId.get(user3Id).get("lastPracticedAt")).isNull();
+    }
+
+    @Test
+    @DisplayName("성공 - 최근 타이핑 시각 정렬 (null 은 마지막)")
+    void successWithSortByLastPracticedAt() {
+      // given
+      seedLastPracticedAt();
+      Long user1Id = findByProviderId("1").getId();
+      Long user2Id = findByProviderId("2").getId();
+      HttpHeaders headers = createAuthHeader(getAccessToken(ADMIN_PROVIDER_ID));
+
+      // when
+      ResponseEntity<Map> desc =
+          restTemplate.exchange(
+              "/admin/members?orderBy=lastPracticedAt&sortDirection=DESC&size=100",
+              HttpMethod.GET,
+              new HttpEntity<>(headers),
+              Map.class);
+      ResponseEntity<Map> asc =
+          restTemplate.exchange(
+              "/admin/members?orderBy=lastPracticedAt&sortDirection=ASC&size=100",
+              HttpMethod.GET,
+              new HttpEntity<>(headers),
+              Map.class);
+
+      // then
+      assertThat(desc.getStatusCode()).isEqualTo(HttpStatus.OK);
+      List<Map<String, Object>> descContent =
+          (List<Map<String, Object>>) ((Map<String, Object>) desc.getBody().get("data")).get("content");
+      List<Long> descIds =
+          descContent.stream().map(m -> ((Number) m.get("id")).longValue()).toList();
+      assertThat(descIds.get(0)).isEqualTo(user2Id);
+      assertThat(descIds.get(1)).isEqualTo(user1Id);
+      assertThat(descContent.subList(2, descContent.size()))
+          .allMatch(m -> m.get("lastPracticedAt") == null);
+
+      assertThat(asc.getStatusCode()).isEqualTo(HttpStatus.OK);
+      List<Map<String, Object>> ascContent =
+          (List<Map<String, Object>>) ((Map<String, Object>) asc.getBody().get("data")).get("content");
+      List<Long> ascIds =
+          ascContent.stream().map(m -> ((Number) m.get("id")).longValue()).toList();
+      assertThat(ascIds.get(0)).isEqualTo(user1Id);
+      assertThat(ascIds.get(1)).isEqualTo(user2Id);
+      assertThat(ascContent.subList(2, ascContent.size()))
+          .allMatch(m -> m.get("lastPracticedAt") == null);
     }
 
     @Test

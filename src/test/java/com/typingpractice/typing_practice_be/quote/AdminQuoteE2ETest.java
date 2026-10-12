@@ -8,6 +8,8 @@ import com.typingpractice.typing_practice_be.common.ApiResponse;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteLanguage;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteStatus;
 import com.typingpractice.typing_practice_be.quote.domain.QuoteType;
+import com.typingpractice.typing_practice_be.quote.dto.AdminQuotePaginationResponse;
+import com.typingpractice.typing_practice_be.quote.dto.AdminQuoteResponse;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteCreateRequest;
 import com.typingpractice.typing_practice_be.quote.dto.QuotePaginationResponse;
 import com.typingpractice.typing_practice_be.quote.dto.QuoteResponse;
@@ -102,6 +104,34 @@ public class AdminQuoteE2ETest {
       assert response.getBody() != null;
       assertThat(response.getBody().success()).isTrue();
       assertThat(response.getBody().data().getContent()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("성공 - 업로더(member) 포함")
+    void successIncludesMember() {
+      String token = getAccessToken(ADMIN_PROVIDER_ID);
+      HttpHeaders headers = createAuthHeader(token);
+
+      // PUBLIC 문장은 시드 회원(탈퇴하지 않음)이 올린 것만 존재
+      ResponseEntity<ApiResponse<AdminQuotePaginationResponse>> response =
+          restTemplate.exchange(
+              "/admin/quotes?type=PUBLIC&size=5",
+              HttpMethod.GET,
+              new HttpEntity<>(headers),
+              new ParameterizedTypeReference<>() {});
+
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+      assert response.getBody() != null;
+      List<AdminQuoteResponse> content = response.getBody().data().getContent();
+      assertThat(content).isNotEmpty();
+      assertThat(content)
+          .allSatisfy(
+              quote -> {
+                assertThat(quote.getMember()).isNotNull();
+                assertThat(quote.getMember().id()).isNotNull();
+                assertThat(quote.getMember().nickname()).isNotBlank();
+                assertThat(quote.getMember().email()).isNotBlank();
+              });
     }
 
     @Test
@@ -218,6 +248,76 @@ public class AdminQuoteE2ETest {
               "/admin/quotes", HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
 
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /admin/quotes/{quoteId} - 문장 단건 조회")
+  class GetQuoteById {
+    @Test
+    @DisplayName("성공 - 업로더(member) 포함")
+    void successIncludesMember() {
+      // 일일 업로드 한도(Redis)를 공용 테스트 유저와 나누지 않도록 전용 계정 사용
+      String userToken = getAccessToken("admin-quote-detail-uploader");
+      Long quoteId = createPrivateQuote(userToken);
+
+      HttpHeaders adminHeaders = createAuthHeader(getAccessToken(ADMIN_PROVIDER_ID));
+      ResponseEntity<ApiResponse<AdminQuoteResponse>> response =
+          restTemplate.exchange(
+              "/admin/quotes/" + quoteId,
+              HttpMethod.GET,
+              new HttpEntity<>(adminHeaders),
+              new ParameterizedTypeReference<>() {});
+
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+      assert response.getBody() != null;
+      AdminQuoteResponse quote = response.getBody().data();
+      assertThat(quote.getQuoteId()).isEqualTo(quoteId);
+      assertThat(quote.getMember()).isNotNull();
+      assertThat(quote.getMember().nickname()).isNotBlank();
+    }
+
+    @Test
+    @DisplayName("성공 - 탈퇴한 업로더의 문장은 member 가 null")
+    void successWithWithdrawnMember() {
+      String withdrawnToken = getAccessToken("withdrawn-uploader");
+      Long quoteId = createPrivateQuote(withdrawnToken);
+
+      ResponseEntity<ApiResponse<Void>> deleteResponse =
+          restTemplate.exchange(
+              "/members/me",
+              HttpMethod.DELETE,
+              new HttpEntity<>(createAuthHeader(withdrawnToken)),
+              new ParameterizedTypeReference<>() {});
+      assertThat(deleteResponse.getStatusCode().is2xxSuccessful()).isTrue();
+
+      HttpHeaders adminHeaders = createAuthHeader(getAccessToken(ADMIN_PROVIDER_ID));
+      ResponseEntity<ApiResponse<AdminQuoteResponse>> response =
+          restTemplate.exchange(
+              "/admin/quotes/" + quoteId,
+              HttpMethod.GET,
+              new HttpEntity<>(adminHeaders),
+              new ParameterizedTypeReference<>() {});
+
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+      assert response.getBody() != null;
+      assertThat(response.getBody().data().getQuoteId()).isEqualTo(quoteId);
+      assertThat(response.getBody().data().getMember()).isNull();
+    }
+
+    @Test
+    @DisplayName("관리자 아닌 유저 - 403")
+    void forbiddenWhenNotAdmin() {
+      HttpHeaders headers = createAuthHeader(getAccessToken(USER_PROVIDER_ID));
+
+      ResponseEntity<ApiResponse<AdminQuoteResponse>> response =
+          restTemplate.exchange(
+              "/admin/quotes/1",
+              HttpMethod.GET,
+              new HttpEntity<>(headers),
+              new ParameterizedTypeReference<>() {});
+
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
   }
 

@@ -8,6 +8,7 @@ import com.typingpractice.typing_practice_be.member.dto.admin.MemberBanRequest;
 import com.typingpractice.typing_practice_be.member.dto.admin.MemberPaginationRequest;
 import com.typingpractice.typing_practice_be.member.dto.admin.MemberPaginationResponse;
 import com.typingpractice.typing_practice_be.member.dto.admin.MemberUpdateRoleRequest;
+import com.typingpractice.typing_practice_be.member.dto.admin.MemberWithLastPracticedAt;
 import com.typingpractice.typing_practice_be.member.query.MemberBanQuery;
 import com.typingpractice.typing_practice_be.member.query.MemberPaginationQuery;
 import com.typingpractice.typing_practice_be.member.service.AdminMemberService;
@@ -27,7 +28,7 @@ public class AdminMemberController {
 
     MemberPaginationQuery query = MemberPaginationQuery.from(request);
 
-    PageResult<Member> result = adminMemberService.findAllMembers(query);
+    PageResult<MemberWithLastPracticedAt> result = adminMemberService.findAllMembers(query);
 
     return ApiResponse.ok(MemberPaginationResponse.from(result));
   }
