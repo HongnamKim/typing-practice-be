@@ -3,6 +3,7 @@ package com.typingpractice.typing_practice_be.member.service;
 import com.typingpractice.typing_practice_be.common.dto.PageResult;
 import com.typingpractice.typing_practice_be.member.domain.Member;
 import com.typingpractice.typing_practice_be.member.domain.MemberRole;
+import com.typingpractice.typing_practice_be.member.dto.admin.MemberWithLastPracticedAt;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotFoundException;
 import com.typingpractice.typing_practice_be.member.exception.MemberNotProcessableException;
 import com.typingpractice.typing_practice_be.member.query.MemberBanQuery;
@@ -19,11 +20,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminMemberService {
   private final MemberRepository memberRepository;
 
-  public PageResult<Member> findAllMembers(MemberPaginationQuery query) {
-    List<Member> members = memberRepository.findAll(query);
+  public PageResult<MemberWithLastPracticedAt> findAllMembers(MemberPaginationQuery query) {
+    List<MemberWithLastPracticedAt> members = memberRepository.findAll(query);
 
     boolean hasNext = members.size() > query.getSize();
-    List<Member> content = hasNext ? members.subList(0, query.getSize()) : members;
+    List<MemberWithLastPracticedAt> content =
+        hasNext ? members.subList(0, query.getSize()) : members;
 
     return new PageResult<>(content, query.getPage(), query.getSize(), hasNext);
   }
