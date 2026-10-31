@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# nginx 가 현재 upstream 파일의 색으로 응답하는 것처럼 동작한다.
+color="${STUB_RESPONSE_COLOR:-$(sed -n 's/.*set \$app_color \([a-z]*\);.*/\1/p' "$PROJECT_DIR/nginx/runtime/app-upstream.conf")}"
+printf 'HTTP/2 200\r\nX-App-Color: %s\r\n\r\n' "$color"
