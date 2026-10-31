@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+cat <<OUT
+               total        used        free      shared  buff/cache   available
+Mem:            1907        1281         153           3         653         ${STUB_AVAILABLE:-626}
+Swap:           1023           0        ${STUB_SWAP_FREE:-1023}
+OUT

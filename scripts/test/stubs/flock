@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+[ -z "${STUB_LOCK_FAIL:-}" ]
