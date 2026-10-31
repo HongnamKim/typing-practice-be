@@ -1,0 +1,59 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+  jpa:
+    hibernate:
+      ddl-auto: none #create
+    #    properties:
+    #      hibernate:
+    #        dialect: org.hibernate.dialect.PostgreSQLDialect
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: never
+
+  data:
+    redis:
+      host: redis
+      port: 6379
+    mongodb:
+      uri: ${MONGODB_URI}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  metrics:
+    tags:
+      application: typing-practice-be
+
+jwt:
+  access-token-expiration-ms: 300000
+  refresh-token-expiration-days: 15
+  secret: ${JWT_SECRET}
+
+google:
+  client-id: ${GOOGLE_CLIENT_ID}
+  client-secret: ${GOOGLE_CLIENT_SECRET}
+  redirect-uri: ${GOOGLE_REDIRECT_URI}
+
+logging:
+  level:
+    root: WARN
+    com.typingpractice: INFO
+
+admin:
+  emails:
+    - ${ADMIN_EMAIL}
+
+fallback:
+  typing-record:
+    path: /data/fallback/fallback-typing-records.jsonl
+  word-typing-record:
+    path: /data/fallback/fallback-word-typing-records.jsonl
