@@ -18,7 +18,6 @@ fallback/
 
 # application-local.yaml (민감정보 포함)
 src/main/resources/application-local.yaml
-src/main/resources/application-prod.yaml
 
 # config.js
 src/main/resources/config.js
