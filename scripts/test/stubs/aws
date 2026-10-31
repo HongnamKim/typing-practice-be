@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+case "$1 $2" in
+  "ecr get-login-password") echo token ;;
+  "ssm get-parameters-by-path")
+    [ -z "${STUB_SSM_FAIL:-}" ] || exit 1
+    if [ -n "${STUB_SSM_JSON:-}" ]; then
+      printf '%s' "$STUB_SSM_JSON"
+    else
+      printf '{"Parameters":['
+      sep=""
+      for key in DB_URL DB_USERNAME DB_PASSWORD MONGODB_URI JWT_SECRET GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET GOOGLE_REDIRECT_URI ADMIN_EMAIL; do
+        printf '%s{"Name":"/typing-practice/prod/%s","Value":"secret-%s"}' "$sep" "$key" "$key"
+        sep=","
+      done
+      printf ']}'
+    fi
+    ;;
+  *) exit 1 ;;
+esac

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# 호출을 기록하고 STUB_* 값에 따라 실패한다.
+echo "docker $*" >> "$CALLS_LOG"
+args=" $* "
+case "$args" in
+  *" login "*) cat > /dev/null ;;
+  *" pull "*) [ -z "${STUB_PULL_FAIL:-}" ] || exit 1 ;;
+  *" nginx -t "*)
+    [ -z "${STUB_NGINX_T_FAIL:-}" ] || exit 1
+    [ "${STUB_NGINX_T_FAIL_ON:-0}" != "$(grep -c ' nginx -t' "$CALLS_LOG")" ] || exit 1
+    ;;
+  *" up "*) [ -z "${STUB_UP_FAIL:-}" ] || exit 1 ;;
+esac
+exit 0

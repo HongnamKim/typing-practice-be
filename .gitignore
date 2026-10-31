@@ -11,10 +11,12 @@ data.mv.db
 .env
 .env.local
 .env.prod
+.env.prod.*
 
-# EC2 에만 있는 운영 데이터 (인증서 키, 폴백 데이터)
+# EC2 에만 있는 운영 데이터 (인증서 키, 폴백 데이터, 활성 색)
 certbot/
 fallback/
+nginx/runtime/
 
 # application-local.yaml (민감정보 포함)
 src/main/resources/application-local.yaml
