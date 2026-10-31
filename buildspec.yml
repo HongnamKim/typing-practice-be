@@ -1,0 +1,21 @@
+version: 0.2
+
+env:
+  shell: bash
+
+phases:
+  pre_build:
+    commands:
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "${ECR_REPOSITORY_URI%%/*}"
+      - IMAGE_URI="$ECR_REPOSITORY_URI:${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}"
+  build:
+    commands:
+      - docker build -t "$IMAGE_URI" .
+      - docker push "$IMAGE_URI"
+      - printf '%s\n' "$IMAGE_URI" > image-uri.txt
+      - chmod +x scripts/*.sh
+
+artifacts:
+  files:
+    - image-uri.txt
+    - scripts/**/*
