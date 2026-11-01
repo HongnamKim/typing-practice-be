@@ -18,5 +18,6 @@ phases:
 artifacts:
   files:
     - appspec.yml
+    - docker-compose.prod.yaml
     - image-uri.txt
     - scripts/**/*
