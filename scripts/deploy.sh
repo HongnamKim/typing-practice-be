@@ -50,8 +50,9 @@ if ! compose --profile "$idle" up -d --no-deps --wait --wait-timeout 180 "app-$i
 fi
 
 # 4. 예열: 전환 직후 첫 요청이 느려지는 것을 줄인다. 실패해도 계속한다.
+# 전체 시간을 제한해 배포가 CodeDeploy 훅 제한(600초) 안에 끝나게 한다. 도중에 강제 종료되면 복구가 실행되지 않는다.
 # shellcheck disable=SC2016
-compose --profile "$idle" exec -T "app-$idle" sh -c '
+compose --profile "$idle" exec -T "app-$idle" timeout 90 sh -c '
   for path in /announcements /update-notes \
     "/quotes?seed=0&language=KOREAN" "/quotes?seed=0&language=ENGLISH" \
     "/words?language=KOREAN" "/words?language=ENGLISH"; do

@@ -62,6 +62,7 @@ expect "appspec 제한 시간 600초" 'grep -q "timeout: 600" "$ROOT/appspec.yml
 expect "appspec 은 파일을 복사하지 않음" '[ -f "$ROOT/appspec.yml" ] && ! grep -q "^files:" "$ROOT/appspec.yml"'
 expect "appspec 은 ApplicationStop 훅 없음" '[ -f "$ROOT/appspec.yml" ] && ! grep -q "ApplicationStop:" "$ROOT/appspec.yml"'
 expect "빌드 산출물에 appspec 포함" 'grep -q "appspec.yml" "$ROOT/buildspec.yml"'
+expect "빌드 산출물에 compose 포함" 'grep -q "docker-compose.prod.yaml" "$ROOT/buildspec.yml"'
 
 if [ "$fails" -ne 0 ]; then
   echo "$fails FAILED"
