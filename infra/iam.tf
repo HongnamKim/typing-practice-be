@@ -18,6 +18,16 @@ data "aws_iam_policy_document" "codepipeline_assume" {
   }
 }
 
+data "aws_iam_policy_document" "codedeploy_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["codedeploy.amazonaws.com"]
+    }
+  }
+}
+
 data "aws_iam_policy_document" "ec2_assume" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -92,12 +102,39 @@ data "aws_iam_policy_document" "codepipeline" {
     actions   = ["s3:GetBucketVersioning", "s3:ListBucket"]
     resources = [aws_s3_bucket.artifacts.arn]
   }
+  statement {
+    actions   = ["codedeploy:CreateDeployment", "codedeploy:GetDeployment"]
+    resources = [aws_codedeploy_deployment_group.app.arn]
+  }
+  statement {
+    actions = [
+      "codedeploy:GetApplication",
+      "codedeploy:GetApplicationRevision",
+      "codedeploy:RegisterApplicationRevision",
+    ]
+    resources = [aws_codedeploy_app.app.arn]
+  }
+  statement {
+    actions   = ["codedeploy:GetDeploymentConfig"]
+    resources = ["arn:aws:codedeploy:${var.region}:${data.aws_caller_identity.current.account_id}:deploymentconfig:${local.codedeploy_config}"]
+  }
 }
 
 resource "aws_iam_role_policy" "codepipeline" {
   name   = "codepipeline"
   role   = aws_iam_role.codepipeline.id
   policy = data.aws_iam_policy_document.codepipeline.json
+}
+
+# CodeDeploy: 태그로 대상 EC2 를 찾는다.
+resource "aws_iam_role" "codedeploy" {
+  name               = "${var.project}-codedeploy"
+  assume_role_policy = data.aws_iam_policy_document.codedeploy_assume.json
+}
+
+resource "aws_iam_role_policy_attachment" "codedeploy" {
+  role       = aws_iam_role.codedeploy.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
 }
 
 # EC2: 이미지 pull, 배포 번들 읽기, 비밀 값 읽기

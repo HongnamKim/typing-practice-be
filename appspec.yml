@@ -1,0 +1,8 @@
+version: 0.0
+os: linux
+# files 섹션은 쓰지 않는다. EC2 의 git clone 을 덮어쓰지 않기 위해서다.
+hooks:
+  ApplicationStart:
+    - location: scripts/codedeploy-start.sh
+      timeout: 600
+      runas: ubuntu
