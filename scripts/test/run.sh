@@ -161,6 +161,7 @@ check "정상 배포: ECR 로그아웃" yes "$(called 'logout ')"
 check "정상 배포: 예열은 문장 조회 파라미터 사용" yes "$(called 'quotes\?seed=0&language=KOREAN')"
 check "정상 배포: 예열은 단어 조회 파라미터 사용" yes "$(called 'words\?language=ENGLISH')"
 check "정상 배포: 예열 요청 제한 시간" yes "$(called 'wget -T 5')"
+check "정상 배포: 예열 전체 제한 시간" yes "$(called 'exec -T app-green timeout 90 sh -c')"
 check "정상 배포: .env.prod 값" "DB_URL='secret-DB_URL'" "$(grep '^DB_URL=' "$PROJECT_DIR/.env.prod")"
 check "정상 배포: .env.prod 권한 600" 600 "$(python3 -c "import os,sys;print(oct(os.stat(sys.argv[1]).st_mode)[-3:])" "$PROJECT_DIR/.env.prod")"
 check "정상 배포: 출력에 비밀 값 없음" no "$(if grep -q 'secret-' "$PROJECT_DIR/out"; then echo yes; else echo no; fi)"
@@ -212,30 +213,45 @@ teardown
 setup_bundle() {
   BUNDLE="$(mktemp -d)"
   mkdir "$BUNDLE/scripts"
-  cp "$ROOT/scripts/codedeploy-start.sh" "$BUNDLE/scripts/"
+  cp "$ROOT/scripts/codedeploy-start.sh" "$ROOT/scripts/lib.sh" "$BUNDLE/scripts/"
   printf '#!/usr/bin/env bash\necho "$1" > "%s/deploy-arg"\nexit "${FAKE_DEPLOY_RC:-0}"\n' "$BUNDLE" > "$BUNDLE/scripts/deploy.sh"
+  PROJECT_DIR="$(mktemp -d)"
+  export PROJECT_DIR
+  echo 'services: {}' > "$BUNDLE/docker-compose.prod.yaml"
+  echo 'services: {}' > "$PROJECT_DIR/docker-compose.prod.yaml"
 }
+teardown_bundle() { rm -rf "$BUNDLE" "$PROJECT_DIR"; }
 codedeploy_start() { (cd / && bash "$BUNDLE/scripts/codedeploy-start.sh") > /dev/null 2>&1; }
 deploy_arg() { cat "$BUNDLE/deploy-arg" 2> /dev/null; }
 
 setup_bundle; echo "$IMAGE" > "$BUNDLE/image-uri.txt"; codedeploy_start; rc=$?
 check "래퍼: 성공" 0 "$rc"
 check "래퍼: deploy.sh 가 URI 를 그대로 받음" "$IMAGE" "$(deploy_arg)"
-rm -rf "$BUNDLE"
+teardown_bundle
 
 setup_bundle; : > "$BUNDLE/image-uri.txt"; codedeploy_start; rc=$?
 check "래퍼: 빈 image-uri.txt 는 실패" 1 "$rc"
 check "래퍼: 빈 image-uri.txt 면 deploy.sh 호출 없음" "" "$(deploy_arg)"
-rm -rf "$BUNDLE"
+teardown_bundle
 
 setup_bundle; codedeploy_start; rc=$?
 check "래퍼: image-uri.txt 없으면 실패" 1 "$rc"
 check "래퍼: image-uri.txt 없으면 deploy.sh 호출 없음" "" "$(deploy_arg)"
-rm -rf "$BUNDLE"
+teardown_bundle
 
 setup_bundle; echo "$IMAGE" > "$BUNDLE/image-uri.txt"; export FAKE_DEPLOY_RC=7; codedeploy_start; rc=$?; unset FAKE_DEPLOY_RC
 check "래퍼: deploy.sh 실패를 그대로 전달" 7 "$rc"
-rm -rf "$BUNDLE"
+teardown_bundle
+
+setup_bundle; echo "$IMAGE" > "$BUNDLE/image-uri.txt"; echo '# changed' >> "$PROJECT_DIR/docker-compose.prod.yaml"; codedeploy_start; rc=$?
+check "래퍼: compose 불일치는 실패" 1 "$rc"
+check "래퍼: compose 불일치면 deploy.sh 호출 없음" "" "$(deploy_arg)"
+teardown_bundle
+
+setup_bundle; echo "$IMAGE" > "$BUNDLE/image-uri.txt"; rm "$BUNDLE/docker-compose.prod.yaml"; codedeploy_start; rc=$?
+check "래퍼: 번들에 compose 없으면 실패" 1 "$rc"
+check "래퍼: 번들에 compose 없으면 deploy.sh 호출 없음" "" "$(deploy_arg)"
+teardown_bundle
 
 echo "$tests tests, $fails failed"
 [ "$fails" -eq 0 ]
