@@ -55,6 +55,14 @@ expect "nginx 7070 Grafana 유지" 'grep -q "proxy_pass http://grafana:3000" "$R
 expect "runtime 은 git 제외" 'git -C "$ROOT" check-ignore -q nginx/runtime/app-upstream.conf'
 expect ".env.prod 임시 파일은 git 제외" 'git -C "$ROOT" check-ignore -q .env.prod.tmp123'
 
+expect "appspec 은 ApplicationStart 훅 사용" 'grep -q "ApplicationStart:" "$ROOT/appspec.yml"'
+expect "appspec 은 래퍼 실행" 'grep -q "location: scripts/codedeploy-start.sh" "$ROOT/appspec.yml"'
+expect "appspec 은 ubuntu 로 실행" 'grep -q "runas: ubuntu" "$ROOT/appspec.yml"'
+expect "appspec 제한 시간 600초" 'grep -q "timeout: 600" "$ROOT/appspec.yml"'
+expect "appspec 은 파일을 복사하지 않음" '[ -f "$ROOT/appspec.yml" ] && ! grep -q "^files:" "$ROOT/appspec.yml"'
+expect "appspec 은 ApplicationStop 훅 없음" '[ -f "$ROOT/appspec.yml" ] && ! grep -q "ApplicationStop:" "$ROOT/appspec.yml"'
+expect "빌드 산출물에 appspec 포함" 'grep -q "appspec.yml" "$ROOT/buildspec.yml"'
+
 if [ "$fails" -ne 0 ]; then
   echo "$fails FAILED"
   exit 1
