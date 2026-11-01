@@ -208,5 +208,34 @@ check "금지 시간 롤백: 실패" 1 "$rc"
 check "금지 시간 롤백: docker 0건" 0 "$(docker_calls)"
 teardown
 
+# CodeDeploy 래퍼: 번들 사본에서 실행한다. deploy.sh 는 받은 인자를 기록하는 가짜로 바꾼다.
+setup_bundle() {
+  BUNDLE="$(mktemp -d)"
+  mkdir "$BUNDLE/scripts"
+  cp "$ROOT/scripts/codedeploy-start.sh" "$BUNDLE/scripts/"
+  printf '#!/usr/bin/env bash\necho "$1" > "%s/deploy-arg"\nexit "${FAKE_DEPLOY_RC:-0}"\n' "$BUNDLE" > "$BUNDLE/scripts/deploy.sh"
+}
+codedeploy_start() { (cd / && bash "$BUNDLE/scripts/codedeploy-start.sh") > /dev/null 2>&1; }
+deploy_arg() { cat "$BUNDLE/deploy-arg" 2> /dev/null; }
+
+setup_bundle; echo "$IMAGE" > "$BUNDLE/image-uri.txt"; codedeploy_start; rc=$?
+check "래퍼: 성공" 0 "$rc"
+check "래퍼: deploy.sh 가 URI 를 그대로 받음" "$IMAGE" "$(deploy_arg)"
+rm -rf "$BUNDLE"
+
+setup_bundle; : > "$BUNDLE/image-uri.txt"; codedeploy_start; rc=$?
+check "래퍼: 빈 image-uri.txt 는 실패" 1 "$rc"
+check "래퍼: 빈 image-uri.txt 면 deploy.sh 호출 없음" "" "$(deploy_arg)"
+rm -rf "$BUNDLE"
+
+setup_bundle; codedeploy_start; rc=$?
+check "래퍼: image-uri.txt 없으면 실패" 1 "$rc"
+check "래퍼: image-uri.txt 없으면 deploy.sh 호출 없음" "" "$(deploy_arg)"
+rm -rf "$BUNDLE"
+
+setup_bundle; echo "$IMAGE" > "$BUNDLE/image-uri.txt"; export FAKE_DEPLOY_RC=7; codedeploy_start; rc=$?; unset FAKE_DEPLOY_RC
+check "래퍼: deploy.sh 실패를 그대로 전달" 7 "$rc"
+rm -rf "$BUNDLE"
+
 echo "$tests tests, $fails failed"
 [ "$fails" -eq 0 ]
